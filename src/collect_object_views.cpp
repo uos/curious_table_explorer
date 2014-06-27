@@ -106,8 +106,8 @@ void gather_objects(const object_recognition_msgs::RecognizedObjectArray::ConstP
 				views.push_back( cloud );
 			}
 			catch(tf::TransformException e){
-				return;
 				ROS_WARN("%s", e.what());
+				return;
 			}
 		}
 	}
