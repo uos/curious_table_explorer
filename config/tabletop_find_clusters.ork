@@ -36,6 +36,6 @@ pipeline1:
 
 pipeline2:
   type: Clusters2PoseResults
-  module: my_table_objects.raw_clusters
+  module: ork_raw_clusters.raw_clusters
   inputs: [pipeline1, source1]
   outputs: [sink2]

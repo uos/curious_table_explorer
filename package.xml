@@ -24,6 +24,7 @@
   <run_depend>opencv_candidate</run_depend>
   <run_depend>pcl_ros</run_depend>
   <run_depend>pcl_conversions</run_depend>
+  <run_depend>ork_raw_clusters</run_depend>
 
   <buildtool_depend>catkin</buildtool_depend>
 </package>

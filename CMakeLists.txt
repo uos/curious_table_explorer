@@ -7,8 +7,6 @@ find_package(catkin REQUIRED COMPONENTS
              object_recognition_core object_recognition_msgs
 )
 
-catkin_python_setup()
-
 find_package(PCL REQUIRED)
 
 # no need to export CATKIN_DEPENDS as long as we don't
