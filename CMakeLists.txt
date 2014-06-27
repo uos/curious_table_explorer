@@ -15,4 +15,12 @@ catkin_package()
 
 add_definitions(-std=c++0x)
 
-add_subdirectory(src)
+include_directories(${catkin_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
+
+add_executable(collect_object_views src/collect_object_views.cpp)
+add_dependencies(collect_object_views ${catkin_EXPORTED_TARGETS})
+
+target_link_libraries(
+	collect_object_views
+	${catkin_LIBRARIES}
+)
