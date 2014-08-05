@@ -1,7 +1,6 @@
 /**
  *
- * Authors:
- * Michael Goerner <mgoerner@uos.de>
+ * Author: Michael Goerner <mgoerner@uos.de>
  *
  */
 
@@ -31,6 +30,8 @@
 #include <pcl_ros/transforms.h>
 
 #include <pcl_conversions/pcl_conversions.h>
+
+#include "backjump.h"
 
 using namespace pcl;
 
@@ -88,6 +89,12 @@ void publish_markers(){
 }
 
 void gather_objects(const object_recognition_msgs::RecognizedObjectArray::ConstPtr& objs){
+	static BackjumpChk backjump;
+	if (backjump){
+		ROS_WARN("Detected jump back in time. Clearing collected views.");
+		views.clear();
+	}
+
 	static tf::TransformListener tf_listener;
 
 	for( const object_recognition_msgs::RecognizedObject& o : objs->objects){
