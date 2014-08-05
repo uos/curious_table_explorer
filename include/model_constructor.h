@@ -4,7 +4,7 @@
 #include <vector>
 #include <utility>
 
-#include <tf/transform_listener.h>
+#include <tf/transform_datatypes.h>
 
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -14,22 +14,23 @@
 using std::vector;
 using std::pair;
 
-using pcl::PointCloud;
-using pcl::PointXYZ;
-
 class ModelConstructor {
 public:
 	ModelConstructor(){}
 
-	void addTableView(const vector<const PointCloud<PointXYZ>> & view);
+	void addTableView(const vector<PointCloud::Ptr>& view, const tf::Transform& to_world){
+		for(const PointCloud::Ptr& pc : view){
+			Model* m= new Model();
+			m->addView( ModelView(pc, to_world) );
+			this->_objects.push_back(*m);
+		}
+	}
 
-	const vector<Model>& getModels(){ return this->_objects; };
+	void clear(){
+		this->_objects.clear();
+	};
 
-protected:
 	vector<Model> _objects;
-
-	PointCloud<PointXYZ>::Ptr _last_view;
-	vector<pair<PointXYZ, uint32_t>> _last_view_object_centers;
 };
 
 #endif

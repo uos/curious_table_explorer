@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <random>
+#include <cassert>
 
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
@@ -33,9 +34,9 @@
 
 #include "backjump.h"
 
-using namespace pcl;
+#include "model_constructor.h"
 
-std::vector<PointCloud<PointXYZ>::Ptr> views;
+ModelConstructor model_constructor;
 
 ros::Publisher pub_markers;
 
@@ -64,22 +65,22 @@ void publish_markers(){
 	m.scale.x= 0.001;
 	m.scale.y= 0.001;
 
-	for( PointCloud<PointXYZ>::Ptr& pc : views ){
-		m.header.seq= pc->header.seq;
-		m.header.stamp= pcl_conversions::fromPCL(pc->header).stamp;
-		m.header.frame_id= pc->header.frame_id;
-
-		m.color= rnd_color();
+	for( Model& model : model_constructor._objects ){
 		m.points.clear();
-		m.points.resize( pc->size() );
-		for( PointXYZ& p : pc->points ){
-			geometry_msgs::Point gp;
-			gp.x= p.x;
-			gp.y= p.y;
-			gp.z= p.z;
-			m.points.push_back( gp );
+		for( ModelView& mv : model._views ){
+			m.header= pcl_conversions::fromPCL(mv._cloud->header);
+
+			m.color= rnd_color();
+			m.points.resize( m.points.size() + mv._cloud->size() );
+			for( pcl::PointXYZ& p : mv._cloud->points ){
+				geometry_msgs::Point gp;
+				gp.x= p.x;
+				gp.y= p.y;
+				gp.z= p.z;
+				m.points.push_back( gp );
+			}
+			markers.markers.push_back( m );
 		}
-		markers.markers.push_back( m );
 		m.id++;
 	}
 
@@ -92,32 +93,45 @@ void gather_objects(const object_recognition_msgs::RecognizedObjectArray::ConstP
 	static BackjumpChk backjump;
 	if (backjump){
 		ROS_WARN("Detected jump back in time. Clearing collected views.");
-		views.clear();
+		model_constructor.clear();
 	}
 
 	static tf::TransformListener tf_listener;
 
-	for( const object_recognition_msgs::RecognizedObject& o : objs->objects){
-		for( const sensor_msgs::PointCloud2& pc : o.point_clouds){
-			try {
-				tf::StampedTransform transform;
-				tf_listener.waitForTransform("map", pc.header.frame_id, pc.header.stamp, ros::Duration(0.5));
-				tf_listener.lookupTransform("map", pc.header.frame_id, pc.header.stamp, transform);
-
-				sensor_msgs::PointCloud2 pc_map;
-				pcl_ros::transformPointCloud("map", transform, pc, pc_map);
-
-				PointCloud<PointXYZ>::Ptr cloud(new PointCloud<PointXYZ>);
-				fromROSMsg( pc_map, *cloud);
-				ROS_INFO("adding cloud with %ld points", cloud->size());
-				views.push_back( cloud );
-			}
-			catch(tf::TransformException e){
-				ROS_WARN("%s", e.what());
-				return;
-			}
-		}
+	if( objs->objects.size() == 0 || objs->objects[0].point_clouds.size() == 0 ){
+		ROS_WARN("received empty objects array. Ignoring.");
+		return;
 	}
+
+	tf::StampedTransform world_transform;
+	try {
+		const std_msgs::Header& fst_cloud_hdr= objs->objects[0].point_clouds[0].header;
+		tf_listener.waitForTransform("/map", fst_cloud_hdr.frame_id, fst_cloud_hdr.stamp, ros::Duration(0.5));
+		tf_listener.lookupTransform("/map", fst_cloud_hdr.frame_id, fst_cloud_hdr.stamp, world_transform);
+	}
+	catch(tf::TransformException e){
+		ROS_WARN("%s", e.what());
+		return;
+	}
+
+	vector<PointCloud::Ptr> view;
+	view.reserve(objs->objects.size());
+
+	for( const object_recognition_msgs::RecognizedObject& o : objs->objects){
+		// ASSUMPTION: each object is provided with exactly one cloud from one single source camera
+		assert( o.point_clouds.size() == 1 );
+		assert( o.point_clouds[0].header.frame_id == std::string("/") + world_transform.child_frame_id_ );
+		assert( o.point_clouds[0].header.stamp == world_transform.stamp_ );
+
+		const sensor_msgs::PointCloud2& pc= o.point_clouds[0];
+
+		PointCloud::Ptr cloud(new PointCloud);
+		fromROSMsg( pc, *cloud);
+
+		view.push_back( cloud );
+	}
+
+	model_constructor.addTableView(view, world_transform);
 
 	publish_markers();
 }
@@ -135,4 +149,3 @@ int main(int argc, char** argv)
 
 	return 0;
 }
-

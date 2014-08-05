@@ -1,32 +1,31 @@
 #ifndef _MODEL_H_
 #define _MODEL_H_
 
-#include <Eigen/Geometry>
+#include <tf/transform_datatypes.h>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 
 #include <vector>
 
+typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
+
 class ModelView {
-	typedef pcl::PointCloud<pcl::PointXYZ> Cloud;
-	typedef Eigen::Quaternion<double> Quaternion;
-
-	ModelView(Cloud::Ptr cloud, const Quaternion& orientation) :
+public:
+	ModelView(PointCloud::Ptr cloud, const tf::Transform& world_transform) :
 		_cloud(cloud),
-		_orientation(orientation) {}
+		_world_transform(world_transform) {}
 
-	Cloud::Ptr _cloud;
-	Quaternion _orientation;
-
+	PointCloud::Ptr _cloud;
+	tf::Transform _world_transform;
 };
 
 class Model {
+public:
 	Model(){}
-	void addView(const ModelView& m){
+	void addView(ModelView m){
 		_views.push_back(m);
 	}
 
-protected:
 	std::vector<ModelView> _views;
 };
 
