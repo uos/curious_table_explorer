@@ -28,10 +28,6 @@
 
 #include <pcl/common/common.h>
 
-#include <pcl_ros/transforms.h>
-
-#include <pcl_conversions/pcl_conversions.h>
-
 #include "backjump.h"
 
 #include "model_constructor.h"
@@ -56,33 +52,7 @@ void publish_markers(){
 	ROS_INFO("publishing markers");
 	visualization_msgs::MarkerArray markers;
 
-	visualization_msgs::Marker m;
-
-	m.type= visualization_msgs::Marker::POINTS;
-	m.action= visualization_msgs::Marker::ADD;
-	m.ns= "object_views";
-	m.lifetime= ros::Duration(0.0);
-	m.scale.x= 0.001;
-	m.scale.y= 0.001;
-
-	for( Model& model : model_constructor._objects ){
-		m.points.clear();
-		for( ModelView& mv : model._views ){
-			m.header= pcl_conversions::fromPCL(mv._cloud->header);
-
-			m.color= rnd_color();
-			m.points.resize( m.points.size() + mv._cloud->size() );
-			for( pcl::PointXYZ& p : mv._cloud->points ){
-				geometry_msgs::Point gp;
-				gp.x= p.x;
-				gp.y= p.y;
-				gp.z= p.z;
-				m.points.push_back( gp );
-			}
-			markers.markers.push_back( m );
-		}
-		m.id++;
-	}
+	model_constructor.buildMarkers(markers);
 
 	ROS_INFO("%ld views", markers.markers.size() );
 

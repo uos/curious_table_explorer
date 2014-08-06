@@ -5,28 +5,42 @@
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 
+#include <pcl_ros/transforms.h>
+
 #include <vector>
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
 class ModelView {
 public:
-	ModelView(PointCloud::Ptr cloud, const tf::Transform& world_transform) :
-		_cloud(cloud),
-		_world_transform(world_transform) {}
+	ModelView(PointCloud::Ptr c, const tf::Transform& w) :
+		cloud(c),
+		world_transform(w) {}
 
-	PointCloud::Ptr _cloud;
-	tf::Transform _world_transform;
+	PointCloud::Ptr getCloud(){ return this->cloud; }
+
+	PointCloud::Ptr getWorldCloud(){
+		PointCloud::Ptr p(new PointCloud);
+		pcl_ros::transformPointCloud( *this->cloud, *p, this->world_transform );
+		p->header= this->cloud->header;
+		p->header.frame_id= "map";
+		return p;
+	}
+
+private:
+	PointCloud::Ptr cloud;
+	tf::Transform world_transform;
 };
 
 class Model {
 public:
 	Model(){}
+
 	void addView(ModelView m){
-		_views.push_back(m);
+		this->views.push_back(m);
 	}
 
-	std::vector<ModelView> _views;
+	std::vector<ModelView> views;
 };
 
 #endif
