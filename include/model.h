@@ -14,14 +14,22 @@ typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 class ModelView {
 public:
 	ModelView(PointCloud::Ptr c, const tf::Transform& w) :
+		cloud(c)
+	{
+		pcl_ros::transformAsMatrix(w, this->world_transform);
+	}
+	ModelView(PointCloud::Ptr c, const Eigen::Matrix4f w) :
 		cloud(c),
-		world_transform(w) {}
+		world_transform(w)
+	{}
 
-	PointCloud::Ptr getCloud(){ return this->cloud; }
+	PointCloud::Ptr getCloud(){
+		return this->cloud;
+	}
 
 	PointCloud::Ptr getWorldCloud(){
 		PointCloud::Ptr p(new PointCloud);
-		pcl_ros::transformPointCloud( *this->cloud, *p, this->world_transform );
+		pcl::transformPointCloud( *this->cloud, *p, this->world_transform );
 		p->header= this->cloud->header;
 		p->header.frame_id= "map";
 		return p;
@@ -29,7 +37,7 @@ public:
 
 private:
 	PointCloud::Ptr cloud;
-	tf::Transform world_transform;
+	Eigen::Matrix4f world_transform;
 };
 
 class Model {
