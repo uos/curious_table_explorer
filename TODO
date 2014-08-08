@@ -1,0 +1,10 @@
+TODO List
+~~~~~~~~~
+
+- switch to PointXYZRGB
+
+- use 2d-overlap for object view->model matching instead of centroid (done by macmason)
+
+- Object-Identification at different positions
+
+- Robot contour following um Tisch um automatisch Bilder aufzunehmen
