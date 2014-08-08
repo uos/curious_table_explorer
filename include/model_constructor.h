@@ -50,7 +50,7 @@ public:
 			if(pc->width < 3000)
 				*full_view+= *pc;
 			else
-				ROS_WARN("ignoring view with %ld points", pc->width);
+				ROS_WARN("ignoring view with %d points", pc->width);
 		}
 
 		if(this->last_view == nullptr){

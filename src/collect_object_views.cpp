@@ -54,7 +54,7 @@ void publish_markers(){
 
 	model_constructor.buildMarkers(markers);
 
-	ROS_INFO("%ld views", markers.markers.size() );
+	ROS_INFO("%ld objects", markers.markers.size() );
 
 	pub_markers.publish( markers );
 }
