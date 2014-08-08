@@ -9,6 +9,10 @@
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 
+#include <pcl/registration/icp.h>
+
+#include <pcl_ros/transforms.h>
+
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <visualization_msgs/Marker.h>
@@ -30,14 +34,58 @@ namespace {
 	}
 }
 
+class IncrementalViewIcp {
+public:
+	IncrementalViewIcp() {}
+
+	void registerView(const vector<PointCloud::Ptr>& view, Eigen::Matrix4f& transform){
+		PointCloud::Ptr full_view(new PointCloud);
+
+		for(const PointCloud::Ptr& pc : view){
+			// ignore objects which are too big. There's likely too much noise in there
+			if(pc->width < 3000)
+				*full_view+= *pc;
+			else
+				ROS_WARN("ignoring view with %ld points", pc->width);
+		}
+
+		if(this->last_view == nullptr){
+			pcl::transformPointCloud( *full_view, *full_view, transform );
+			this->last_view= full_view;
+		}
+		else {
+			pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
+			icp.setMaxCorrespondenceDistance(.05);
+
+			icp.setInputSource(full_view);
+			icp.setInputTarget(this->last_view);
+
+			PointCloud::Ptr p(new PointCloud);
+			icp.align(*p, transform);
+			this->last_view= p;
+
+			transform= icp.getFinalTransformation();
+		}
+	}
+
+protected:
+	PointCloud::ConstPtr last_view;
+};
+
 class ModelConstructor {
 public:
 	ModelConstructor(){}
 
 	void addTableView(const vector<PointCloud::Ptr>& view, const tf::Transform& to_world){
+
+		Eigen::Matrix4f to_world_mat;
+		pcl_ros::transformAsMatrix(to_world, to_world_mat);
+
+		this->incremental_view_icp.registerView(view, to_world_mat);
+
 		for(const PointCloud::Ptr& pc : view){
 			Model* m= new Model();
-			m->addView( ModelView(pc, to_world) );
+			m->addView( ModelView(pc, to_world_mat) );
 			this->models.push_back(*m);
 		}
 	}
@@ -77,7 +125,10 @@ public:
 		this->models.clear();
 	};
 
+protected:
 	vector<Model> models;
+
+	IncrementalViewIcp incremental_view_icp;
 };
 
 #endif
