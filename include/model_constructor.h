@@ -4,10 +4,14 @@
 #include <vector>
 #include <utility>
 
+#include <limits>
+
 #include <tf/transform_datatypes.h>
 
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
+
+#include <pcl/common/centroid.h>
 
 #include <pcl/registration/icp.h>
 
@@ -83,10 +87,35 @@ public:
 
 		this->incremental_view_icp.registerView(view, to_world_mat);
 
-		for(const PointCloud::Ptr& pc : view){
-			Model* m= new Model();
-			m->addView( ModelView(pc, to_world_mat) );
-			this->models.push_back(*m);
+		for(const PointCloud::Ptr& pc : view)
+			this->addModelView( ModelView(pc, to_world_mat) );
+	}
+
+	void addModelView(ModelView mv){
+		PointCloud::Ptr p= mv.getWorldCloud();
+		Eigen::Vector4f view_center;
+		pcl::compute3DCentroid(*p, view_center);
+
+		double min_dist= std::numeric_limits<double>::infinity();
+		Model* closest_model= nullptr;
+
+		for( Model& m : this->models ){
+			double dist= (m.getCenter()-view_center).norm();
+			if(dist < min_dist){
+				min_dist= dist;
+				closest_model= &m;
+			}
+		}
+
+		if(closest_model && min_dist < .10 ){
+			ROS_INFO("adding view to model at distance %fm which has %d views already", min_dist, closest_model->views.size() );
+			closest_model->addView(mv);
+		}
+		else {
+			ROS_INFO("found no matching model. Adding new one at %f / %f / %f", view_center[0], view_center[1], view_center[2]);
+			closest_model= new Model;
+			closest_model->addView(mv);
+			this->models.push_back(*closest_model);
 		}
 	}
 

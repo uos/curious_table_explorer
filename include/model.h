@@ -42,13 +42,38 @@ private:
 
 class Model {
 public:
-	Model(){}
+	Model() :
+		point_count(0)
+	{}
 
 	void addView(ModelView m){
+		this->updateCenter( m );
+
 		this->views.push_back(m);
+
+	}
+
+	Eigen::Vector4f getCenter(){
+		return center;
 	}
 
 	std::vector<ModelView> views;
+
+protected:
+	void updateCenter(ModelView& m){
+		PointCloud::Ptr pc= m.getWorldCloud();
+
+		Eigen::Vector4f view_center;
+		pcl::compute3DCentroid(*pc, view_center);
+
+		size_t new_count= this->point_count + pc->width;
+		this->center= (static_cast<double>(this->point_count)/static_cast<double>(new_count)) * this->center
+		            + (static_cast<double>(        pc->width)/static_cast<double>(new_count)) * view_center;
+		this->point_count= new_count;
+	}
+
+	size_t point_count;
+	Eigen::Vector4f center;
 };
 
 #endif
