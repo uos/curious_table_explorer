@@ -28,6 +28,8 @@
 
 #include <pcl/common/common.h>
 
+#include <pcl_conversions/pcl_conversions.h>
+
 #include "backjump.h"
 
 #include "model_constructor.h"
@@ -84,7 +86,7 @@ void gather_objects(const object_recognition_msgs::RecognizedObjectArray::ConstP
 		return;
 	}
 
-	vector<PointCloud::Ptr> view;
+	std::vector<PointCloud::Ptr> view;
 	view.reserve(objs->objects.size());
 
 	for( const object_recognition_msgs::RecognizedObject& o : objs->objects){
@@ -96,7 +98,7 @@ void gather_objects(const object_recognition_msgs::RecognizedObjectArray::ConstP
 		const sensor_msgs::PointCloud2& pc= o.point_clouds[0];
 
 		PointCloud::Ptr cloud(new PointCloud);
-		fromROSMsg( pc, *cloud);
+		pcl::fromROSMsg( pc, *cloud);
 
 		view.push_back( cloud );
 	}

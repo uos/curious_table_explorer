@@ -17,7 +17,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 include_directories(include ${catkin_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
 
-add_executable(collect_object_views src/collect_object_views.cpp)
+add_executable(collect_object_views
+	src/collect_object_views.cpp
+	src/model.cpp
+	src/incremental_view_icp.cpp
+	src/model_constructor.cpp
+)
+
 add_dependencies(collect_object_views ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(
