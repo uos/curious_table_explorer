@@ -12,7 +12,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 namespace {
-	geometry_msgs::Point pcl2ros(pcl::PointXYZ p){
+	geometry_msgs::Point pcl2ros(Point p){
 		geometry_msgs::Point gp;
 		gp.x= p.x;
 		gp.y= p.y;
@@ -86,7 +86,7 @@ void ModelConstructor::buildMarkers(visualization_msgs::MarkerArray& marker_arra
 			PointCloud::Ptr cloud= view.getWorldCloud();
 
 			marker.points.resize( marker.points.size() + cloud->size() );
-			for( pcl::PointXYZ& p : cloud->points )
+			for( Point& p : cloud->points )
 				marker.points.push_back( pcl2ros(p) );
 			marker.header= pcl_conversions::fromPCL(cloud->header);
 		}

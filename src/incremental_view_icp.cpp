@@ -26,7 +26,7 @@ void IncrementalViewIcp::registerView(const std::vector<PointCloud::Ptr>& view, 
 		this->last_view= full_view;
 	}
 	else {
-		pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
+		pcl::IterativeClosestPoint<Point, Point> icp;
 		icp.setMaxCorrespondenceDistance(.05);
 
 		icp.setInputSource(full_view);

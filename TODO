@@ -5,8 +5,6 @@ TODO List
 
 - use 2d-overlap for object view->model matching instead of centroid (done by macmason)
 
-- use Point throughout the code
-
 - ModelConstructor::addModelView should be protected and should mark models already taken in this TableView
 
 - Object-Identification at different positions
