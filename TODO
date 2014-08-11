@@ -5,7 +5,11 @@ TODO List
 
 - use 2d-overlap for object view->model matching instead of centroid (done by macmason)
 
+- build markers always w.r.t. latest world observation (add world-correction-transform to model_constructor)
+
 - ModelConstructor::addModelView should be protected and should mark models already taken in this TableView
+
+- refined view registration via pcl::registration::LUM
 
 - Object-Identification at different positions
 
