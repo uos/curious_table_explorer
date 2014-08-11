@@ -8,6 +8,10 @@
 
 IncrementalViewIcp::IncrementalViewIcp() {}
 
+void IncrementalViewIcp::reset(){
+	this->last_view= nullptr;
+}
+
 void IncrementalViewIcp::registerView(const std::vector<PointCloud::Ptr>& view, Eigen::Matrix4f& transform){
 	PointCloud::Ptr full_view(new PointCloud);
 

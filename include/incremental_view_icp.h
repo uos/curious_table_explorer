@@ -11,6 +11,7 @@ public:
 
 	void registerView(const std::vector<PointCloud::Ptr>& view, TransformMat& transform);
 
+	void reset();
 protected:
 	PointCloud::ConstPtr last_view;
 };

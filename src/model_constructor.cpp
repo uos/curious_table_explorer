@@ -25,6 +25,7 @@ ModelConstructor::ModelConstructor() {}
 
 void ModelConstructor::clear(){
 	this->models.clear();
+	this->incremental_view_icp.reset();
 }
 
 void ModelConstructor::addTableView(const std::vector<PointCloud::Ptr>& view, const tf::Transform& to_world){
