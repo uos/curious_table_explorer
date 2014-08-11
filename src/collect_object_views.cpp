@@ -38,25 +38,12 @@ ModelConstructor model_constructor;
 
 ros::Publisher pub_markers;
 
-std_msgs::ColorRGBA rnd_color(){
-	static std::default_random_engine generator(0xf00ba5);
-	static std::uniform_real_distribution<double> distribution(0.0, 1.0);
-
-	std_msgs::ColorRGBA color;
-	color.a= 1.0;
-	color.r= distribution(generator);
-	color.g= distribution(generator);
-	color.b= distribution(generator);
-	return color;
-};
-
 void publish_markers(){
-	ROS_INFO("publishing markers");
 	visualization_msgs::MarkerArray markers;
 
 	model_constructor.buildMarkers(markers);
 
-	ROS_INFO("%ld objects", markers.markers.size() );
+	ROS_INFO("publishing %d objects", markers.markers.size() );
 
 	pub_markers.publish( markers );
 }
