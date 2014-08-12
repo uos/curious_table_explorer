@@ -11,9 +11,14 @@ public:
 
 	void registerView(const std::vector<PointCloud::Ptr>& view, TransformMat& transform);
 
+	// provides a transform: (frame tracked by this class) -> (latest registered view)
+	const TransformMat& getLastCorrection();
+
 	void reset();
 protected:
 	PointCloud::ConstPtr last_view;
+
+	TransformMat last_correction;
 };
 
 #endif

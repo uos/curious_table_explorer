@@ -6,10 +6,14 @@
 #include <pcl/common/transforms.h>
 #include <pcl/registration/icp.h>
 
-IncrementalViewIcp::IncrementalViewIcp() {}
+IncrementalViewIcp::IncrementalViewIcp() :
+	last_view(nullptr),
+	last_correction(TransformMat::Identity())
+{}
 
 void IncrementalViewIcp::reset(){
 	this->last_view= nullptr;
+	this->last_correction= TransformMat::Identity();
 }
 
 void IncrementalViewIcp::registerView(const std::vector<PointCloud::Ptr>& view, Eigen::Matrix4f& transform){
@@ -28,6 +32,7 @@ void IncrementalViewIcp::registerView(const std::vector<PointCloud::Ptr>& view, 
 	if(this->last_view == nullptr){
 		pcl::transformPointCloud( *full_view, *full_view, transform );
 		this->last_view= full_view;
+		this->last_correction= TransformMat::Identity();
 	}
 	else {
 		pcl::IterativeClosestPoint<Point, Point> icp;
@@ -40,6 +45,12 @@ void IncrementalViewIcp::registerView(const std::vector<PointCloud::Ptr>& view, 
 		icp.align(*p, transform);
 		this->last_view= p;
 
-		transform= icp.getFinalTransformation();
+		TransformMat new_transform= icp.getFinalTransformation();
+		this->last_correction= transform*new_transform.inverse();
+		transform= new_transform;
 	}
+}
+
+const TransformMat& IncrementalViewIcp::getLastCorrection(){
+	return this->last_correction;
 }
