@@ -84,7 +84,8 @@ void ModelConstructor::buildMarkers(visualization_msgs::MarkerArray& marker_arra
 		marker.color= distribution(generator);
 		marker.points.clear();
 		for( ModelView& view : model.views ){
-			PointCloud::Ptr cloud= view.getWorldCloud();
+			PointCloud::Ptr cloud(new PointCloud);
+			pcl::transformPointCloud(*view.getWorldCloud(), *cloud, this->incremental_view_icp.getLastCorrection());
 
 			marker.points.resize( marker.points.size() + cloud->size() );
 			for( Point& p : cloud->points )
