@@ -12,12 +12,12 @@ public:
 	ModelView(PointCloud::Ptr c, const Transform& w);
 	ModelView(PointCloud::Ptr c, const TransformMat w);
 
-	PointCloud::Ptr getCloud();
-	PointCloud::Ptr getWorldCloud();
+	PointCloud::Ptr getViewCloud();
+	PointCloud::Ptr getDeskCloud();
 
 private:
 	PointCloud::Ptr cloud;
-	TransformMat world_transform;
+	TransformMat desk_transform;
 };
 
 class Model {

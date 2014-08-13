@@ -8,15 +8,15 @@
 
 IncrementalViewIcp::IncrementalViewIcp() :
 	last_view(nullptr),
-	last_correction(TransformMat::Identity())
+	world_to_desk(TransformMat::Identity())
 {}
 
 void IncrementalViewIcp::reset(){
 	this->last_view= nullptr;
-	this->last_correction= TransformMat::Identity();
+	this->world_to_desk= TransformMat::Identity();
 }
 
-void IncrementalViewIcp::registerView(const std::vector<PointCloud::Ptr>& view, Eigen::Matrix4f& transform){
+TransformMat IncrementalViewIcp::registerView(const std::vector<PointCloud::Ptr>& view, const TransformMat& to_world){
 	PointCloud::Ptr full_view(new PointCloud);
 
 	for(const PointCloud::Ptr& pc : view){
@@ -29,10 +29,11 @@ void IncrementalViewIcp::registerView(const std::vector<PointCloud::Ptr>& view, 
 			ROS_WARN("View ICP: ignoring object with %d points", pc->width);
 	}
 
+	pcl::transformPointCloud( *full_view, *full_view, to_world );
+
 	if(this->last_view == nullptr){
-		pcl::transformPointCloud( *full_view, *full_view, transform );
 		this->last_view= full_view;
-		this->last_correction= TransformMat::Identity();
+		this->world_to_desk= TransformMat::Identity();
 	}
 	else {
 		pcl::IterativeClosestPoint<Point, Point> icp;
@@ -41,16 +42,24 @@ void IncrementalViewIcp::registerView(const std::vector<PointCloud::Ptr>& view, 
 		icp.setInputSource(full_view);
 		icp.setInputTarget(this->last_view);
 
-		PointCloud::Ptr p(new PointCloud);
-		icp.align(*p, transform);
-		this->last_view= p;
+		{
+		PointCloud p;
+		icp.align(p, TransformMat::Identity());
+		}
 
-		TransformMat new_transform= icp.getFinalTransformation();
-		this->last_correction= transform*new_transform.inverse();
-		transform= new_transform;
+		this->last_view= full_view;
+
+		TransformMat correction= icp.getFinalTransformation();
+		this->world_to_desk= this->world_to_desk * correction;
 	}
+
+	return this->world_to_desk*to_world;
 }
 
-const TransformMat& IncrementalViewIcp::getLastCorrection(){
-	return this->last_correction;
+TransformMat IncrementalViewIcp::getWorldToFixedFrame(){
+	return this->world_to_desk;
+}
+
+TransformMat IncrementalViewIcp::getFixedFrameToWorld(){
+	return this->world_to_desk.inverse();
 }

@@ -29,17 +29,17 @@ void ModelConstructor::clear(){
 }
 
 void ModelConstructor::addTableView(const std::vector<PointCloud::Ptr>& view, const tf::Transform& to_world){
-	Eigen::Matrix4f to_world_mat;
+	TransformMat to_world_mat, to_desk_mat;
 	pcl_ros::transformAsMatrix(to_world, to_world_mat);
 
-	this->incremental_view_icp.registerView(view, to_world_mat);
+	to_desk_mat= this->incremental_view_icp.registerView(view, to_world_mat);
 
 	for(const PointCloud::Ptr& pc : view)
-		this->addModelView( ModelView(pc, to_world_mat) );
+		this->addModelView( ModelView(pc, to_desk_mat) );
 }
 
 void ModelConstructor::addModelView(ModelView mv){
-	PointCloud::Ptr p= mv.getWorldCloud();
+	PointCloud::Ptr p= mv.getDeskCloud();
 	Eigen::Vector4f view_center;
 	pcl::compute3DCentroid(*p, view_center);
 
@@ -85,7 +85,8 @@ void ModelConstructor::buildMarkers(visualization_msgs::MarkerArray& marker_arra
 		marker.points.clear();
 		for( ModelView& view : model.views ){
 			PointCloud::Ptr cloud(new PointCloud);
-			pcl::transformPointCloud(*view.getWorldCloud(), *cloud, this->incremental_view_icp.getLastCorrection());
+			pcl::transformPointCloud(*view.getDeskCloud(), *cloud, this->incremental_view_icp.getFixedFrameToWorld());
+			cloud->header.frame_id= "map";
 
 			marker.points.resize( marker.points.size() + cloud->size() );
 			for( Point& p : cloud->points )

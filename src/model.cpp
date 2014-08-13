@@ -8,23 +8,23 @@
 ModelView::ModelView(PointCloud::Ptr c, const tf::Transform& w) :
 	cloud(c)
 {
-	pcl_ros::transformAsMatrix(w, this->world_transform);
+	pcl_ros::transformAsMatrix(w, this->desk_transform);
 }
 
 ModelView::ModelView(PointCloud::Ptr c, const Eigen::Matrix4f w) :
 	cloud(c),
-	world_transform(w)
+	desk_transform(w)
 {}
 
-PointCloud::Ptr ModelView::getCloud(){
+PointCloud::Ptr ModelView::getViewCloud(){
 	return this->cloud;
 }
 
-PointCloud::Ptr ModelView::getWorldCloud(){
+PointCloud::Ptr ModelView::getDeskCloud(){
 	PointCloud::Ptr p(new PointCloud);
-	pcl::transformPointCloud( *this->cloud, *p, this->world_transform );
+	pcl::transformPointCloud( *this->cloud, *p, this->desk_transform );
 	p->header= this->cloud->header;
-	p->header.frame_id= "map";
+	p->header.frame_id= "desk";
 	return p;
 }
 
@@ -46,7 +46,7 @@ Eigen::Vector4f Model::getCenter(){
 }
 
 void Model::updateCenter(ModelView& m){
-	PointCloud::Ptr pc= m.getWorldCloud();
+	PointCloud::Ptr pc= m.getDeskCloud();
 
 	Eigen::Vector4f view_center;
 	pcl::compute3DCentroid(*pc, view_center);

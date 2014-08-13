@@ -1,10 +1,6 @@
 TODO List
 ~~~~~~~~~
 
-- clearly separate "desk" and "map" frame
-
-- don't use registered view as last_view, but the one actually observed
-
 - switch to PointXYZRGB
 
 - use 2d-overlap for object view->model matching instead of centroid (done by macmason)

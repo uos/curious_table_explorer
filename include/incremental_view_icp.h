@@ -9,16 +9,17 @@ class IncrementalViewIcp {
 public:
 	IncrementalViewIcp();
 
-	void registerView(const std::vector<PointCloud::Ptr>& view, TransformMat& transform);
+	TransformMat registerView(const std::vector<PointCloud::Ptr>& view, const TransformMat& transform);
 
-	// provides a transform: (frame tracked by this class) -> (latest registered view)
-	const TransformMat& getLastCorrection();
+	// provides a transform: (frame tracked by this class) <-> (latest registered view)
+	TransformMat getWorldToFixedFrame();
+	TransformMat getFixedFrameToWorld();
 
 	void reset();
 protected:
 	PointCloud::ConstPtr last_view;
 
-	TransformMat last_correction;
+	TransformMat world_to_desk;
 };
 
 #endif
