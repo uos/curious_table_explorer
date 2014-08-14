@@ -19,6 +19,14 @@ namespace {
 		gp.z= p.z;
 		return gp;
 	}
+
+	geometry_msgs::Point eigen2ros(Eigen::Vector4f v){
+		geometry_msgs::Point gp;
+		gp.x= v[0];
+		gp.y= v[1];
+		gp.z= v[2];
+		return gp;
+	}
 }
 
 ModelConstructor::ModelConstructor() {}
@@ -66,22 +74,43 @@ void ModelConstructor::addModelView(ModelView mv){
 	}
 }
 
+namespace {
+	visualization_msgs::Marker pointMarker(){
+		visualization_msgs::Marker m;
+		m.type= visualization_msgs::Marker::POINTS;
+		m.action= visualization_msgs::Marker::ADD;
+		m.ns= "my_table_objects";
+		m.id= 0;
+		m.lifetime= ros::Duration(0.0);
+		m.scale.x= m.scale.y= .001;
+		m.frame_locked= true; // more intuitive behaviour in rviz
+		return m;
+	}
+
+	visualization_msgs::Marker centerMarker(){
+		visualization_msgs::Marker m;
+		m.type= visualization_msgs::Marker::SPHERE;
+		m.action= visualization_msgs::Marker::ADD;
+		m.ns= "my_table_objects_centers";
+		m.id= 0;
+		m.lifetime= ros::Duration(0.0);
+		m.scale.x= m.scale.y= m.scale.z= .05;
+		m.pose.orientation.w= 1;
+		m.frame_locked= true; // more intuitive behaviour in rviz
+		return m;
+	}
+}
+
 void ModelConstructor::buildMarkers(visualization_msgs::MarkerArray& marker_array){
 	// deterministic random numbers to make colors the same on each call
 	std::default_random_engine generator(0xf00ba5);
 	uniform_color_distribution distribution;
 
-	visualization_msgs::Marker marker;
-	marker.type= visualization_msgs::Marker::POINTS;
-	marker.action= visualization_msgs::Marker::ADD;
-	marker.ns= "my_table_objects";
-	marker.id= 0;
-	marker.lifetime= ros::Duration(0.0);
-	marker.scale.x= marker.scale.y= .001;
-	marker.frame_locked= true; // more intuitive behaviour in rviz
+	visualization_msgs::Marker marker= pointMarker();
+	visualization_msgs::Marker marker_center= centerMarker();
 
 	for( Model& model : this->models ){
-		marker.color= distribution(generator);
+		marker.color= marker_center.color= distribution(generator);
 		marker.points.clear();
 		for( ModelView& view : model.views ){
 			PointCloud::Ptr cloud(new PointCloud);
@@ -95,5 +124,11 @@ void ModelConstructor::buildMarkers(visualization_msgs::MarkerArray& marker_arra
 		}
 		marker_array.markers.push_back(marker);
 		++marker.id;
+
+		const Eigen::Vector4f& center= this->incremental_view_icp.getFixedFrameToWorld() * model.getCenter();
+		marker_center.pose.position= eigen2ros(center);
+		marker_center.header= marker.header;
+		marker_array.markers.push_back(marker_center);
+		++marker_center.id;
 	}
 }
