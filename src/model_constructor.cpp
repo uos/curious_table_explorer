@@ -50,6 +50,7 @@ void ModelConstructor::addModelView(ModelView mv){
 	PointCloud::Ptr p= mv.getDeskCloud();
 	Eigen::Vector4f view_center;
 	pcl::compute3DCentroid(*p, view_center);
+	view_center[3]= 1; // bug in pcl 1.7.1
 
 	double min_dist= std::numeric_limits<double>::infinity();
 	Model* closest_model= nullptr;

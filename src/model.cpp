@@ -50,6 +50,7 @@ void Model::updateCenter(ModelView& m){
 
 	Eigen::Vector4f view_center;
 	pcl::compute3DCentroid(*pc, view_center);
+	view_center[3]= 1; // bug in pcl 1.7.1
 
 	size_t new_count= this->point_count + pc->width;
 	this->center= this->center * (this->point_count/static_cast<double>(new_count))
