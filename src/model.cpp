@@ -41,7 +41,7 @@ void Model::addView(ModelView m){
 	this->views.push_back(m);
 }
 
-Eigen::Vector4f Model::getCenter(){
+const Eigen::Vector4f& Model::getCenter(){
 	return this->center;
 }
 

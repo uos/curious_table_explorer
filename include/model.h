@@ -26,7 +26,7 @@ public:
 
 	void addView(ModelView m);
 
-	Eigen::Vector4f getCenter();
+	const Eigen::Vector4f& getCenter();
 
 	std::vector<ModelView> views;
 
