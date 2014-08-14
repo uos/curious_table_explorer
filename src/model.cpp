@@ -32,8 +32,10 @@ PointCloud::Ptr ModelView::getDeskCloud(){
 // Model implementation
 
 Model::Model() :
-	point_count(0)
-{}
+	point_count(0),
+	center(Eigen::Vector4f::Zero())
+{
+}
 
 void Model::addView(ModelView m){
 	this->updateCenter( m );
