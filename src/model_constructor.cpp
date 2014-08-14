@@ -118,7 +118,7 @@ void ModelConstructor::buildMarkers(visualization_msgs::MarkerArray& marker_arra
 			pcl::transformPointCloud(*view.getDeskCloud(), *cloud, this->incremental_view_icp.getFixedFrameToWorld());
 			cloud->header.frame_id= "map";
 
-			marker.points.resize( marker.points.size() + cloud->size() );
+			marker.points.reserve( marker.points.size() + cloud->size() );
 			for( Point& p : cloud->points )
 				marker.points.push_back( pcl2ros(p) );
 			marker.header= pcl_conversions::fromPCL(cloud->header);
