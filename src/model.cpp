@@ -1,6 +1,8 @@
 #include "common.h"
 #include "model.h"
 
+#include <pcl/surface/convex_hull.h>
+
 #include <pcl_ros/transforms.h>
 
 // ModelView implementation
@@ -33,7 +35,8 @@ PointCloud::Ptr ModelView::getDeskCloud(){
 
 Model::Model() :
 	point_count(0),
-	center(Eigen::Vector4f::Zero())
+	center(Eigen::Vector4f::Zero()),
+	hull_points(new PointCloud)
 {
 }
 
@@ -41,6 +44,7 @@ void Model::addView(ModelView m){
 	this->updateCenter( m );
 
 	this->views.push_back(m);
+	this->updateConvexHull();
 }
 
 const Eigen::Vector4f& Model::getCenter(){
@@ -57,4 +61,22 @@ void Model::updateCenter(ModelView& m){
 	size_t new_count= this->point_count + pc->width;
 	this->center= this->center * (this->point_count/static_cast<double>(new_count))
 	            +  view_center * (        pc->width/static_cast<double>(new_count));
+}
+
+
+void Model::getConvexHull(PointCloud& hull_points, std::vector<pcl::Vertices>& hull_polygons){
+	hull_points= *this->hull_points;
+	hull_polygons= this->hull_polygons;
+}
+
+void Model::updateConvexHull(){
+	PointCloud::Ptr cloud(new PointCloud);
+
+	for( ModelView& mv : this->views )
+		*cloud+= *mv.getDeskCloud();
+
+	pcl::ConvexHull<Point> chull;
+	chull.setInputCloud(cloud);
+
+	chull.reconstruct(*this->hull_points, this->hull_polygons);
 }

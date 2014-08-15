@@ -3,9 +3,11 @@
 
 #include "common.h"
 
+#include <vector>
+
 #include <Eigen/Core>
 
-#include <vector>
+#include <pcl/Vertices.h>
 
 class ModelView {
 public:
@@ -28,6 +30,8 @@ public:
 
 	const Eigen::Vector4f& getCenter();
 
+	void getConvexHull(PointCloud& cloud, std::vector<pcl::Vertices>& hull_polygons);
+
 	std::vector<ModelView> views;
 
 protected:
@@ -35,6 +39,12 @@ protected:
 
 	size_t point_count;
 	Eigen::Vector4f center;
+
+
+	void updateConvexHull();
+
+	PointCloud::Ptr hull_points;
+	std::vector<pcl::Vertices> hull_polygons;
 };
 
 #endif
