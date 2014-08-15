@@ -7,6 +7,8 @@
 
 #include <vector>
 
+#include <pcl/filters/crop_hull.h>
+
 #include <pcl_ros/transforms.h>
 
 #include <pcl_conversions/pcl_conversions.h>
@@ -47,32 +49,37 @@ void ModelConstructor::addTableView(const std::vector<PointCloud::Ptr>& view, co
 }
 
 void ModelConstructor::addModelView(ModelView mv){
-	PointCloud::Ptr p= mv.getDeskCloud();
-	Eigen::Vector4f view_center;
-	pcl::compute3DCentroid(*p, view_center);
-	view_center[3]= 1; // bug in pcl 1.7.1
+	PointCloud::Ptr hull_points(new PointCloud);
+	std::vector<pcl::Vertices> hull_polygons;
+	pcl::CropHull<Point> crop;
 
-	double min_dist= std::numeric_limits<double>::infinity();
-	Model* closest_model= nullptr;
+	PointCloud::Ptr view= mv.getDeskCloud();
 
 	for( Model& m : this->models ){
-		double dist= (m.getCenter()-view_center).norm();
-		if(dist < min_dist){
-			min_dist= dist;
-			closest_model= &m;
+		hull_points->clear();
+		hull_polygons.clear();
+
+		m.getConvexHull(*hull_points, hull_polygons);
+
+		crop.setInputCloud(view);
+		crop.setHullCloud(hull_points);
+		crop.setHullIndices(hull_polygons);
+
+		PointCloud overlap;
+		crop.filter(overlap);
+
+		if(overlap.size() > 0){
+			ROS_INFO("adding view to model with %d views already (%d points overlap)", m.views.size(), overlap.size());
+			m.addView(mv);
+			return;
 		}
 	}
 
-	if(closest_model && min_dist < .10 ){
-		ROS_INFO("adding view to model at distance %fm which has %d views already", min_dist, closest_model->views.size());
-		closest_model->addView(mv);
-	}
-	else {
-		ROS_INFO("found no matching model. Adding new one at %f / %f / %f", view_center[0], view_center[1], view_center[2]);
-		closest_model= new Model;
-		closest_model->addView(mv);
-		this->models.push_back(*closest_model);
-	}
+	Model* fresh_model= new Model;
+	fresh_model->addView(mv);
+	Eigen::Vector4f center= fresh_model->getCenter();
+	ROS_INFO("found no matching model. Adding new one %f / %f / %f", center[0], center[1], center[2]);
+	this->models.push_back(*fresh_model);
 }
 
 namespace {
