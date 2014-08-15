@@ -1,8 +1,9 @@
 TODO List
 ~~~~~~~~~
 
-- switch to PointXYZRGB
+- individual object/view visualization
 
+- switch to PointXYZRGB
 
 - ModelConstructor::addModelView should be protected and should mark models already taken in this TableView
 
@@ -11,3 +12,5 @@ TODO List
 - Object-Identification at different positions
 
 - Robot contour following um Tisch um automatisch Bilder aufzunehmen
+
+- only detect objects _above_ the table
