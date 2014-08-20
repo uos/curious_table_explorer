@@ -20,7 +20,11 @@ public:
 
 	void clear();
 
-	void buildMarkers(visualization_msgs::MarkerArray& marker_array);
+   /****************
+   * visualization *
+	****************/
+	void buildCloudMarkers(visualization_msgs::MarkerArray& cloud_array);
+	void buildCenterMarkers(visualization_msgs::MarkerArray& center_array);
 
 protected:
 	std::vector<Model> models;

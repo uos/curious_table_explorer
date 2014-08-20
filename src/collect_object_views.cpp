@@ -41,10 +41,12 @@ ros::Publisher pub_markers;
 void publish_markers(){
 	visualization_msgs::MarkerArray markers;
 
-	model_constructor.buildMarkers(markers);
-
+	model_constructor.buildCenterMarkers(markers);
 	ROS_INFO("publishing %d objects", markers.markers.size() );
+	pub_markers.publish( markers );
 
+	markers.markers.clear();
+	model_constructor.buildCloudMarkers(markers);
 	pub_markers.publish( markers );
 }
 

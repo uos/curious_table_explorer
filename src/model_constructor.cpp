@@ -83,7 +83,10 @@ void ModelConstructor::addModelView(ModelView mv){
 }
 
 namespace {
-	visualization_msgs::Marker pointMarker(){
+	// deterministic random numbers to make marker colors the same on each call
+	static const unsigned int RANDOM_SEED= 0xf00ba5;
+
+	visualization_msgs::Marker cloudMarker(){
 		visualization_msgs::Marker m;
 		m.type= visualization_msgs::Marker::POINTS;
 		m.action= visualization_msgs::Marker::ADD;
@@ -109,16 +112,14 @@ namespace {
 	}
 }
 
-void ModelConstructor::buildMarkers(visualization_msgs::MarkerArray& marker_array){
-	// deterministic random numbers to make colors the same on each call
-	std::default_random_engine generator(0xf00ba5);
+void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_array){
+	std::default_random_engine generator(RANDOM_SEED);
 	uniform_color_distribution distribution;
 
-	visualization_msgs::Marker marker= pointMarker();
-	visualization_msgs::Marker marker_center= centerMarker();
+	visualization_msgs::Marker marker= cloudMarker();
 
 	for( Model& model : this->models ){
-		marker.color= marker_center.color= distribution(generator);
+		marker.color= distribution(generator);
 		marker.points.clear();
 		for( ModelView& view : model.views ){
 			PointCloud::Ptr cloud(new PointCloud);
@@ -130,13 +131,24 @@ void ModelConstructor::buildMarkers(visualization_msgs::MarkerArray& marker_arra
 				marker.points.push_back( pcl2ros(p) );
 			marker.header= pcl_conversions::fromPCL(cloud->header);
 		}
-		marker_array.markers.push_back(marker);
+		cloud_array.markers.push_back(marker);
 		++marker.id;
+	}
+}
 
-		const Eigen::Vector4f& center= this->incremental_view_icp.getFixedFrameToWorld() * model.getCenter();
-		marker_center.pose.position= eigen2ros(center);
-		marker_center.header= marker.header;
-		marker_array.markers.push_back(marker_center);
-		++marker_center.id;
+void ModelConstructor::buildCenterMarkers(visualization_msgs::MarkerArray& center_array){
+	std::default_random_engine generator(RANDOM_SEED);
+	uniform_color_distribution distribution;
+
+	visualization_msgs::Marker marker= centerMarker();
+
+	for( Model& model : this->models ){
+		marker.color= distribution(generator);
+		marker.pose.position= eigen2ros( this->incremental_view_icp.getFixedFrameToWorld() * model.getCenter() );
+		marker.header= pcl_conversions::fromPCL(model.views[model.views.size()-1].getViewCloud()->header);
+		marker.header.frame_id= "map";
+
+		center_array.markers.push_back(marker);
+		++marker.id;
 	}
 }
