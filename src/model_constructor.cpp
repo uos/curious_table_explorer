@@ -90,11 +90,19 @@ namespace {
 		visualization_msgs::Marker m;
 		m.type= visualization_msgs::Marker::POINTS;
 		m.action= visualization_msgs::Marker::ADD;
-		m.ns= "my_table_objects";
+		m.ns= "my_table_objects_clouds";
 		m.id= 0;
 		m.lifetime= ros::Duration(0.0);
 		m.scale.x= m.scale.y= .001;
 		m.frame_locked= true; // more intuitive behaviour in rviz
+		return m;
+	}
+
+	visualization_msgs::Marker hullMarker(){
+		visualization_msgs::Marker m= cloudMarker();
+		m.ns= "my_table_objects_hulls";
+		m.type= visualization_msgs::Marker::TRIANGLE_LIST;
+		m.scale.x= m.scale.y= m.scale.z= 1;
 		return m;
 	}
 
@@ -132,6 +140,43 @@ void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_
 			marker.header= pcl_conversions::fromPCL(cloud->header);
 		}
 		cloud_array.markers.push_back(marker);
+		++marker.id;
+	}
+}
+
+void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_array){
+	std::default_random_engine generator(RANDOM_SEED);
+	uniform_color_distribution distribution;
+
+	visualization_msgs::Marker marker= hullMarker();
+
+	for( Model& model : this->models ){
+		marker.color= distribution(generator);
+		marker.points.clear();
+
+		PointCloud points;
+		std::vector<pcl::Vertices> vertices;
+		model.getConvexHull(points, vertices);
+
+		pcl::transformPointCloud(points, points, this->incremental_view_icp.getFixedFrameToWorld());
+		marker.header.frame_id= "map";
+		marker.header.stamp= ros::Time::now();
+
+		marker.points.reserve( 3*vertices.size() );
+		for( pcl::Vertices& v : vertices ){
+			if( v.vertices.size() != 3 ){
+				ROS_WARN("Non-triangle found in convex hull (size=%ld)", v.vertices.size() );
+				continue;
+			}
+			if (v.vertices[0] >= points.size() || v.vertices[1] >= points.size() || v.vertices[2] >= points.size()){
+				ROS_WARN("Invalid triangle found. Ignoring");
+				continue;
+			}
+			marker.points.push_back( pcl2ros(points[v.vertices[0]]) );
+			marker.points.push_back( pcl2ros(points[v.vertices[1]]) );
+			marker.points.push_back( pcl2ros(points[v.vertices[2]]) );
+		}
+		hull_array.markers.push_back(marker);
 		++marker.id;
 	}
 }

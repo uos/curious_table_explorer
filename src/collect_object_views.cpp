@@ -43,10 +43,10 @@ void publish_markers(){
 
 	model_constructor.buildCenterMarkers(markers);
 	ROS_INFO("publishing %ld objects", markers.markers.size() );
-	pub_markers.publish( markers );
 
-	markers.markers.clear();
 	model_constructor.buildCloudMarkers(markers);
+
+	model_constructor.buildHullMarkers(markers);
 	pub_markers.publish( markers );
 }
 

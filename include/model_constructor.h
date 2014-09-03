@@ -24,6 +24,7 @@ public:
    * visualization *
 	****************/
 	void buildCloudMarkers(visualization_msgs::MarkerArray& cloud_array);
+	void buildHullMarkers(visualization_msgs::MarkerArray& hull_array);
 	void buildCenterMarkers(visualization_msgs::MarkerArray& center_array);
 
 protected:
