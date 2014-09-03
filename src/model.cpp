@@ -42,9 +42,9 @@ Model::Model() :
 
 void Model::addView(ModelView m){
 	this->updateCenter( m );
+	this->updateConvexHull( m );
 
 	this->views.push_back(m);
-	this->updateConvexHull();
 }
 
 const Eigen::Vector4f& Model::getCenter(){
@@ -64,16 +64,20 @@ void Model::updateCenter(ModelView& m){
 }
 
 
+void Model::getConvexHull(PointCloud& hull_points){
+	hull_points= *this->hull_points;
+}
+
 void Model::getConvexHull(PointCloud& hull_points, std::vector<pcl::Vertices>& hull_polygons){
 	hull_points= *this->hull_points;
 	hull_polygons= this->hull_polygons;
 }
 
-void Model::updateConvexHull(){
+void Model::updateConvexHull(ModelView& m){
 	PointCloud::Ptr cloud(new PointCloud);
 
-	for( ModelView& mv : this->views )
-		*cloud+= *mv.getDeskCloud();
+	this->getConvexHull(*cloud);
+	*cloud+= *m.getDeskCloud();
 
 	pcl::ConvexHull<Point> chull;
 	chull.setInputCloud(cloud);
