@@ -69,7 +69,7 @@ void ModelConstructor::addModelView(ModelView mv){
 		crop.filter(overlap);
 
 		if(overlap.size() > 0){
-			ROS_INFO("adding view to model with %d views already (%d points overlap)", m.views.size(), overlap.size());
+			ROS_INFO("adding view to model with %ld views already (%ld points overlap)", m.views.size(), overlap.size());
 			m.addView(mv);
 			return;
 		}

@@ -42,7 +42,7 @@ void publish_markers(){
 	visualization_msgs::MarkerArray markers;
 
 	model_constructor.buildCenterMarkers(markers);
-	ROS_INFO("publishing %d objects", markers.markers.size() );
+	ROS_INFO("publishing %ld objects", markers.markers.size() );
 	pub_markers.publish( markers );
 
 	markers.markers.clear();
