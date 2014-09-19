@@ -1,6 +1,12 @@
 TODO List
 ~~~~~~~~~
 
+- Test VFH / Color histograms
+
+- get a tabletop segmentation up and running for indigo
+
+- build table frame and publish it
+
 - individual object/view visualization
 
 - switch to PointXYZRGB
@@ -11,6 +17,6 @@ TODO List
 
 - Object-Identification at different positions
 
-- Robot contour following um Tisch um automatisch Bilder aufzunehmen
+- Robot contour following around table to get different views
 
 - only detect objects _above_ the table
