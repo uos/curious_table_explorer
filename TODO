@@ -1,9 +1,17 @@
 TODO List
-~~~~~~~~~
+=========
 
+my_tabletop_segmentation
+~~~~~~~~~~~~~~~~~~~~~~~~
+- ExtractPolygonalPrismData in /map uses wrong viewpoint
+
+- Cluster Table inliers before building convex hull
+
+- Extract objects above plane more reasonable than simply cropping at min_height
+
+my_table_objects
+~~~~~~~~~~~~~~~~
 - Test VFH / Color histograms
-
-- get a tabletop segmentation up and running for indigo
 
 - build table frame and publish it
 
@@ -18,5 +26,3 @@ TODO List
 - Object-Identification at different positions
 
 - Robot contour following around table to get different views
-
-- only detect objects _above_ the table
