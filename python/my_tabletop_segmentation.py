@@ -40,6 +40,7 @@ class TableTopSegmentationServer:
 			model_type= ecto_pcl.SACMODEL_NORMAL_PLANE,
 			eps_angle=.06,
 			distance_threshold=.02)
+		extract_table_indices= ecto_pcl.ExtractIndices("extract_table_indices", negative= False)
 		inlier_projection= ecto_pcl.ProjectInliers("inlier_projection", model_type= ecto_pcl.SACMODEL_NORMAL_PLANE)
 		convex_table= ecto_pcl.ConvexHull("convex_table", dimensionality= 2)
 
@@ -58,7 +59,9 @@ class TableTopSegmentationServer:
 			voxel_grid[:] >> normals[:],
 			voxel_grid[:] >> planar_segmentation["input"],
 			normals[:]    >> planar_segmentation["normals"],
-			voxel_grid[:] >> inlier_projection["input"],
+			planar_segmentation["inliers"] >> extract_table_indices["indices"],
+			voxel_grid[:] >> extract_table_indices["input"],
+			extract_table_indices[:] >> inlier_projection["input"],
 			planar_segmentation["model"] >> inlier_projection["model"],
 			inlier_projection[:] >> convex_table[:],
 			convex_table[:] >> extract_table_content["planar_hull"],
