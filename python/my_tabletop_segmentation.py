@@ -38,7 +38,6 @@ class TableTopSegmentationServer:
 		normals= ecto_pcl.NormalEstimation("normals", radius_search= .02, k_search= 0)
 		planar_segmentation= ecto_pcl.SACSegmentationFromNormals("planar_segmentation",
 			model_type= ecto_pcl.SACMODEL_NORMAL_PLANE,
-			eps_angle=.06,
 			distance_threshold=.02,
 			max_iterations= 100)
 		extract_table_indices= ecto_pcl.ExtractIndices("extract_table_indices", negative= False)
