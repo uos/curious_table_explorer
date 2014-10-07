@@ -23,8 +23,10 @@ class TableTopSegmentationServer:
 
 	def execute(self, goal):
 		rospy.loginfo('received goal: ' + str(goal))
-		self.plasm.execute(niter= 1)
-		self.server.set_succeeded()
+		if self.plasm.execute(niter= 1):
+			self.server.set_succeeded()
+		else:
+			self.server.set_aborted()
 		
 	def create_plasm(self):
 		self.plasm= ecto.Plasm()
