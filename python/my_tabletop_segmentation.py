@@ -47,7 +47,7 @@ class TableTopSegmentationServer:
 		inlier_projection= ecto_pcl.ProjectInliers("inlier_projection", model_type= ecto_pcl.SACMODEL_NORMAL_PLANE)
 		convex_table= ecto_pcl.ConvexHull("convex_table", dimensionality= 2)
 
-		extract_table_content= ecto_pcl.ExtractPolygonalPrismData("extract_table_content", height_min=.02, height_max=.5)
+		extract_table_content= ecto_pcl.ExtractPolygonalPrismData("extract_table_content", height_min= .02, height_max= .5)
 		cluster_table_content= ecto_pcl.EuclideanClusterExtraction(cluster_tolerance= .05, min_cluster_size= 20)
 
 		colorize_clusters= ecto_pcl.ColorizeClusters()
