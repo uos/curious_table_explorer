@@ -48,6 +48,9 @@ class TableTopSegmentationServer:
 		convex_table= ecto_pcl.ConvexHull("convex_table", dimensionality= 2)
 
 		extract_table_content= ecto_pcl.ExtractPolygonalPrismData("extract_table_content", height_min=.02, height_max=.5)
+		cluster_table_content= ecto_pcl.EuclideanClusterExtraction(cluster_tolerance= .05, min_cluster_size= 20)
+
+		colorize_clusters= ecto_pcl.ColorizeClusters()
 
 		extract_table_content_indices= ecto_pcl.ExtractIndices("extract_table_content_indices", negative= False)
 		cloud2msg= ecto_pcl_ros.PointCloud2Message()
@@ -73,9 +76,14 @@ class TableTopSegmentationServer:
 			inlier_projection[:] >> convex_table[:],
 			convex_table[:] >> extract_table_content["planar_hull"],
 			msg2cloud[:] >> extract_table_content["input"],
-			extract_table_content[:] >> extract_table_content_indices["indices"],
-			msg2cloud[:] >> extract_table_content_indices["input"],
-			extract_table_content_indices[:] >> cloud2msg[:],
+
+			msg2cloud[:] >> cluster_table_content["input"],
+			extract_table_content[:] >> cluster_table_content["indices"],
+
+			cluster_table_content[:] >> colorize_clusters["clusters"],
+			msg2cloud[:] >> colorize_clusters["input"],
+
+			colorize_clusters[:] >> cloud2msg[:],
 			cloud2msg[:] >> table_content_cloud_pub[:]
 		]
 
