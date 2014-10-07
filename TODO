@@ -3,8 +3,6 @@ TODO List
 
 my_tabletop_segmentation
 ~~~~~~~~~~~~~~~~~~~~~~~~
-- ExtractPolygonalPrismData in /map uses wrong viewpoint
-
 - Cluster Table inliers before building convex hull
 
 - Extract objects above plane more reasonable than simply cropping at min_height
