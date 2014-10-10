@@ -58,8 +58,8 @@ class TableTopSegmentationServer:
 		cloud2msg= ecto_pcl_ros.PointCloud2Message()
 		table_content_cloud_pub= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/table_content')
 
-		tableinlier2msg= ecto_pcl_ros.PointCloud2Message()
-		tableinlier_pub= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/table_inlier')
+		convex2tables= my_ecto_cells.ConvexHull2Table()
+		table_pub= ecto_object_recognition_msgs.Publisher_TableArray(topic_name= '/table_array')
 
 		graph= [
 			cloud_sub[:] >> msg2cloud[:],
@@ -78,11 +78,11 @@ class TableTopSegmentationServer:
 			voxel_grid[:] >> extract_table_indices["input"],
 			extract_table_indices[:] >> inlier_projection["input"],
 			planar_segmentation["model"] >> inlier_projection["model"],
-
-			extract_table_indices[:] >> tableinlier2msg[:],
-			tableinlier2msg[:] >> tableinlier_pub[:],
-
 			inlier_projection[:] >> convex_table[:],
+
+			convex_table[:] >> convex2tables[:],
+			convex2tables[:] >> table_pub[:],
+
 			convex_table[:] >> extract_table_content["planar_hull"],
 			msg2cloud[:] >> extract_table_content["input"],
 
