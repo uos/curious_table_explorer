@@ -10,7 +10,7 @@ from object_recognition_msgs.msg import ObjectRecognitionAction
 import ecto, ecto_ros, ecto_pcl, ecto_pcl_ros
 from ecto_ros import ecto_sensor_msgs
 
-from my_ecto_cells import my_ecto_cells
+from my_ecto_cells import my_ecto_cells, ecto_object_recognition_msgs
 
 class TableTopSegmentationServer:
 	def __init__(self):
@@ -50,6 +50,9 @@ class TableTopSegmentationServer:
 		extract_table_content= ecto_pcl.ExtractPolygonalPrismData("extract_table_content", height_min= .02, height_max= .5)
 		cluster_table_content= ecto_pcl.EuclideanClusterExtraction(cluster_tolerance= .05, min_cluster_size= 20)
 
+		clusters2recognized_objects= my_ecto_cells.Clusters2RecognizedObjectArray()
+		recognized_objects_pub= ecto_object_recognition_msgs.Publisher_RecognizedObjectArray(topic_name= '/recognized_object_array')
+
 		colorize_clusters= ecto_pcl.ColorizeClusters()
 
 		extract_table_content_indices= ecto_pcl.ExtractIndices("extract_table_content_indices", negative= False)
@@ -80,9 +83,12 @@ class TableTopSegmentationServer:
 			msg2cloud[:] >> cluster_table_content["input"],
 			extract_table_content[:] >> cluster_table_content["indices"],
 
+			cluster_table_content[:] >> clusters2recognized_objects["indices"],
+			msg2cloud[:] >> clusters2recognized_objects["input"],
+			clusters2recognized_objects[:] >> recognized_objects_pub[:],
+
 			cluster_table_content[:] >> colorize_clusters["clusters"],
 			msg2cloud[:] >> colorize_clusters["input"],
-
 			colorize_clusters[:] >> cloud2msg[:],
 			cloud2msg[:] >> table_content_cloud_pub[:]
 		]
