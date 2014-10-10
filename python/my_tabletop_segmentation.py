@@ -31,23 +31,23 @@ class TableTopSegmentationServer:
 	def create_plasm(self):
 		self.plasm= ecto.Plasm()
 
-		cloud_sub= ecto_sensor_msgs.Subscriber_PointCloud2("cloud_sub", topic_name= '/kinect/depth_registered/points', queue_size= 1)
-		msg2cloud= ecto_pcl_ros.Message2PointCloud("msg2cloud")
+		cloud_sub= ecto_sensor_msgs.Subscriber_PointCloud2(topic_name= '/kinect/depth_registered/points', queue_size= 1)
+		msg2cloud= ecto_pcl_ros.Message2PointCloud()
 		cloud_to_map= my_ecto_cells.CloudReframer(target_frame= '/map', timeout= 0.0, tf_cache_time= 60.0)
 		floor_cropper= my_ecto_cells.PassThroughIndices(filter_field_name= "z", filter_limit_min= .20)
 		extract_indices_floor= ecto_pcl.ExtractIndices()
 
-		voxel_grid= ecto_pcl.VoxelGrid("voxel_grid", leaf_size=.008)
-		normals= ecto_pcl.NormalEstimation("normals", radius_search= .02, k_search= 0)
-		planar_segmentation= ecto_pcl.SACSegmentationFromNormals("planar_segmentation",
+		voxel_grid= ecto_pcl.VoxelGrid(leaf_size=.008)
+		normals= ecto_pcl.NormalEstimation(radius_search= .02, k_search= 0)
+		planar_segmentation= ecto_pcl.SACSegmentationFromNormals(
 			model_type= ecto_pcl.SACMODEL_NORMAL_PLANE,
 			distance_threshold=.02,
 			max_iterations= 100)
-		extract_table_indices= ecto_pcl.ExtractIndices("extract_table_indices", negative= False)
-		inlier_projection= ecto_pcl.ProjectInliers("inlier_projection", model_type= ecto_pcl.SACMODEL_NORMAL_PLANE)
-		convex_table= ecto_pcl.ConvexHull("convex_table", dimensionality= 2)
+		extract_table_indices= ecto_pcl.ExtractIndices(negative= False)
+		inlier_projection= ecto_pcl.ProjectInliers(model_type= ecto_pcl.SACMODEL_NORMAL_PLANE)
+		convex_table= ecto_pcl.ConvexHull(dimensionality= 2)
 
-		extract_table_content= ecto_pcl.ExtractPolygonalPrismData("extract_table_content", height_min= .02, height_max= .5)
+		extract_table_content= ecto_pcl.ExtractPolygonalPrismData(height_min= .02, height_max= .5)
 		cluster_table_content= ecto_pcl.EuclideanClusterExtraction(cluster_tolerance= .05, min_cluster_size= 20)
 
 		clusters2recognized_objects= my_ecto_cells.Clusters2RecognizedObjectArray()
@@ -56,7 +56,7 @@ class TableTopSegmentationServer:
 		colorize_clusters= ecto_pcl.ColorizeClusters()
 
 		cloud2msg= ecto_pcl_ros.PointCloud2Message()
-		table_content_cloud_pub= ecto_sensor_msgs.Publisher_PointCloud2("table_content_cloud_pub", topic_name= '/table_content')
+		table_content_cloud_pub= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/table_content')
 
 		tableinlier2msg= ecto_pcl_ros.PointCloud2Message()
 		tableinlier_pub= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/table_inlier')
