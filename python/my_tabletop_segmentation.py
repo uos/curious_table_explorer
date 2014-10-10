@@ -55,7 +55,6 @@ class TableTopSegmentationServer:
 
 		colorize_clusters= ecto_pcl.ColorizeClusters()
 
-		extract_table_content_indices= ecto_pcl.ExtractIndices("extract_table_content_indices", negative= False)
 		cloud2msg= ecto_pcl_ros.PointCloud2Message()
 		table_content_cloud_pub= ecto_sensor_msgs.Publisher_PointCloud2("table_content_cloud_pub", topic_name= '/table_content')
 
@@ -63,7 +62,7 @@ class TableTopSegmentationServer:
 			cloud_sub[:] >> msg2cloud[:],
 
 			msg2cloud[:] >> cloud_to_map[:],
-			cloud_to_map[:] >> floor_cropper[:],
+			cloud_to_map[:] >> floor_cropper["input"],
 			floor_cropper[:] >> extract_indices_floor["indices"],
 			msg2cloud[:] >> extract_indices_floor["input"],
 
