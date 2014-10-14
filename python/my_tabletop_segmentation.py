@@ -45,6 +45,8 @@ class TableTopSegmentationServer:
 			max_iterations= 100)
 		extract_table_indices= ecto_pcl.ExtractIndices(negative= False)
 		inlier_projection= ecto_pcl.ProjectInliers(model_type= ecto_pcl.SACMODEL_NORMAL_PLANE)
+		extract_table_clusters= ecto_pcl.EuclideanClusterExtraction(cluster_tolerance= .03)
+		extract_largest_table_cluster= ecto_pcl.ExtractLargestCluster()
 		convex_table= ecto_pcl.ConvexHull(dimensionality= 2)
 
 		extract_table_content= ecto_pcl.ExtractPolygonalPrismData(height_min= .02, height_max= .5)
@@ -78,7 +80,10 @@ class TableTopSegmentationServer:
 			voxel_grid[:] >> extract_table_indices["input"],
 			extract_table_indices[:] >> inlier_projection["input"],
 			planar_segmentation["model"] >> inlier_projection["model"],
-			inlier_projection[:] >> convex_table[:],
+			inlier_projection[:] >> extract_table_clusters["input"],
+			extract_table_clusters[:] >> extract_largest_table_cluster["clusters"],
+			inlier_projection[:] >> extract_largest_table_cluster["input"],
+			extract_largest_table_cluster[:] >> convex_table[:],
 
 			convex_table[:] >> convex2tables[:],
 			convex2tables[:] >> table_pub[:],
