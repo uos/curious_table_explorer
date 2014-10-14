@@ -33,7 +33,7 @@ class TableTopSegmentationServer:
 
 		cloud_sub= ecto_sensor_msgs.Subscriber_PointCloud2(topic_name= '/kinect/depth_registered/points', queue_size= 1)
 		msg2cloud= ecto_pcl_ros.Message2PointCloud()
-		cloud_to_map= my_ecto_cells.CloudReframer(target_frame= '/map', timeout= 0.0, tf_cache_time= 60.0)
+		cloud_to_map= my_ecto_cells.CloudReframer(target_frame= '/map', timeout= 0.2, tf_cache_time= 60.0)
 		floor_cropper= my_ecto_cells.PassThroughIndices(filter_field_name= "z", filter_limit_min= .20)
 		extract_indices_floor= ecto_pcl.ExtractIndices()
 
