@@ -26,7 +26,7 @@ TransformMat IncrementalViewIcp::registerView(const std::vector<PointCloud::Ptr>
 		if(pc->points.size() < 3000)
 			*full_view+= *pc;
 		else
-			ROS_WARN("View ICP: ignoring object with %d points", pc->points.size());
+			ROS_WARN("View ICP: ignoring object with %ld points", pc->points.size());
 	}
 
 	pcl::transformPointCloud( *full_view, *full_view, view_to_world );
