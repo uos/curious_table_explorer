@@ -19,6 +19,7 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
 
 add_executable(collect_object_views
 	src/collect_object_views.cpp
+	src/collector.cpp
 	src/model.cpp
 	src/incremental_view_icp.cpp
 	src/model_constructor.cpp
