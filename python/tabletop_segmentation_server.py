@@ -22,12 +22,13 @@ class TableTopSegmentationServer:
 		rospy.loginfo('started tts-server')
 
 	def execute(self, goal):
-		rospy.loginfo('received goal: ' + str(goal))
+		rospy.loginfo('received request - running plasm once')
 		if self.plasm.execute(niter= 1):
 			self.server.set_succeeded()
+			rospy.loginfo('succeeded')
 		else:
 			self.server.set_aborted()
-		
+
 	def create_plasm(self):
 		self.plasm= ecto.Plasm()
 
