@@ -4,7 +4,7 @@
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 
-typedef pcl::PointXYZ Point;
+typedef pcl::PointXYZRGB Point;
 typedef pcl::PointCloud<Point> PointCloud;
 
 #include <tf/transform_datatypes.h>
