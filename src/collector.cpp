@@ -6,6 +6,19 @@
 
 #include <vector>
 
+namespace {
+	std::vector<PointCloud::Ptr> convert(const object_recognition_msgs::RecognizedObjectArray& rec){
+		std::vector<PointCloud::Ptr> vec;
+		vec.reserve(rec.objects.size());
+		for( const object_recognition_msgs::RecognizedObject& o : rec.objects){
+			PointCloud::Ptr cloud(new PointCloud);
+			pcl::fromROSMsg( o.point_clouds[0], *cloud);
+			vec.push_back( cloud );
+		}
+		return vec;
+	}
+}
+
 Collector::Collector(const std::string& table_topic, const std::string& recognized_objects_topic) :
 	sync_table_(5)
 {
@@ -25,6 +38,10 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 		table_tracker_.reset();
 	}
 
+	if( tables->tables.size() != 1 ){
+		ROS_WARN("table message is expected to contain exactly one table. Ignoring.");
+		return;
+	}
 	if( objs->objects.size() == 0 || objs->objects[0].point_clouds.size() == 0 ){
 		ROS_WARN("received empty objects array. Ignoring.");
 		return;
@@ -41,21 +58,7 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 		return;
 	}
 
-	std::vector<PointCloud::Ptr> view;
-	view.reserve(objs->objects.size());
-	for( const object_recognition_msgs::RecognizedObject& o : objs->objects){
-		// ASSUMPTION: each object is provided with exactly one cloud from one single source camera
-		assert( o.point_clouds.size() == 1 );
-		assert( o.point_clouds[0].header.frame_id == std::string("/") + world_transform.child_frame_id_ );
-		assert( o.point_clouds[0].header.stamp == world_transform.stamp_ );
-
-		const sensor_msgs::PointCloud2& pc= o.point_clouds[0];
-
-		PointCloud::Ptr cloud(new PointCloud);
-		pcl::fromROSMsg( pc, *cloud);
-
-		view.push_back( cloud );
-	}
+	std::vector<PointCloud::Ptr> view= convert(*objs);
 
 	model_constructor_.addTableView(view, world_transform);
 
