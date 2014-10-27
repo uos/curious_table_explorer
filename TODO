@@ -7,6 +7,8 @@ my_tabletop_segmentation
 
 my_table_objects
 ~~~~~~~~~~~~~~~~
+- [pcl::IterativeClosestPoint::computeTransformation] Not enough correspondences found. Relax your threshold parameters.
+
 - Test VFH / Color histograms
 
 - build table frame and publish it
