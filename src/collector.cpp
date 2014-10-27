@@ -6,13 +6,18 @@
 
 #include <vector>
 
-Collector::Collector(const std::string& recognized_objects_topic){
-	this->sub_object_=  this->nh_.subscribe<object_recognition_msgs::RecognizedObjectArray>(recognized_objects_topic, 5, &Collector::observe_table, this);
+Collector::Collector(const std::string& table_topic, const std::string& recognized_objects_topic) :
+	sync_table_(5)
+{
+	this->sub_table_.subscribe(this->nh_,table_topic, 5);
+	this->sub_objects_.subscribe(this->nh_, recognized_objects_topic, 5);
+	this->sync_table_.connectInput(this->sub_table_, this->sub_objects_);
+	this->sync_table_.registerCallback(boost::bind(&Collector::observe_table, this, _1, _2));
 
 	this->pub_markers_= this->nh_.advertise<visualization_msgs::MarkerArray>("/stored_object_views", 5, true);
 }
 
-void Collector::observe_table(const object_recognition_msgs::RecognizedObjectArray::ConstPtr& objs){
+void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPtr& tables, const object_recognition_msgs::RecognizedObjectArray::ConstPtr& objs){
 	static BackjumpChk backjump;
 	if(backjump){
 		ROS_WARN("Detected jump back in time. Clearing object buffer");

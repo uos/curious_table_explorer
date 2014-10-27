@@ -5,6 +5,9 @@
 
 #include <ros/ros.h>
 
+#include <message_filters/subscriber.h>
+#include <message_filters/time_synchronizer.h>
+
 #include <tf/transform_listener.h>
 
 #include <object_recognition_msgs/RecognizedObjectArray.h>
@@ -15,18 +18,22 @@
 
 class Collector {
 public:
-	Collector(const std::string& recognized_objects_topic);
+	Collector(const std::string& table_topic, const std::string& recognized_objects_topic);
 
 	void publish_object_markers();
 protected:
-	void observe_table(const object_recognition_msgs::RecognizedObjectArray::ConstPtr&);
+	void observe_table(const object_recognition_msgs::TableArray::ConstPtr&, const object_recognition_msgs::RecognizedObjectArray::ConstPtr&);
 
 	IncrementalViewIcp table_tracker_;
 	ModelConstructor model_constructor_;
 
 	ros::NodeHandle nh_;
-	ros::Subscriber sub_object_;
+
 	ros::Publisher  pub_markers_;
+
+	message_filters::Subscriber<object_recognition_msgs::TableArray> sub_table_;
+	message_filters::Subscriber<object_recognition_msgs::RecognizedObjectArray> sub_objects_;
+	message_filters::TimeSynchronizer<object_recognition_msgs::TableArray, object_recognition_msgs::RecognizedObjectArray> sync_table_;
 
 	tf::TransformListener tfl_;
 };
