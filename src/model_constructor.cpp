@@ -1,6 +1,5 @@
 #include "common.h"
 #include "model.h"
-#include "incremental_view_icp.h"
 #include "model_constructor.h"
 
 #include "uniform_color_distribution.h"
@@ -35,17 +34,13 @@ ModelConstructor::ModelConstructor() {}
 
 void ModelConstructor::clear(){
 	this->models.clear();
-	this->incremental_view_icp.reset();
 }
 
-void ModelConstructor::addTableView(const std::vector<PointCloud::Ptr>& view, const tf::Transform& to_world){
-	TransformMat to_world_mat, to_desk_mat;
-	pcl_ros::transformAsMatrix(to_world, to_world_mat);
+void ModelConstructor::finalizeTable() {}
 
-	to_desk_mat= this->incremental_view_icp.registerView(view, to_world_mat);
-
+void ModelConstructor::addTableView(const object_recognition_msgs::Table& table, const std::vector<PointCloud::Ptr>& view, const TransformMat& view_to_table){
 	for(const PointCloud::Ptr& pc : view)
-		this->addModelView( ModelView(pc, to_desk_mat) );
+		this->addModelView( ModelView(pc, view_to_table) );
 }
 
 void ModelConstructor::addModelView(ModelView mv){
@@ -120,7 +115,7 @@ namespace {
 	}
 }
 
-void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_array){
+void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_array, const TransformMat& table_to_world){
 	std::default_random_engine generator(RANDOM_SEED);
 	uniform_color_distribution distribution;
 
@@ -131,7 +126,7 @@ void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_
 		marker.points.clear();
 		for( ModelView& view : model.views ){
 			PointCloud::Ptr cloud(new PointCloud);
-			pcl::transformPointCloud(*view.getDeskCloud(), *cloud, this->incremental_view_icp.getFixedFrameToWorld());
+			pcl::transformPointCloud(*view.getDeskCloud(), *cloud, table_to_world);
 			cloud->header.frame_id= "map";
 
 			marker.points.reserve( marker.points.size() + cloud->size() );
@@ -144,7 +139,7 @@ void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_
 	}
 }
 
-void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_array){
+void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_array, const TransformMat& table_to_world){
 	std::default_random_engine generator(RANDOM_SEED);
 	uniform_color_distribution distribution;
 
@@ -158,7 +153,7 @@ void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_ar
 		std::vector<pcl::Vertices> vertices;
 		model.getConvexHull(points, vertices);
 
-		pcl::transformPointCloud(points, points, this->incremental_view_icp.getFixedFrameToWorld());
+		pcl::transformPointCloud(points, points, table_to_world);
 		marker.header.frame_id= "map";
 		marker.header.stamp= ros::Time::now();
 
@@ -181,7 +176,7 @@ void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_ar
 	}
 }
 
-void ModelConstructor::buildCenterMarkers(visualization_msgs::MarkerArray& center_array){
+void ModelConstructor::buildCenterMarkers(visualization_msgs::MarkerArray& center_array, const TransformMat& table_to_world){
 	std::default_random_engine generator(RANDOM_SEED);
 	uniform_color_distribution distribution;
 
@@ -189,7 +184,7 @@ void ModelConstructor::buildCenterMarkers(visualization_msgs::MarkerArray& cente
 
 	for( Model& model : this->models ){
 		marker.color= distribution(generator);
-		marker.pose.position= eigen2ros( this->incremental_view_icp.getFixedFrameToWorld() * model.getCenter() );
+		marker.pose.position= eigen2ros( table_to_world * model.getCenter() );
 		marker.header= pcl_conversions::fromPCL(model.views[model.views.size()-1].getViewCloud()->header);
 		marker.header.frame_id= "map";
 

@@ -22,6 +22,7 @@ add_executable(collect_object_views
 	src/collector.cpp
 	src/model.cpp
 	src/incremental_view_icp.cpp
+	src/table_tracker.cpp
 	src/model_constructor.cpp
 )
 

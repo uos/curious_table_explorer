@@ -2,6 +2,8 @@
 
 #include "backjump.h"
 
+#include <pcl_ros/transforms.h>
+
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <vector>
@@ -42,16 +44,20 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 		ROS_WARN("table message is expected to contain exactly one table. Ignoring.");
 		return;
 	}
+	const object_recognition_msgs::Table& table= tables->tables[0];
+
 	if( objs->objects.size() == 0 || objs->objects[0].point_clouds.size() == 0 ){
 		ROS_WARN("received empty objects array. Ignoring.");
 		return;
 	}
 
-	tf::StampedTransform world_transform;
+	TransformMat world_transform;
 	try {
+		tf::StampedTransform tf_world;
 		const std_msgs::Header& fst_cloud_hdr= objs->objects[0].point_clouds[0].header;
 		this->tfl_.waitForTransform("/map", fst_cloud_hdr.frame_id, fst_cloud_hdr.stamp, ros::Duration(0.5));
-		this->tfl_.lookupTransform("/map", fst_cloud_hdr.frame_id, fst_cloud_hdr.stamp, world_transform);
+		this->tfl_.lookupTransform("/map", fst_cloud_hdr.frame_id, fst_cloud_hdr.stamp, tf_world);
+		pcl_ros::transformAsMatrix(tf_world, world_transform);
 	}
 	catch(tf::TransformException e){
 		ROS_WARN("%s", e.what());
@@ -60,7 +66,20 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 
 	std::vector<PointCloud::Ptr> view= convert(*objs);
 
-	model_constructor_.addTableView(view, world_transform);
+	PointCloud::Ptr full_view(new PointCloud);
+	for( const PointCloud::Ptr& p : view )
+		*full_view+= *p;
+
+	if( table_tracker_.isLocked() && table_tracker_.registerTable(table, full_view, world_transform) )
+		model_constructor_.addTableView(table, view, table_tracker_.getWorldToFixedFrame()*world_transform);
+	else {
+		model_constructor_.finalizeTable();
+
+		ROS_INFO("locked onto new table");
+		table_tracker_.lockTable(table, full_view, world_transform);
+
+		model_constructor_.addTableView(table, view, table_tracker_.getWorldToFixedFrame()*world_transform);
+	}
 
 	this->publish_object_markers();
 }
@@ -68,9 +87,10 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 void Collector::publish_object_markers(){
 	visualization_msgs::MarkerArray markers;
 
-	model_constructor_.buildCenterMarkers(markers);
-	model_constructor_.buildHullMarkers(markers);
-	model_constructor_.buildCloudMarkers(markers);
+	const TransformMat table_to_world= table_tracker_.getFixedFrameToWorld();
+	model_constructor_.buildCenterMarkers(markers, table_to_world);
+	model_constructor_.buildHullMarkers(markers, table_to_world);
+	model_constructor_.buildCloudMarkers(markers, table_to_world);
 
 	pub_markers_.publish( markers );
 }

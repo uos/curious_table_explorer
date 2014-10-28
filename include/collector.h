@@ -13,7 +13,7 @@
 #include <object_recognition_msgs/RecognizedObjectArray.h>
 #include <object_recognition_msgs/TableArray.h>
 
-#include "incremental_view_icp.h"
+#include "table_tracker.h"
 #include "model_constructor.h"
 
 class Collector {
@@ -24,7 +24,7 @@ public:
 protected:
 	void observe_table(const object_recognition_msgs::TableArray::ConstPtr&, const object_recognition_msgs::RecognizedObjectArray::ConstPtr&);
 
-	IncrementalViewIcp table_tracker_;
+	TableTracker table_tracker_;
 	ModelConstructor model_constructor_;
 
 	ros::NodeHandle nh_;

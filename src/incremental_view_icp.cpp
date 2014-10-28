@@ -16,44 +16,39 @@ void IncrementalViewIcp::reset(){
 	this->world_to_fixed_frame= TransformMat::Identity();
 }
 
-TransformMat IncrementalViewIcp::registerView(const std::vector<PointCloud::Ptr>& view, const TransformMat& view_to_world){
-	PointCloud::Ptr full_view(new PointCloud);
+bool IncrementalViewIcp::isLocked() const {
+	return this->last_view == nullptr;
+}
 
-	for(const PointCloud::Ptr& pc : view){
-		// ignore objects which are too big.
-		// They are likely unstable/incomplete and confuse ICP
+void IncrementalViewIcp::lockToFrame(PointCloud::ConstPtr view, const TransformMat& world_to_frame){
+	if(this->isLocked())
+		this->reset();
 
-		if(pc->points.size() < 3000)
-			*full_view+= *pc;
-		else
-			ROS_WARN("View ICP: ignoring object with %ld points", pc->points.size());
+	this->last_view= view;
+	this->world_to_fixed_frame= world_to_frame;
+}
+
+bool IncrementalViewIcp::registerView(PointCloud::ConstPtr view){
+	assert( this->last_view != nullptr );
+
+	pcl::IterativeClosestPoint<Point, Point> icp;
+	icp.setMaxCorrespondenceDistance(.05);
+
+	icp.setInputSource(view);
+	icp.setInputTarget(this->last_view);
+
+	{
+	PointCloud p;
+	icp.align(p, TransformMat::Identity());
 	}
 
-	pcl::transformPointCloud( *full_view, *full_view, view_to_world );
-
-	if(this->last_view == nullptr){
-		this->last_view= full_view;
-		this->world_to_fixed_frame= TransformMat::Identity();
-	}
-	else {
-		pcl::IterativeClosestPoint<Point, Point> icp;
-		icp.setMaxCorrespondenceDistance(.05);
-
-		icp.setInputSource(full_view);
-		icp.setInputTarget(this->last_view);
-
-		{
-		PointCloud p;
-		icp.align(p, TransformMat::Identity());
-		}
-
-		this->last_view= full_view;
-
-		TransformMat correction= icp.getFinalTransformation();
-		this->world_to_fixed_frame= this->world_to_fixed_frame * correction;
+	if( icp.hasConverged() ){
+		TransformMat new_to_old_world= icp.getFinalTransformation();
+		this->world_to_fixed_frame= this->world_to_fixed_frame * new_to_old_world;
+		this->last_view= view;
 	}
 
-	return this->world_to_fixed_frame*view_to_world;
+	return icp.hasConverged();
 }
 
 TransformMat IncrementalViewIcp::getWorldToFixedFrame(){
