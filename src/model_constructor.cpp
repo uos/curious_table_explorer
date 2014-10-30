@@ -36,7 +36,10 @@ void ModelConstructor::clear(){
 	this->models.clear();
 }
 
-void ModelConstructor::finalizeTable() {}
+void ModelConstructor::finalizeTable() {
+	ROS_INFO("finalizing last table");
+	clear();
+}
 
 void ModelConstructor::addTableView(const object_recognition_msgs::Table& table, const std::vector<PointCloud::Ptr>& view, const TransformMat& view_to_table){
 	for(const PointCloud::Ptr& pc : view)
