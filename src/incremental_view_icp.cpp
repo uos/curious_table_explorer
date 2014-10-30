@@ -17,7 +17,7 @@ void IncrementalViewIcp::reset(){
 }
 
 bool IncrementalViewIcp::isLocked() const {
-	return this->last_view == nullptr;
+	return this->last_view != nullptr;
 }
 
 void IncrementalViewIcp::lockToFrame(PointCloud::ConstPtr view, const TransformMat& world_to_frame){
