@@ -38,8 +38,10 @@ bool IncrementalViewIcp::registerView(PointCloud::ConstPtr view){
 	icp.setInputTarget(this->last_view);
 
 	{
+	pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
 	PointCloud p;
 	icp.align(p, TransformMat::Identity());
+	pcl::console::setVerbosityLevel(pcl::console::L_INFO);
 	}
 
 	if( icp.hasConverged() ){
