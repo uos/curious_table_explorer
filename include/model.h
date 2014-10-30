@@ -14,8 +14,8 @@ public:
 	ModelView(PointCloud::Ptr c, const Transform& w);
 	ModelView(PointCloud::Ptr c, const TransformMat w);
 
-	PointCloud::Ptr getViewCloud();
-	PointCloud::Ptr getDeskCloud();
+	PointCloud::ConstPtr getViewCloud() const;
+	PointCloud::ConstPtr getDeskCloud() const;
 
 private:
 	PointCloud::Ptr cloud;

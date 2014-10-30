@@ -51,7 +51,7 @@ void ModelConstructor::addModelView(ModelView mv){
 	std::vector<pcl::Vertices> hull_polygons;
 	pcl::CropHull<Point> crop;
 
-	PointCloud::Ptr view= mv.getDeskCloud();
+	PointCloud::ConstPtr view= mv.getDeskCloud();
 
 	for( Model& m : this->models ){
 		hull_points->clear();

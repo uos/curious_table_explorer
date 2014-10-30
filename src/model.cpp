@@ -18,11 +18,11 @@ ModelView::ModelView(PointCloud::Ptr c, const Eigen::Matrix4f w) :
 	desk_transform(w)
 {}
 
-PointCloud::Ptr ModelView::getViewCloud(){
+PointCloud::ConstPtr ModelView::getViewCloud() const{
 	return this->cloud;
 }
 
-PointCloud::Ptr ModelView::getDeskCloud(){
+PointCloud::ConstPtr ModelView::getDeskCloud() const {
 	PointCloud::Ptr p(new PointCloud);
 	pcl::transformPointCloud( *this->cloud, *p, this->desk_transform );
 	p->header= this->cloud->header;
@@ -52,7 +52,7 @@ const Eigen::Vector4f& Model::getCenter(){
 }
 
 void Model::updateCenter(ModelView& m){
-	PointCloud::Ptr pc= m.getDeskCloud();
+	PointCloud::ConstPtr pc= m.getDeskCloud();
 
 	Eigen::Vector4f view_center;
 	pcl::compute3DCentroid(*pc, view_center);
