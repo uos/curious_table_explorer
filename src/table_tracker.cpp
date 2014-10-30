@@ -6,8 +6,7 @@
 
 #include <tf/transform_datatypes.h>
 
-namespace {
-}
+#include <boost/make_shared.hpp>
 
 TableTracker::TableTracker() {};
 
@@ -19,10 +18,14 @@ void TableTracker::lockTable(const object_recognition_msgs::Table& table, PointC
 	tf::poseMsgToTF(table.pose, table_pose);
 	pcl_ros::transformAsMatrix(tf::Transform( table_pose ), world_to_table);
 
-	PointCloud::Ptr world_view(new PointCloud);
+	PointCloud::Ptr world_view= boost::make_shared<PointCloud>();
 	pcl::transformPointCloud(*view, *world_view, view_to_world);
 
 	lockToFrame(world_view, world_to_table);
 }
 
-bool TableTracker::registerTable(const object_recognition_msgs::Table& table, PointCloud::ConstPtr view, const TransformMat& view_to_world) {}
+bool TableTracker::registerTable(const object_recognition_msgs::Table& table, PointCloud::ConstPtr view, const TransformMat& view_to_world){
+	PointCloud::Ptr world_view= boost::make_shared<PointCloud>();
+	pcl::transformPointCloud(*view, *world_view, view_to_world);
+	return registerView(world_view);
+}
