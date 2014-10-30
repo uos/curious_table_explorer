@@ -70,8 +70,10 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 	for( const PointCloud::Ptr& p : view )
 		*full_view+= *p;
 
-	if( table_tracker_.isLocked() && table_tracker_.registerTable(table, full_view, world_transform) )
+	if( table_tracker_.isLocked() && table_tracker_.registerTable(table, full_view, world_transform) ){
+		ROS_INFO("registered known table");
 		model_constructor_.addTableView(table, view, table_tracker_.getWorldToFixedFrame()*world_transform);
+	}
 	else {
 		model_constructor_.finalizeTable();
 
