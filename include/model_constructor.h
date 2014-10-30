@@ -22,6 +22,8 @@ public:
 	void clear();
 	void finalizeTable();
 
+	void writeTableToFiles(const std::string& folder);
+
    /****************
    * visualization *
 	****************/

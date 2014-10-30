@@ -4,9 +4,12 @@
 
 #include "uniform_color_distribution.h"
 
+#include <sstream>
 #include <vector>
 
 #include <pcl/filters/crop_hull.h>
+
+#include <pcl/io/pcd_io.h>
 
 #include <pcl_ros/transforms.h>
 
@@ -34,11 +37,6 @@ ModelConstructor::ModelConstructor() {}
 
 void ModelConstructor::clear(){
 	this->models.clear();
-}
-
-void ModelConstructor::finalizeTable() {
-	ROS_INFO("finalizing last table");
-	clear();
 }
 
 void ModelConstructor::addTableView(const object_recognition_msgs::Table& table, const std::vector<PointCloud::Ptr>& view, const TransformMat& view_to_table){
@@ -79,6 +77,43 @@ void ModelConstructor::addModelView(ModelView mv){
 	ROS_INFO("found no matching model. Adding new one %f / %f / %f", center[0], center[1], center[2]);
 	this->models.push_back(*fresh_model);
 }
+
+
+void ModelConstructor::finalizeTable() {
+	if(this->models.size() > 0){
+		ROS_INFO("finalizing last table");
+		writeTableToFiles("/tmp/my_table_objects/");
+		clear();
+	}
+}
+
+/*************************
+ * Write models to files *
+ *************************/
+
+void ModelConstructor::writeTableToFiles(const std::string& folder){
+	pcl::PCDWriter writer;
+
+	PointCloud::Ptr full_table(new PointCloud);
+
+	for(size_t mi= 0; mi < this->models.size(); ++mi){
+		for(size_t vi= 0; vi < this->models[mi].views.size(); ++vi){
+			std::stringstream fname;
+			fname << folder << "/object" << mi << "_v" << vi << ".pcd";
+			writer.writeBinary(fname.str(), *this->models[mi].views[vi].getDeskCloud());
+		}
+	}
+
+	for(const Model& m : this->models)
+		for(const ModelView& mv : m.views)
+			*full_table+= *mv.getDeskCloud();
+	writer.writeBinary(folder+"/full_table.pcd", *full_table);
+}
+
+
+/*************************
+ *      Marker Code      *
+ *************************/
 
 namespace {
 	// deterministic random numbers to make marker colors the same on each call
