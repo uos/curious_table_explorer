@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 {
 	ros::init(argc, argv, "collect_object_views");
 
-	Collector collector("/tables", "/recognized_object_array");
+	Collector collector("/table", "/recognized_object_array");
 
 	ros::spin();
 

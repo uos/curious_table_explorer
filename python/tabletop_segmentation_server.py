@@ -62,7 +62,7 @@ class TableTopSegmentationServer:
 		table_content_cloud_pub= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/table_content')
 
 		convex2tables= my_ecto_cells.ConvexHull2Table()
-		table_pub= ecto_object_recognition_msgs.Publisher_TableArray(topic_name= '/table_array')
+		table_pub= ecto_object_recognition_msgs.Publisher_TableArray(topic_name= '/table')
 
 		graph= [
 			cloud_sub[:] >> msg2cloud[:],
