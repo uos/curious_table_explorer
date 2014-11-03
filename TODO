@@ -9,8 +9,6 @@ my_table_objects
 ~~~~~~~~~~~~~~~~
 - Test VFH / Color histograms
 
-- individual object/view visualization
-
 - ModelConstructor::addModelView should be protected and should mark models already taken in this TableView
 
 - refined view registration via pcl::registration::LUM
