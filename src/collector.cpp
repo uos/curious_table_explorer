@@ -30,6 +30,7 @@ Collector::Collector(const std::string& table_topic, const std::string& recogniz
 	this->sync_table_.registerCallback(boost::bind(&Collector::observe_table, this, _1, _2));
 
 	this->pub_markers_= this->nh_.advertise<visualization_msgs::MarkerArray>("/stored_object_views", 5, true);
+	this->pub_tables_=  this->nh_.advertise<object_recognition_msgs::TableArray>("/stored_tables", 5, true);
 }
 
 void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPtr& tables, const object_recognition_msgs::RecognizedObjectArray::ConstPtr& objs){
@@ -84,6 +85,7 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 	}
 
 	this->publish_object_markers();
+	this->publish_tables();
 }
 
 void Collector::publish_object_markers() const {
@@ -95,4 +97,13 @@ void Collector::publish_object_markers() const {
 	model_constructor_.buildCloudMarkers(markers, table_to_world);
 
 	pub_markers_.publish( markers );
+}
+
+void Collector::publish_tables() const {
+	object_recognition_msgs::TableArray tabs;
+
+	tabs.tables.push_back(this->table_tracker_.getTable());
+	tabs.header= tabs.tables[0].header;
+
+	this->pub_tables_.publish( tabs );
 }

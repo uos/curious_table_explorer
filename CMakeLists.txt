@@ -5,6 +5,7 @@ find_package(catkin REQUIRED COMPONENTS
              ecto pcl_ros moveit_msgs genmsg
              roscpp actionlib actionlib_msgs muffin_msgs
              object_recognition_core object_recognition_msgs
+             eigen_conversions
 )
 
 find_package(PCL REQUIRED)

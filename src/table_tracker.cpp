@@ -6,6 +6,8 @@
 
 #include <tf/transform_datatypes.h>
 
+#include <eigen_conversions/eigen_msg.h>
+
 #include <boost/make_shared.hpp>
 
 TableTracker::TableTracker() {};
@@ -28,4 +30,14 @@ bool TableTracker::registerTable(const object_recognition_msgs::Table& table, Po
 	PointCloud::Ptr world_view= boost::make_shared<PointCloud>();
 	pcl::transformPointCloud(*view, *world_view, view_to_world);
 	return registerView(world_view);
+}
+
+object_recognition_msgs::Table TableTracker::getTable() const {
+	object_recognition_msgs::Table worldTable(this->table_);
+
+	Eigen::Affine3d trans(this->getFixedFrameToWorld().cast<double>());
+	tf::poseEigenToMsg(trans, worldTable.pose);
+	worldTable.header.frame_id= "/map";
+
+	return this->table_;
 }

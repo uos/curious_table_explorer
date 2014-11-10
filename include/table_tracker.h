@@ -15,6 +15,7 @@ public:
 
 	bool registerTable(const object_recognition_msgs::Table& table, PointCloud::ConstPtr view, const TransformMat& view_to_world);
 
+	object_recognition_msgs::Table getTable() const;
 protected:
 	object_recognition_msgs::Table table_;
 };
