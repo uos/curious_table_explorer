@@ -16,8 +16,8 @@ public:
 	bool registerView(PointCloud::ConstPtr view);
 
 	// provides a transform: (frame tracked by this class) <-> (world frame)
-	TransformMat getWorldToFixedFrame();
-	TransformMat getFixedFrameToWorld();
+	TransformMat getWorldToFixedFrame() const;
+	TransformMat getFixedFrameToWorld() const;
 
 	void reset();
 	bool isLocked() const;

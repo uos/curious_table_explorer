@@ -86,7 +86,7 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 	this->publish_object_markers();
 }
 
-void Collector::publish_object_markers(){
+void Collector::publish_object_markers() const {
 	visualization_msgs::MarkerArray markers;
 
 	const TransformMat table_to_world= table_tracker_.getFixedFrameToWorld();

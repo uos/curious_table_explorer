@@ -153,16 +153,16 @@ namespace {
 	}
 }
 
-void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_array, const TransformMat& table_to_world){
+void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_array, const TransformMat& table_to_world) const {
 	std::default_random_engine generator(RANDOM_SEED);
 	uniform_color_distribution distribution;
 
 	visualization_msgs::Marker marker= cloudMarker();
 
-	for( Model& model : this->models ){
+	for( const Model& model : this->models ){
 		marker.color= distribution(generator);
 		marker.points.clear();
-		for( ModelView& view : model.views ){
+		for( const ModelView& view : model.views ){
 			PointCloud::Ptr cloud(new PointCloud);
 			pcl::transformPointCloud(*view.getDeskCloud(), *cloud, table_to_world);
 			cloud->header.frame_id= "map";
@@ -177,13 +177,13 @@ void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_
 	}
 }
 
-void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_array, const TransformMat& table_to_world){
+void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_array, const TransformMat& table_to_world) const {
 	std::default_random_engine generator(RANDOM_SEED);
 	uniform_color_distribution distribution;
 
 	visualization_msgs::Marker marker= hullMarker();
 
-	for( Model& model : this->models ){
+	for( const Model& model : this->models ){
 		marker.color= distribution(generator);
 		marker.points.clear();
 
@@ -196,7 +196,7 @@ void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_ar
 		marker.header.stamp= ros::Time::now();
 
 		marker.points.reserve( 3*vertices.size() );
-		for( pcl::Vertices& v : vertices ){
+		for( const pcl::Vertices& v : vertices ){
 			if( v.vertices.size() != 3 ){
 				ROS_WARN("Non-triangle found in convex hull (size=%ld)", v.vertices.size() );
 				continue;
@@ -214,13 +214,13 @@ void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_ar
 	}
 }
 
-void ModelConstructor::buildCenterMarkers(visualization_msgs::MarkerArray& center_array, const TransformMat& table_to_world){
+void ModelConstructor::buildCenterMarkers(visualization_msgs::MarkerArray& center_array, const TransformMat& table_to_world) const {
 	std::default_random_engine generator(RANDOM_SEED);
 	uniform_color_distribution distribution;
 
 	visualization_msgs::Marker marker= centerMarker();
 
-	for( Model& model : this->models ){
+	for( const Model& model : this->models ){
 		marker.color= distribution(generator);
 		marker.pose.position= eigen2ros( table_to_world * model.getCenter() );
 		marker.header= pcl_conversions::fromPCL(model.views[model.views.size()-1].getViewCloud()->header);

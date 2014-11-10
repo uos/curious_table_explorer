@@ -20,7 +20,8 @@ class Collector {
 public:
 	Collector(const std::string& table_topic, const std::string& recognized_objects_topic);
 
-	void publish_object_markers();
+	void publish_object_markers() const;
+
 protected:
 	void observe_table(const object_recognition_msgs::TableArray::ConstPtr&, const object_recognition_msgs::RecognizedObjectArray::ConstPtr&);
 
@@ -29,7 +30,7 @@ protected:
 
 	ros::NodeHandle nh_;
 
-	ros::Publisher  pub_markers_;
+	ros::Publisher pub_markers_;
 
 	message_filters::Subscriber<object_recognition_msgs::TableArray> sub_table_;
 	message_filters::Subscriber<object_recognition_msgs::RecognizedObjectArray> sub_objects_;

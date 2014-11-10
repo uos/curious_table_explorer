@@ -53,10 +53,10 @@ bool IncrementalViewIcp::registerView(PointCloud::ConstPtr view){
 	return icp.hasConverged();
 }
 
-TransformMat IncrementalViewIcp::getWorldToFixedFrame(){
+TransformMat IncrementalViewIcp::getWorldToFixedFrame() const {
 	return this->world_to_fixed_frame;
 }
 
-TransformMat IncrementalViewIcp::getFixedFrameToWorld(){
+TransformMat IncrementalViewIcp::getFixedFrameToWorld() const {
 	return this->world_to_fixed_frame.inverse();
 }

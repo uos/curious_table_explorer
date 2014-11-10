@@ -28,10 +28,10 @@ public:
 
 	void addView(ModelView m);
 
-	const Eigen::Vector4f& getCenter();
+	const Eigen::Vector4f& getCenter() const;
 
-	void getConvexHull(PointCloud& cloud);
-	void getConvexHull(PointCloud& cloud, std::vector<pcl::Vertices>& hull_polygons);
+	void getConvexHull(PointCloud& cloud) const;
+	void getConvexHull(PointCloud& cloud, std::vector<pcl::Vertices>& hull_polygons) const;
 
 	std::vector<ModelView> views;
 

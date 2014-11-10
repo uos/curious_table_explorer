@@ -47,7 +47,7 @@ void Model::addView(ModelView m){
 	this->views.push_back(m);
 }
 
-const Eigen::Vector4f& Model::getCenter(){
+const Eigen::Vector4f& Model::getCenter() const {
 	return this->center;
 }
 
@@ -64,11 +64,11 @@ void Model::updateCenter(ModelView& m){
 }
 
 
-void Model::getConvexHull(PointCloud& hull_points){
+void Model::getConvexHull(PointCloud& hull_points) const {
 	hull_points= *this->hull_points;
 }
 
-void Model::getConvexHull(PointCloud& hull_points, std::vector<pcl::Vertices>& hull_polygons){
+void Model::getConvexHull(PointCloud& hull_points, std::vector<pcl::Vertices>& hull_polygons) const {
 	hull_points= *this->hull_points;
 	hull_polygons= this->hull_polygons;
 }

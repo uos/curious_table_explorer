@@ -27,9 +27,9 @@ public:
    /****************
    * visualization *
 	****************/
-	void buildCloudMarkers(visualization_msgs::MarkerArray& cloud_array, const TransformMat& table_to_world);
-	void buildHullMarkers(visualization_msgs::MarkerArray& hull_array, const TransformMat& table_to_world);
-	void buildCenterMarkers(visualization_msgs::MarkerArray& center_array, const TransformMat& table_to_world);
+	void buildCloudMarkers(visualization_msgs::MarkerArray& cloud_array, const TransformMat& table_to_world) const;
+	void buildHullMarkers(visualization_msgs::MarkerArray& hull_array, const TransformMat& table_to_world) const;
+	void buildCenterMarkers(visualization_msgs::MarkerArray& center_array, const TransformMat& table_to_world) const;
 
 protected:
 	std::vector<Model> models;
