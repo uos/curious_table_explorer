@@ -22,6 +22,7 @@ namespace {
 }
 
 Collector::Collector(const std::string& table_topic, const std::string& recognized_objects_topic) :
+	table_count_(0),
 	sync_table_(5)
 {
 	this->sub_table_.subscribe(this->nh_,table_topic, 5);
@@ -77,6 +78,18 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 	}
 	else {
 		model_constructor_.finalizeTable();
+
+		std::string path;
+		nh_.param<std::string>("view_storage_path", path, "/tmp/my_table_objects");
+
+		std::stringstream tablename;
+		tablename << "table" << std::setfill('0') << std::setw(3) << this->table_count_;
+
+		model_constructor_.writeTableToFiles(boost::filesystem::path(path)/tablename.str());
+
+		model_constructor_.clear();
+
+		this->table_count_++;
 
 		ROS_INFO("locked onto new table");
 		table_tracker_.lockTable(table, full_view, world_transform);

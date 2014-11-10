@@ -7,6 +7,8 @@
 #include <sstream>
 #include <vector>
 
+#include <boost/filesystem.hpp>
+
 #include <pcl/filters/crop_hull.h>
 
 #include <pcl/io/pcd_io.h>
@@ -80,34 +82,46 @@ void ModelConstructor::addModelView(ModelView mv){
 
 
 void ModelConstructor::finalizeTable() {
-	if(this->models.size() > 0){
-		ROS_INFO("finalizing last table");
-		writeTableToFiles("/tmp/my_table_objects/");
-		clear();
-	}
+	// post-registration can be performed here
 }
 
 /*************************
  * Write models to files *
  *************************/
 
-void ModelConstructor::writeTableToFiles(const std::string& folder){
+bool ModelConstructor::writeTableToFiles(const boost::filesystem::path& folder) const {
+	if( this->models.size() == 0 )
+		return true;
+
+	ROS_INFO("writing table content to '%s'", folder.c_str());
+
 	pcl::PCDWriter writer;
 
-	PointCloud::Ptr full_table(new PointCloud);
+	boost::system::error_code ec;
+	boost::filesystem::create_directories(folder, ec);
+	/* if this failed the code below will error out */
 
-	for(size_t mi= 0; mi < this->models.size(); ++mi){
-		for(size_t vi= 0; vi < this->models[mi].views.size(); ++vi){
-			std::stringstream fname;
-			fname << folder << "/object" << mi << "_v" << vi << ".pcd";
-			writer.writeBinary(fname.str(), *this->models[mi].views[vi].getDeskCloud());
+	try {
+		for(size_t mi= 0; mi < this->models.size(); ++mi){
+			for(size_t vi= 0; vi < this->models[mi].views.size(); ++vi){
+				std::stringstream file;
+				file << "object" << std::setfill('0') << std::setw(2) << mi << "_view" << std::setfill('0') << std::setw(2) << vi << ".pcd";
+				writer.writeBinary( (folder/file.str()).native(), *this->models[mi].views[vi].getDeskCloud());
+			}
 		}
+
+		PointCloud::Ptr full_table(new PointCloud);
+		for(const Model& m : this->models)
+			for(const ModelView& mv : m.views)
+				*full_table+= *mv.getDeskCloud();
+		writer.writeBinary((folder/"full_table.pcd").native(), *full_table);
+	}
+	catch(pcl::IOException e){
+		ROS_ERROR("failed to write table to file: %s", e.what());
+		return false;
 	}
 
-	for(const Model& m : this->models)
-		for(const ModelView& mv : m.views)
-			*full_table+= *mv.getDeskCloud();
-	writer.writeBinary(folder+"/full_table.pcd", *full_table);
+	return true;
 }
 
 

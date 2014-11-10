@@ -5,6 +5,8 @@
 
 #include <vector>
 
+#include <boost/filesystem.hpp>
+
 #include <visualization_msgs/MarkerArray.h>
 
 #include <object_recognition_msgs/Table.h>
@@ -22,7 +24,7 @@ public:
 	void clear();
 	void finalizeTable();
 
-	void writeTableToFiles(const std::string& folder);
+	bool writeTableToFiles(const boost::filesystem::path& folder) const;
 
    /****************
    * visualization *

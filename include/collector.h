@@ -29,6 +29,8 @@ protected:
 	TableTracker table_tracker_;
 	ModelConstructor model_constructor_;
 
+	size_t table_count_;
+
 	ros::NodeHandle nh_;
 
 	ros::Publisher pub_markers_;
@@ -39,6 +41,7 @@ protected:
 	message_filters::TimeSynchronizer<object_recognition_msgs::TableArray, object_recognition_msgs::RecognizedObjectArray> sync_table_;
 
 	tf::TransformListener tfl_;
+
 };
 
 #endif
