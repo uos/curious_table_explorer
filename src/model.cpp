@@ -1,6 +1,7 @@
 #include "common.h"
 #include "model.h"
 
+#include <pcl/common/common.h>
 #include <pcl/surface/convex_hull.h>
 
 #include <pcl_ros/transforms.h>
@@ -34,8 +35,6 @@ PointCloud::ConstPtr ModelView::getDeskCloud() const {
 // Model implementation
 
 Model::Model() :
-	point_count(0),
-	center(Eigen::Vector4f::Zero()),
 	hull_points(new PointCloud)
 {
 }
@@ -47,20 +46,19 @@ void Model::addView(ModelView m){
 	this->views.push_back(m);
 }
 
-const Eigen::Vector4f& Model::getCenter() const {
-	return this->center;
+Eigen::Vector4f Model::getCenter() const {
+	return (this->min_.getVector4fMap() + this->max_.getVector4fMap()) / 2;
 }
 
 void Model::updateCenter(ModelView& m){
-	PointCloud::ConstPtr pc= m.getDeskCloud();
+	PointCloud pc(*m.getDeskCloud());
 
-	Eigen::Vector4f view_center;
-	pcl::compute3DCentroid(*pc, view_center);
-	view_center[3]= 1; // bug in pcl 1.7.1
+	if( this->views.size() > 0 ){
+		pc.push_back(this->min_);
+		pc.push_back(this->max_);
+	}
 
-	size_t new_count= this->point_count + pc->width;
-	this->center= this->center * (this->point_count/static_cast<double>(new_count))
-	            +  view_center * (        pc->width/static_cast<double>(new_count));
+	pcl::getMinMax3D(pc, this->min_, this->max_);
 }
 
 
