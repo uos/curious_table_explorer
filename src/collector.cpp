@@ -1,12 +1,12 @@
-#include "collector.h"
-
-#include "backjump.h"
-
 #include <pcl_ros/transforms.h>
 
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <vector>
+
+#include "collector.h"
+
+#include "backjump.h"
 
 namespace {
 	std::vector<PointCloud::Ptr> convert(const object_recognition_msgs::RecognizedObjectArray& rec){
@@ -32,6 +32,8 @@ Collector::Collector(const std::string& table_topic, const std::string& recogniz
 
 	this->pub_markers_= this->nh_.advertise<visualization_msgs::MarkerArray>("/stored_object_views", 5, true);
 	this->pub_tables_=  this->nh_.advertise<object_recognition_msgs::TableArray>("/stored_tables", 5, true);
+
+	this->dump_service_= this->nh_.advertiseService("dump_models_to_folder", &Collector::dump_models, this);
 }
 
 void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPtr& tables, const object_recognition_msgs::RecognizedObjectArray::ConstPtr& objs){
@@ -99,6 +101,11 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 
 	this->publish_object_markers();
 	this->publish_tables();
+}
+
+bool Collector::dump_models(my_table_objects::DumpModelsToFolder::Request& req, my_table_objects::DumpModelsToFolder::Response& res) {
+	res.success= model_constructor_.writeTableToFiles(req.path == "" ? "." : req.path);
+	return true;
 }
 
 void Collector::publish_object_markers() const {

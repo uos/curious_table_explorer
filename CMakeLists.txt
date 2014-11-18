@@ -5,10 +5,17 @@ find_package(catkin REQUIRED COMPONENTS
              ecto pcl_ros moveit_msgs genmsg
              roscpp actionlib actionlib_msgs muffin_msgs
              object_recognition_core object_recognition_msgs
-             eigen_conversions
+             eigen_conversions message_generation
 )
 
 find_package(PCL REQUIRED)
+
+add_service_files(
+	FILES
+	DumpModelsToFolder.srv
+)
+
+generate_messages()
 
 # no need to export CATKIN_DEPENDS as long as we don't
 # have other modules building on top of something from here
