@@ -7,6 +7,9 @@
 typedef pcl::PointXYZRGB Point;
 typedef pcl::PointCloud<Point> PointCloud;
 
+using pcl::PointXYZ;
+typedef pcl::PointCloud<PointXYZ> PointCloudXYZ;
+
 #include <tf/transform_datatypes.h>
 
 using tf::Transform;
