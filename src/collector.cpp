@@ -123,7 +123,7 @@ void Collector::publish_tables() const {
 	object_recognition_msgs::TableArray tabs;
 
 	tabs.tables.push_back(this->table_tracker_.getTable());
-	tabs.header= tabs.tables[0].header;
+	tabs.header= tabs.tables[tabs.tables.size()-1].header;
 
 	this->pub_tables_.publish( tabs );
 }
