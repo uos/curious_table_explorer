@@ -223,7 +223,9 @@ void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_ar
 			marker.points.push_back( pcl2ros(points[v.vertices[1]]) );
 			marker.points.push_back( pcl2ros(points[v.vertices[2]]) );
 		}
-		hull_array.markers.push_back(marker);
+		if( marker.points.size() > 0 ){
+			hull_array.markers.push_back(marker);
+		}
 		++marker.id;
 	}
 }
