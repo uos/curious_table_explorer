@@ -10,12 +10,21 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(PCL REQUIRED)
 
+add_action_files(
+	FILES
+	SurroundPoint.action
+)
+
 add_service_files(
 	FILES
 	DumpModelsToFolder.srv
 )
 
-generate_messages()
+generate_messages(
+	DEPENDENCIES
+	actionlib_msgs
+	geometry_msgs
+)
 
 # no need to export CATKIN_DEPENDS as long as we don't
 # have other modules building on top of something from here

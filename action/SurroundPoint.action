@@ -1,0 +1,6 @@
+geometry_msgs/PointStamped point
+
+# difference between two views on the point (in rad)
+float64 delta
+---
+---
