@@ -47,7 +47,8 @@ class Surrounder:
 		i= 0
 		while plan == None and i < 10:
 			try:
-				plan= self.move_base_planner(start= robot_pose, goal= goal_pose, tolerance= .05).plan
+				# the tolerance would plan multiple times and this takes too much time here
+				plan= self.move_base_planner(start= robot_pose, goal= goal_pose, tolerance= .00).plan
 			except rospy.ServiceException:
 				rospy.logwarn("failed to call move_base planning service. trying again...")
 				i+= 1
