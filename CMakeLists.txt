@@ -48,7 +48,7 @@ catkin_package(
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-include_directories(include ${catkin_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
+include_directories(include ${PCL_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 add_executable(collect_object_views
 	src/collect_object_views.cpp
@@ -59,10 +59,11 @@ add_executable(collect_object_views
 	src/model_constructor.cpp
 )
 
-add_dependencies(collect_object_views ${catkin_EXPORTED_TARGETS})
+add_dependencies(collect_object_views ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(
 	collect_object_views
+	${PCL_LIBRARIES}
 	${catkin_LIBRARIES}
 )
 
