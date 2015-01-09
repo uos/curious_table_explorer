@@ -103,8 +103,8 @@ class Surrounder:
 					rospy.loginfo("found working dist %s for angle %s" % (dist, angle))
 					self.move_base_client.send_goal_and_wait( MoveBaseGoal(test_pose), rospy.Duration(40.0))
 					if self.move_base_client.get_state() == GoalStatus.SUCCEEDED:
-						# move_base often returns a second _before_ it stopped moving. Make sure we get a "clean" picture for recognition
-						rospy.sleep(rospy.Duration(1.5))
+						# move_base often returns one or two seconds _before_ it stopped moving. Make sure we get a "clean" picture for recognition
+						rospy.sleep(rospy.Duration(2.5))
 						self.object_recognition_client.send_goal_and_wait( ObjectRecognitionGoal(), rospy.Duration() )
 						break
 					else:
