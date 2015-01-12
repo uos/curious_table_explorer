@@ -10,7 +10,7 @@ from object_recognition_msgs.msg import ObjectRecognitionAction
 import ecto, ecto_ros, ecto_pcl, ecto_pcl_ros
 from ecto_ros import ecto_sensor_msgs
 
-from my_ecto_cells import my_ecto_cells, ecto_object_recognition_msgs
+from uos_ecto_cells import uos_ecto_cells, ecto_object_recognition_msgs
 
 class TableTopSegmentationServer:
 	def __init__(self):
@@ -34,7 +34,7 @@ class TableTopSegmentationServer:
 
 		cloud_sub= ecto_sensor_msgs.Subscriber_PointCloud2(topic_name= '/kinect/depth_registered/points', queue_size= 1)
 		msg2cloud= ecto_pcl_ros.Message2PointCloud()
-		cloud_to_map= my_ecto_cells.CloudReframer(target_frame= '/map', timeout= 0.2, tf_cache_time= 60.0)
+		cloud_to_map= uos_ecto_cells.CloudReframer(target_frame= '/map', timeout= 0.2, tf_cache_time= 60.0)
 		floor_cropper= ecto_pcl.PassThroughIndices(filter_field_name= "z", filter_limit_min= .20)
 		extract_indices_floor= ecto_pcl.ExtractIndices()
 
@@ -53,7 +53,7 @@ class TableTopSegmentationServer:
 		extract_table_content= ecto_pcl.ExtractPolygonalPrismData(height_min= .02, height_max= .5)
 		cluster_table_content= ecto_pcl.EuclideanClusterExtraction(cluster_tolerance= .05, min_cluster_size= 20)
 
-		clusters2recognized_objects= my_ecto_cells.Clusters2RecognizedObjectArray()
+		clusters2recognized_objects= uos_ecto_cells.Clusters2RecognizedObjectArray()
 		recognized_objects_pub= ecto_object_recognition_msgs.Publisher_RecognizedObjectArray(topic_name= '/recognized_object_array')
 
 		colorize_clusters= ecto_pcl.ColorizeClusters()
@@ -61,7 +61,7 @@ class TableTopSegmentationServer:
 		cloud2msg= ecto_pcl_ros.PointCloud2Message()
 		table_content_cloud_pub= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/table_content')
 
-		convex2tables= my_ecto_cells.ConvexHull2Table()
+		convex2tables= uos_ecto_cells.ConvexHull2Table()
 		table_pub= ecto_object_recognition_msgs.Publisher_TableArray(topic_name= '/table')
 
 		graph= [
