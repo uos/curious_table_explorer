@@ -13,7 +13,7 @@
 #include <object_recognition_msgs/RecognizedObjectArray.h>
 #include <object_recognition_msgs/TableArray.h>
 
-#include "my_table_objects/DumpModelsToFolder.h"
+#include "curious_table_explorer/DumpModelsToFolder.h"
 
 #include "table_tracker.h"
 #include "model_constructor.h"
@@ -25,7 +25,7 @@ public:
 	void publish_object_markers() const;
 	void publish_tables() const;
 
-	bool dump_models(my_table_objects::DumpModelsToFolder::Request&, my_table_objects::DumpModelsToFolder::Response&);
+	bool dump_models(curious_table_explorer::DumpModelsToFolder::Request&, curious_table_explorer::DumpModelsToFolder::Response&);
 protected:
 	void observe_table(const object_recognition_msgs::TableArray::ConstPtr&, const object_recognition_msgs::RecognizedObjectArray::ConstPtr&);
 

@@ -137,7 +137,7 @@ namespace {
 		visualization_msgs::Marker m;
 		m.type= visualization_msgs::Marker::POINTS;
 		m.action= visualization_msgs::Marker::ADD;
-		m.ns= "my_table_objects_clouds";
+		m.ns= "cutax_clouds";
 		m.id= 0;
 		m.lifetime= ros::Duration(0.0);
 		m.scale.x= m.scale.y= .001;
@@ -147,7 +147,7 @@ namespace {
 
 	visualization_msgs::Marker hullMarker(){
 		visualization_msgs::Marker m= cloudMarker();
-		m.ns= "my_table_objects_hulls";
+		m.ns= "cutax_hulls";
 		m.type= visualization_msgs::Marker::TRIANGLE_LIST;
 		m.scale.x= m.scale.y= m.scale.z= 1;
 		return m;
@@ -157,7 +157,7 @@ namespace {
 		visualization_msgs::Marker m;
 		m.type= visualization_msgs::Marker::SPHERE;
 		m.action= visualization_msgs::Marker::ADD;
-		m.ns= "my_table_objects_centers";
+		m.ns= "cutax_centers";
 		m.id= 0;
 		m.lifetime= ros::Duration(0.0);
 		m.scale.x= m.scale.y= m.scale.z= .05;

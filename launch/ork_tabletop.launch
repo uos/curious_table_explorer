@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="config" default="$(find my_table_objects)/config/tabletop_find_clusters.ork" />
+  <arg name="config" default="$(find curious_table_explorer)/config/tabletop_find_clusters.ork" />
   <arg name="debug" default="false" />
 
   <node name="tabletop_object_recognition_server" pkg="object_recognition_ros" type="server" args="--node_name tabletop_object_recognition -c $(arg config)" output="screen" if="$(arg debug)"/>

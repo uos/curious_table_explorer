@@ -15,7 +15,7 @@ from geometry_msgs.msg import *
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from nav_msgs.srv import GetPlan
 
-from my_table_objects.msg import SurroundPointAction
+from curious_table_explorer.msg import SurroundPointAction
 from object_recognition_msgs.msg import ObjectRecognitionAction, ObjectRecognitionGoal
 
 class Surrounder:

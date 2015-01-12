@@ -1,5 +1,5 @@
 <package>
-  <name>my_table_objects</name>
+  <name>curious_table_explorer</name>
   <version>0.0.1</version>
   <description>Build Table Object Representations from Autonomous Runs</description>
   <author>Michael Goerner</author>

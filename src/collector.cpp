@@ -82,7 +82,7 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 		model_constructor_.finalizeTable();
 
 		std::string path;
-		nh_.param<std::string>("view_storage_path", path, "/tmp/my_table_objects");
+		nh_.param<std::string>("view_storage_path", path, "/tmp/curious_table_explorer");
 
 		std::stringstream tablename;
 		tablename << "table" << std::setfill('0') << std::setw(3) << this->table_count_;
@@ -103,7 +103,7 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 	this->publish_tables();
 }
 
-bool Collector::dump_models(my_table_objects::DumpModelsToFolder::Request& req, my_table_objects::DumpModelsToFolder::Response& res) {
+bool Collector::dump_models(curious_table_explorer::DumpModelsToFolder::Request& req, curious_table_explorer::DumpModelsToFolder::Response& res) {
 	res.success= model_constructor_.writeTableToFiles(req.path == "" ? "." : req.path);
 	return true;
 }

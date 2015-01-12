@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(my_table_objects)
+project(curious_table_explorer)
 
 find_package(catkin REQUIRED COMPONENTS
 	actionlib
