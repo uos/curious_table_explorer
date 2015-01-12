@@ -19,7 +19,7 @@ class TableTopSegmentationServer:
 
 		self.server= actionlib.SimpleActionServer('recognize_objects', ObjectRecognitionAction, self.execute, False)
 		self.server.start()
-		rospy.loginfo('started tts-server')
+		rospy.loginfo('started tabletop segmentation server')
 
 	def execute(self, goal):
 		rospy.loginfo('received request - running plasm once')
