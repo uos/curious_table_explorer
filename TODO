@@ -1,12 +1,12 @@
 TODO List
 =========
 
-my_tabletop_segmentation
-~~~~~~~~~~~~~~~~~~~~~~~~
+tabletop_segmentation_server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - Extract objects above plane more reasonable than simply cropping at min_height
 
-my_table_objects
-~~~~~~~~~~~~~~~~
+table_object - related
+~~~~~~~~~~~~~~~~~~~~~~
 - Test VFH / Color histograms
 
 - ModelConstructor::addModelView should be protected and should mark models already taken in this TableView
@@ -14,5 +14,3 @@ my_table_objects
 - refined view registration via pcl::registration::LUM
 
 - Object-Identification at different positions
-
-- Robot contour following around table to get different views
