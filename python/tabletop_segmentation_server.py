@@ -108,7 +108,16 @@ class TableTopSegmentationServer:
 		self.plasm.connect(graph)
 
 if __name__ == '__main__':
-	rospy.init_node('tabletop_segmentation')
-	ecto_ros.init(sys.argv, 'tabletop_segmentation_ecto')
+	node_name= "tabletop_segmentation"
+	rospy.init_node(node_name)
+
+	node_name= rospy.get_name()
+	try:
+		node_name= node_name[(node_name.rindex('/')+1):]
+	except ValueError:
+		pass
+	# this filter is necessary to ensure the python & cpp node
+	# get different names when this is called from a launch file
+	ecto_ros.init([s for s in sys.argv if not s.startswith('__name:=')], node_name+'_ecto', anonymous= True)
 	ttserver= TableTopSegmentationServer()
 	rospy.spin()
