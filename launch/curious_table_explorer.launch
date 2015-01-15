@@ -2,5 +2,5 @@
 <launch>
   <node name="point_surrounder" pkg="curious_table_explorer" type="surrounder.py" output="screen"/>
   <node name="tabletop_segmentation_server" pkg="curious_table_explorer" type="tabletop_segmentation_server.py" output="screen"/>
-  <node name="object_view_collector" pkg="collect_object_views" type="collect_objects_views" output="screen"/>
+  <node name="object_view_collector" pkg="curious_table_explorer" type="collect_objects_views" output="screen"/>
 </launch>
