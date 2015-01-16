@@ -14,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
 	pcl_ros
 	roscpp
 	sensor_msgs
-	std_msgs
 	tf
 	visualization_msgs
 )
@@ -51,9 +50,8 @@ catkin_package(
 		message_runtime
 		actionlib_msgs
 		geometry_msgs
-		sensor_msgs
-		std_msgs
 		object_recognition_msgs
+		sensor_msgs
 		visualization_msgs
 )
 
