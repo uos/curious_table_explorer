@@ -1,0 +1,3 @@
+geometry_msgs/PoseStamped object_pose
+
+curious_table_explorer/RegisteredPointCloud[] views

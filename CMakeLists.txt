@@ -13,12 +13,20 @@ find_package(catkin REQUIRED COMPONENTS
 	pcl_conversions
 	pcl_ros
 	roscpp
+	sensor_msgs
 	std_msgs
 	tf
 	visualization_msgs
 )
 
 find_package(PCL REQUIRED)
+
+add_message_files(
+   FILES
+	RegisteredPointCloud.msg
+	RegisteredObject.msg
+	ObservedTable.msg
+)
 
 add_action_files(
 	FILES
@@ -34,6 +42,8 @@ generate_messages(
 	DEPENDENCIES
 	actionlib_msgs
 	geometry_msgs
+	object_recognition_msgs
+	sensor_msgs
 )
 
 catkin_package(
@@ -41,6 +51,7 @@ catkin_package(
 		message_runtime
 		actionlib_msgs
 		geometry_msgs
+		sensor_msgs
 		std_msgs
 		object_recognition_msgs
 		visualization_msgs
