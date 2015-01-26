@@ -24,6 +24,7 @@ public:
 
 	void publish_object_markers() const;
 	void publish_tables() const;
+	void publish_observed_table() const;
 
 	bool dump_models(curious_table_explorer::DumpModelsToFolder::Request&, curious_table_explorer::DumpModelsToFolder::Response&);
 protected:

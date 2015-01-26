@@ -11,6 +11,8 @@
 
 #include <object_recognition_msgs/Table.h>
 
+#include "curious_table_explorer/RegisteredObject.h"
+
 #include "model.h"
 
 class ModelConstructor {
@@ -25,6 +27,8 @@ public:
 	void finalizeTable();
 
 	bool writeTableToFiles(const boost::filesystem::path& folder) const;
+
+	void buildRegisteredObjects(std::vector<curious_table_explorer::RegisteredObject>&) const;
 
    /****************
    * visualization *

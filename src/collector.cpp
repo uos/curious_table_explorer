@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "collector.h"
+#include "curious_table_explorer/ObservedTable.h"
 
 #include "backjump.h"
 
@@ -101,6 +102,8 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 
 	this->publish_object_markers();
 	this->publish_tables();
+
+	this->publish_observed_table();
 }
 
 bool Collector::dump_models(curious_table_explorer::DumpModelsToFolder::Request& req, curious_table_explorer::DumpModelsToFolder::Response& res) {
@@ -126,4 +129,13 @@ void Collector::publish_tables() const {
 	tabs.header= tabs.tables[tabs.tables.size()-1].header;
 
 	this->pub_tables_.publish( tabs );
+}
+
+void Collector::publish_observed_table() const {
+	curious_table_explorer::ObservedTable ot;
+
+	ot.table= table_tracker_.getTable();
+	ot.table.header.seq= table_count_;
+
+	model_constructor_.buildRegisteredObjects(ot.objects);
 }

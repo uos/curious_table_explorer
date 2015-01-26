@@ -4,8 +4,12 @@
 
 #include "uniform_color_distribution.h"
 
+#include "curious_table_explorer/RegisteredPointCloud.h"
+
 #include <sstream>
 #include <vector>
+
+#include <Eigen/Geometry>
 
 #include <boost/filesystem.hpp>
 
@@ -83,6 +87,38 @@ void ModelConstructor::addModelView(ModelView mv){
 
 void ModelConstructor::finalizeTable() {
 	// post-registration can be performed here
+}
+
+/***************************
+ * Output generated models *
+ ***************************/
+
+void ModelConstructor::buildRegisteredObjects(std::vector<curious_table_explorer::RegisteredObject>& objects) const {
+	Eigen::Translation<float, 3> trans(0, 0, 0);
+	objects.reserve(models.size());
+	for(const Model& m : models){
+		curious_table_explorer::RegisteredObject obj;
+
+		trans= Eigen::Translation<float,3>(m.getCenter().head<3>());
+
+		obj.object_pose.pose.position.x= trans.x();
+		obj.object_pose.pose.position.y= trans.y();
+		obj.object_pose.pose.position.z= trans.z();
+		obj.object_pose.pose.orientation.w= 1;
+
+		obj.views.reserve(m.views.size());
+		for( const ModelView& mv : m.views ){
+			curious_table_explorer::RegisteredPointCloud rpc;
+
+			PointCloud pc(*mv.getViewCloud());
+			pcl::toROSMsg(pc, rpc.view);
+
+			//TODO: get desk-Transform, adjust it to be an object_frame_transform (using trans) and add it to rpc.object_frame_transform
+			obj.views.push_back(rpc);
+		}
+
+		objects.push_back(obj);
+	}
 }
 
 /*************************
