@@ -39,6 +39,7 @@ protected:
 
 	ros::Publisher pub_markers_;
 	ros::Publisher pub_tables_;
+	ros::Publisher pub_models_;
 
 	message_filters::Subscriber<object_recognition_msgs::TableArray> sub_table_;
 	message_filters::Subscriber<object_recognition_msgs::RecognizedObjectArray> sub_objects_;

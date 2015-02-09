@@ -33,6 +33,7 @@ Collector::Collector(const std::string& table_topic, const std::string& recogniz
 
 	this->pub_markers_= this->nh_.advertise<visualization_msgs::MarkerArray>("/stored_object_views", 5, true);
 	this->pub_tables_=  this->nh_.advertise<object_recognition_msgs::TableArray>("/stored_tables", 5, true);
+	this->pub_models_=  this->nh_.advertise<curious_table_explorer::ObservedTable>("/generated_models", 5, true);
 
 	this->dump_service_= this->nh_.advertiseService("dump_models_to_folder", &Collector::dump_models, this);
 }
@@ -138,4 +139,6 @@ void Collector::publish_observed_table() const {
 	ot.table.header.seq= table_count_;
 
 	model_constructor_.buildRegisteredObjects(ot.objects);
+
+	this->pub_models_.publish( ot );
 }
