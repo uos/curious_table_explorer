@@ -31,8 +31,8 @@ Collector::Collector(const std::string& table_topic, const std::string& recogniz
 	this->sync_table_.connectInput(this->sub_table_, this->sub_objects_);
 	this->sync_table_.registerCallback(boost::bind(&Collector::observe_table, this, _1, _2));
 
-	this->pub_markers_= this->nh_.advertise<visualization_msgs::MarkerArray>("/stored_object_views", 5, true);
-	this->pub_tables_=  this->nh_.advertise<object_recognition_msgs::TableArray>("/stored_tables", 5, true);
+	this->pub_markers_= this->nh_.advertise<visualization_msgs::MarkerArray>("/tracked_object_views", 5, true);
+	this->pub_tables_=  this->nh_.advertise<object_recognition_msgs::TableArray>("/tracked_table", 5, true);
 	this->pub_models_=  this->nh_.advertise<curious_table_explorer::ObservedTable>("/generated_models", 5, true);
 
 	this->dump_service_= this->nh_.advertiseService("dump_models_to_folder", &Collector::dump_models, this);
