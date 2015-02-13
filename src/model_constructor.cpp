@@ -77,7 +77,7 @@ void ModelConstructor::addModelView(ModelView mv){
 		}
 	}
 
-	this->models.push_back( Model() );
+	this->models.emplace_back();
 	Model& fresh_model= this->models.back();
 	fresh_model.addView(mv);
 	Eigen::Vector4f center= fresh_model.getCenter();
