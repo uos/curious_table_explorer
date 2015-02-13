@@ -77,11 +77,11 @@ void ModelConstructor::addModelView(ModelView mv){
 		}
 	}
 
-	Model* fresh_model= new Model;
-	fresh_model->addView(mv);
-	Eigen::Vector4f center= fresh_model->getCenter();
+	this->models.push_back( Model() );
+	Model& fresh_model= this->models.back();
+	fresh_model.addView(mv);
+	Eigen::Vector4f center= fresh_model.getCenter();
 	ROS_INFO("found no matching model. Adding new one %f / %f / %f", center[0], center[1], center[2]);
-	this->models.push_back(*fresh_model);
 }
 
 
