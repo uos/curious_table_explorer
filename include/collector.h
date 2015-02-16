@@ -18,6 +18,8 @@
 #include "table_tracker.h"
 #include "model_constructor.h"
 
+namespace curious_table_explorer {
+
 class Collector {
 public:
 	Collector(const std::string& table_topic, const std::string& recognized_objects_topic);
@@ -50,4 +52,5 @@ protected:
 
 };
 
+}
 #endif

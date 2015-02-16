@@ -14,6 +14,8 @@
 
 #include <boost/make_shared.hpp>
 
+namespace curious_table_explorer {
+
 namespace {
 	std::vector<geometry_msgs::Point> convert( const PointCloudXYZ& cloud ){
 		std::vector<geometry_msgs::Point> pts;
@@ -98,4 +100,6 @@ object_recognition_msgs::Table TableTracker::getTable() const {
 	worldTable.header.frame_id= "/map";
 
 	return worldTable;
+}
+
 }

@@ -5,6 +5,9 @@
 
 #include <vector>
 
+namespace curious_table_explorer {
+namespace utils {
+
 class IncrementalViewIcp {
 public:
 	IncrementalViewIcp();
@@ -28,4 +31,6 @@ protected:
 	TransformMat world_to_fixed_frame;
 };
 
+}
+}
 #endif

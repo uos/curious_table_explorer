@@ -9,6 +9,8 @@
 
 #include <pcl/Vertices.h>
 
+namespace curious_table_explorer {
+
 class ModelView {
 public:
 	ModelView(PointCloud::Ptr c, const Transform& w);
@@ -47,4 +49,5 @@ protected:
 	std::vector<pcl::Vertices> hull_polygons;
 };
 
+}
 #endif

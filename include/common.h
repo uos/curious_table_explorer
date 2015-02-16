@@ -4,18 +4,21 @@
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 
+#include <tf/transform_datatypes.h>
+
+#include <Eigen/Core>
+
+namespace curious_table_explorer {
+
 typedef pcl::PointXYZRGB Point;
 typedef pcl::PointCloud<Point> PointCloud;
 
 using pcl::PointXYZ;
 typedef pcl::PointCloud<PointXYZ> PointCloudXYZ;
 
-#include <tf/transform_datatypes.h>
-
 using tf::Transform;
-
-#include <Eigen/Core>
 
 typedef Eigen::Matrix4f TransformMat;
 
+}
 #endif

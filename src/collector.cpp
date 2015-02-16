@@ -9,6 +9,8 @@
 
 #include "backjump.h"
 
+namespace curious_table_explorer {
+
 namespace {
 	std::vector<PointCloud::Ptr> convert(const object_recognition_msgs::RecognizedObjectArray& rec){
 		std::vector<PointCloud::Ptr> vec;
@@ -33,7 +35,7 @@ Collector::Collector(const std::string& table_topic, const std::string& recogniz
 
 	this->pub_markers_= this->nh_.advertise<visualization_msgs::MarkerArray>("/tracked_object_views", 5, true);
 	this->pub_tables_=  this->nh_.advertise<object_recognition_msgs::TableArray>("/tracked_table", 5, true);
-	this->pub_models_=  this->nh_.advertise<curious_table_explorer::ObservedTable>("/generated_models", 5, true);
+	this->pub_models_=  this->nh_.advertise<ObservedTable>("/generated_models", 5, true);
 
 	this->dump_service_= this->nh_.advertiseService("dump_models_to_folder", &Collector::dump_models, this);
 }
@@ -107,7 +109,7 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 	this->publish_observed_table();
 }
 
-bool Collector::dump_models(curious_table_explorer::DumpModelsToFolder::Request& req, curious_table_explorer::DumpModelsToFolder::Response& res) {
+bool Collector::dump_models(DumpModelsToFolder::Request& req, DumpModelsToFolder::Response& res) {
 	res.success= model_constructor_.writeTableToFiles(req.path == "" ? "." : req.path);
 	return true;
 }
@@ -133,7 +135,7 @@ void Collector::publish_tables() const {
 }
 
 void Collector::publish_observed_table() const {
-	curious_table_explorer::ObservedTable ot;
+	ObservedTable ot;
 
 	ot.table= table_tracker_.getTable();
 	ot.table.header.seq= table_count_;
@@ -141,4 +143,6 @@ void Collector::publish_observed_table() const {
 	model_constructor_.buildRegisteredObjects(ot.objects);
 
 	this->pub_models_.publish( ot );
+}
+
 }

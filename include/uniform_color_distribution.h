@@ -4,6 +4,9 @@
 #include <random>
 #include <std_msgs/ColorRGBA.h>
 
+namespace curious_table_explorer {
+namespace utils {
+
 class uniform_color_distribution {
 public:
 	uniform_color_distribution() : uni_dist(0.0, 1.0){}
@@ -21,4 +24,6 @@ private:
 	std::uniform_real_distribution<double> uni_dist;
 };
 
+}
+}
 #endif

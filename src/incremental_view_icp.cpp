@@ -6,6 +6,9 @@
 #include <pcl/common/transforms.h>
 #include <pcl/registration/icp.h>
 
+namespace curious_table_explorer {
+namespace utils {
+
 IncrementalViewIcp::IncrementalViewIcp() :
 	last_view(nullptr),
 	world_to_fixed_frame(TransformMat::Identity())
@@ -59,4 +62,7 @@ TransformMat IncrementalViewIcp::getWorldToFixedFrame() const {
 
 TransformMat IncrementalViewIcp::getFixedFrameToWorld() const {
 	return this->world_to_fixed_frame.inverse();
+}
+
+}
 }

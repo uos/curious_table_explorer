@@ -6,6 +6,9 @@
 
 #include <pcl_ros/transforms.h>
 
+
+namespace curious_table_explorer {
+
 // ModelView implementation
 
 ModelView::ModelView(PointCloud::Ptr c, const tf::Transform& w) :
@@ -81,4 +84,6 @@ void Model::updateConvexHull(ModelView& m){
 	chull.setInputCloud(cloud);
 
 	chull.reconstruct(*this->hull_points, this->hull_polygons);
+}
+
 }

@@ -7,7 +7,9 @@
 
 #include <object_recognition_msgs/Table.h>
 
-class TableTracker : public IncrementalViewIcp {
+namespace curious_table_explorer {
+
+class TableTracker : public utils::IncrementalViewIcp {
 public:
 	TableTracker();
 
@@ -20,4 +22,5 @@ protected:
 	object_recognition_msgs::Table table_;
 };
 
+}
 #endif

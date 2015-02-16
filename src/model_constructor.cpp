@@ -21,6 +21,8 @@
 
 #include <pcl_conversions/pcl_conversions.h>
 
+namespace curious_table_explorer {
+
 namespace {
 	geometry_msgs::Point pcl2ros(Point p){
 		geometry_msgs::Point gp;
@@ -93,11 +95,11 @@ void ModelConstructor::finalizeTable() {
  * Output generated models *
  ***************************/
 
-void ModelConstructor::buildRegisteredObjects(std::vector<curious_table_explorer::RegisteredObject>& objects) const {
+void ModelConstructor::buildRegisteredObjects(std::vector<RegisteredObject>& objects) const {
 	Eigen::Translation<float, 3> trans(0, 0, 0);
 	objects.reserve(models.size());
 	for(const Model& m : models){
-		curious_table_explorer::RegisteredObject obj;
+		RegisteredObject obj;
 
 		trans= Eigen::Translation<float,3>(m.getCenter().head<3>());
 
@@ -108,7 +110,7 @@ void ModelConstructor::buildRegisteredObjects(std::vector<curious_table_explorer
 
 		obj.views.reserve(m.views.size());
 		for( const ModelView& mv : m.views ){
-			curious_table_explorer::RegisteredPointCloud rpc;
+			RegisteredPointCloud rpc;
 
 			PointCloud pc(*mv.getViewCloud());
 			pcl::toROSMsg(pc, rpc.view);
@@ -205,7 +207,7 @@ namespace {
 
 void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_array, const TransformMat& table_to_world) const {
 	std::default_random_engine generator(RANDOM_SEED);
-	uniform_color_distribution distribution;
+	utils::uniform_color_distribution distribution;
 
 	visualization_msgs::Marker marker= cloudMarker();
 
@@ -229,7 +231,7 @@ void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_
 
 void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_array, const TransformMat& table_to_world) const {
 	std::default_random_engine generator(RANDOM_SEED);
-	uniform_color_distribution distribution;
+	utils::uniform_color_distribution distribution;
 
 	visualization_msgs::Marker marker= hullMarker();
 
@@ -268,7 +270,7 @@ void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_ar
 
 void ModelConstructor::buildCenterMarkers(visualization_msgs::MarkerArray& center_array, const TransformMat& table_to_world) const {
 	std::default_random_engine generator(RANDOM_SEED);
-	uniform_color_distribution distribution;
+	utils::uniform_color_distribution distribution;
 
 	visualization_msgs::Marker marker= centerMarker();
 
@@ -281,4 +283,6 @@ void ModelConstructor::buildCenterMarkers(visualization_msgs::MarkerArray& cente
 		center_array.markers.push_back(marker);
 		++marker.id;
 	}
+}
+
 }

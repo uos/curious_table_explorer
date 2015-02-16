@@ -15,6 +15,8 @@
 
 #include "model.h"
 
+namespace curious_table_explorer {
+
 class ModelConstructor {
 public:
 	ModelConstructor();
@@ -28,7 +30,7 @@ public:
 
 	bool writeTableToFiles(const boost::filesystem::path& folder) const;
 
-	void buildRegisteredObjects(std::vector<curious_table_explorer::RegisteredObject>&) const;
+	void buildRegisteredObjects(std::vector<RegisteredObject>&) const;
 
    /****************
    * visualization *
@@ -41,4 +43,5 @@ protected:
 	std::vector<Model> models;
 };
 
+}
 #endif
