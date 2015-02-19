@@ -76,4 +76,16 @@ target_link_libraries(
 	${catkin_LIBRARIES}
 )
 
+
+add_executable(recognize_registered_objects
+	src/recognize_registered_objects.cpp
+)
+add_dependencies(recognize_registered_objects ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+
+target_link_libraries(
+	recognize_registered_objects
+	${PCL_LIBRARIES}
+	${catkin_LIBRARIES}
+)
+
 install(TARGETS collect_object_views RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
