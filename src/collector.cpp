@@ -138,7 +138,8 @@ void Collector::publish_observed_table() const {
 	ObservedTable ot;
 
 	ot.table= table_tracker_.getTable();
-	ot.table.header.seq= table_count_;
+	ot.header= ot.table.header;
+	ot.header.seq= table_count_;
 
 	model_constructor_.buildRegisteredObjects(ot.objects);
 
