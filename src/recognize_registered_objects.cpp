@@ -105,10 +105,11 @@ public:
 		object_recognition_msgs::RecognizedObjectArray recognition_result= convert( *ot );
 
 		// should we track a new table?
-		if( ot->header.seq > current_table_id_ ){
+		if( ot->table_id != current_table_id_ ){
+			ROS_INFO("got new table (id: %d) / storing old table (id: %d)", ot->table_id, current_table_id_);
 			stored_objects_.insert( stored_objects_.end(), current_objects_.begin(), current_objects_.end() );
 			stored_clustering_= current_clustering_;
-			current_table_id_++;
+			current_table_id_= ot->table_id;
 		}
 		current_objects_.clear();
 		current_clustering_= stored_clustering_;

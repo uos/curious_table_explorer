@@ -79,7 +79,7 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 		*full_view+= *p;
 
 	if( table_tracker_.isLocked() && table_tracker_.registerTable(table, full_view, world_transform) ){
-		ROS_INFO("registered known table");
+		ROS_INFO("registered known table %ld", table_count_);
 		model_constructor_.addTableView(table, view, table_tracker_.getWorldToFixedFrame()*world_transform);
 	}
 	else {
@@ -139,7 +139,7 @@ void Collector::publish_observed_table() const {
 
 	ot.table= table_tracker_.getTable();
 	ot.header= ot.table.header;
-	ot.header.seq= table_count_;
+	ot.table_id= table_count_;
 
 	model_constructor_.buildRegisteredObjects(ot.objects);
 
