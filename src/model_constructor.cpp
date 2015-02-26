@@ -96,13 +96,15 @@ void ModelConstructor::finalizeTable() {
  ***************************/
 
 void ModelConstructor::buildRegisteredObjects(std::vector<RegisteredObject>& objects) const {
+
 	Eigen::Translation<float, 3> trans(0, 0, 0);
 	objects.reserve(models.size());
 	for(const Model& m : models){
+		assert( m.views.size() > 0 );
+
 		RegisteredObject obj;
 
 		trans= Eigen::Translation<float,3>(m.getCenter().head<3>());
-
 		obj.object_pose.pose.position.x= trans.x();
 		obj.object_pose.pose.position.y= trans.y();
 		obj.object_pose.pose.position.z= trans.z();
@@ -116,8 +118,11 @@ void ModelConstructor::buildRegisteredObjects(std::vector<RegisteredObject>& obj
 			pcl::toROSMsg(pc, rpc.view);
 
 			//TODO: get desk-Transform, adjust it to be an object_frame_transform (using trans) and add it to rpc.object_frame_transform
+			rpc.object_frame_transform.transform.rotation.w= 1;
 			obj.views.push_back(rpc);
 		}
+		obj.object_pose.header= obj.views.back().view.header;
+		obj.object_pose.header.frame_id= "table";
 
 		objects.push_back(obj);
 	}

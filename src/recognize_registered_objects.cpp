@@ -28,6 +28,7 @@ using std::unordered_map;
 namespace {
 	object_recognition_msgs::RecognizedObjectArray convert( const ObservedTable& ot ){
 		object_recognition_msgs::RecognizedObjectArray oa;
+		oa.header= ot.header;
 
 		if( ot.objects.size() == 0 )
 			return oa;
@@ -40,8 +41,9 @@ namespace {
 		tf::StampedTransform table2world;
 		{
 		tf::Transform trans;
-		tf::poseMsgToTF( ot.table.pose, table2world );
-		table2world= tf::StampedTransform( trans, ot.header.stamp, ot.header.frame_id, ot.objects[0].object_pose.header.frame_id );
+		tf::poseMsgToTF( ot.table.pose, trans );
+
+		table2world= tf::StampedTransform( trans, ros::Time(), ot.header.frame_id, ot.objects[0].object_pose.header.frame_id );
 		}
 		transformer.setTransform( table2world );
 
@@ -60,7 +62,9 @@ namespace {
 			geometry_msgs::PoseStamped psout;
 			tf::Stamped<tf::Pose> pin, pout;
 			tf::poseStampedMsgToTF( obj.object_pose, pin );
+			pin.stamp_= ros::Time();
 			transformer.transformPose( ot.header.frame_id, pin, pout);
+			pout.stamp_= obj.object_pose.header.stamp;
 			tf::poseStampedTFToMsg( pout, psout );
 
 			ro.pose.header= psout.header;

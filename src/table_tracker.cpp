@@ -87,6 +87,7 @@ bool TableTracker::registerTable(const object_recognition_msgs::Table& table, Po
 	PointCloudXYZ new_hull;
 	convex.reconstruct(new_hull);
 
+	this->table_.header= table.header;
 	this->table_.convex_hull= convert(new_hull);
 
 	return true;
