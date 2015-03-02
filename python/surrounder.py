@@ -37,7 +37,7 @@ class Surrounder:
 		rospy.loginfo('started surround_point action server')
 
 	def check_preempted(self):
-		req= self.server.is_preempt_requested()
+		req= self.server.is_preempt_requested() or rospy.is_shutdown()
 		if req:
 			self.server.set_preempted()
 		return req
@@ -45,7 +45,7 @@ class Surrounder:
 	def get_plan(self, robot_pose, goal_pose):
 		plan= None
 		i= 0
-		while plan == None and i < 10:
+		while plan == None and i < 10 and not self.check_preempted():
 			try:
 				# the tolerance would plan multiple times and this takes too much time here
 				plan= self.move_base_planner(start= robot_pose, goal= goal_pose, tolerance= .00).plan
