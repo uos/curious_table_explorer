@@ -7,9 +7,15 @@
 #include <unordered_map>
 #include <string>
 
+#include <pcl/search/kdtree.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/features/vfh.h>
+
 #include <ros/ros.h>
 
 #include <tf/tf.h>
+
+#include <pcl_conversions/pcl_conversions.h>
 
 #include <object_recognition_msgs/RecognizedObject.h>
 #include <object_recognition_msgs/RecognizedObjectArray.h>
@@ -75,31 +81,60 @@ namespace {
 
 		return oa;
 	}
+
+
+	pcl::VFHSignature308 compute_vfh_signature( const sensor_msgs::PointCloud2& pc ){
+		PointCloud::Ptr cloud= boost::make_shared<PointCloud>();
+		pcl::fromROSMsg(pc, *cloud);
+		pcl::PointCloud<pcl::Normal>::Ptr normals= boost::make_shared<pcl::PointCloud<pcl::Normal>>();
+		{
+			// TODO: this should probably happen in segmentation already
+			pcl::NormalEstimation<Point, pcl::Normal> ne;
+			ne.setRadiusSearch(.01);
+			ne.setSearchMethod(boost::make_shared<pcl::search::KdTree<Point>>());
+			ne.setInputCloud(cloud);
+			ne.compute(*normals);
+			// TODO: is this necessary? ecto's NormalEstimation does the same
+			normals->header= cloud->header;
+		}
+		pcl::PointCloud<pcl::VFHSignature308> cloud_signature;
+		{
+			pcl::VFHEstimation<Point, pcl::Normal, pcl::VFHSignature308> ve;
+			ve.setSearchMethod(boost::make_shared<pcl::search::KdTree<Point>>());
+			ve.setInputCloud(cloud);
+			ve.setInputNormals(normals);
+			ve.compute(cloud_signature);
+		}
+		assert( cloud_signature.points.size() == 1 );
+		return cloud_signature.points[0];
+	}
 }
 
-typedef vector<RegisteredObject::Ptr> Cluster;
+typedef vector<RegisteredObject::Ptr> ObjectCluster;
 
-struct Clustering {
-	Clustering() : next_cluster_id(0) {};
+struct ObjectClustering {
+	ObjectClustering() : next_cluster_id(0) {};
 
 	size_t new_cluster(){
-		clusters[next_cluster_id]= Cluster();
+		clusters[next_cluster_id]= ObjectCluster();
 		return next_cluster_id++;
 	};
 
-	Cluster& operator[](size_t id){
+	ObjectCluster& operator[](size_t id){
 		return clusters[id];
 	};
 
 	size_t next_cluster_id;
-	unordered_map<size_t, Cluster> clusters;
+	unordered_map<size_t, ObjectCluster> clusters;
 };
 
 
 class Recognizer {
 public:
 	Recognizer(const std::string topic) :
-		current_table_id_(0)
+		current_table_id_(0),
+		stored_signatures_(new pcl::PointCloud<pcl::VFHSignature308>),
+		current_signatures_(new pcl::PointCloud<pcl::VFHSignature308>)
 	{
 		this->sub_objects_= nh_.subscribe(topic, 3, &Recognizer::recognition_callback, this);
 		this->pub_result_= nh_.advertise<object_recognition_msgs::RecognizedObjectArray>("/clustering_result", 5, true);
@@ -113,10 +148,13 @@ public:
 			ROS_INFO("got new table (id: %d) / storing old table (id: %d)", ot->table_id, current_table_id_);
 			stored_objects_.insert( stored_objects_.end(), current_objects_.begin(), current_objects_.end() );
 			stored_clustering_= current_clustering_;
+			*stored_signatures_= *current_signatures_;
+
 			current_table_id_= ot->table_id;
 		}
 		current_objects_.clear();
 		current_clustering_= stored_clustering_;
+		*current_signatures_= *stored_signatures_;
 
 		for(size_t obji= 0; obji < ot->objects.size(); ++obji){
 			const RegisteredObject& o= ot->objects[obji];
@@ -137,18 +175,68 @@ public:
 
 	// classify object and return index in current_clustering
 	size_t classify( RegisteredObject::Ptr& op ){
-		size_t cluster_id= this->current_clustering_.new_cluster();
+		// KdTree fails with empty input
+		if( current_signatures_->points.size() == 0 ) {
+			for( const RegisteredPointCloud& rp : op->views )
+				current_signatures_->push_back( compute_vfh_signature( rp.view ) );
+			size_t cluster_id= this->current_clustering_.new_cluster();
+			this->current_clustering_[cluster_id].push_back( op );
+			return cluster_id;
+		}
+
+		pcl::search::KdTree<pcl::VFHSignature308> signature_tree;
+		signature_tree.setInputCloud(current_signatures_);
+
+		pcl::PointCloud<pcl::VFHSignature308> object_signatures;
+		float min_distance= 1.0/0.0;
+		int min_distance_index= 0;
+		for( const RegisteredPointCloud& rp : op->views ){
+			pcl::VFHSignature308 cloud_signature= compute_vfh_signature( rp.view );
+			object_signatures.push_back( cloud_signature );
+
+			const size_t nr_of_candidates= 1;
+			vector<int> matching_sigs; matching_sigs.resize(nr_of_candidates);
+			vector<float> matching_sigs_distances;  matching_sigs_distances.resize(nr_of_candidates);
+			signature_tree.nearestKSearch( cloud_signature, nr_of_candidates, matching_sigs, matching_sigs_distances );
+			if( matching_sigs_distances[0] < min_distance ){
+				min_distance= matching_sigs_distances[0];
+				min_distance_index= matching_sigs[0];
+			}
+		}
+		*current_signatures_+= object_signatures;
+
+		size_t cluster_id= 0;
+		if( min_distance > 0 && min_distance < 200){
+			cluster_id= this->current_objects_[vfh_id_to_object_id(min_distance_index)].second;
+		}
+		else {
+			cluster_id= this->current_clustering_.new_cluster();
+		}
+
 		this->current_clustering_[cluster_id].push_back( op );
 		return cluster_id;
 	}
 
 protected:
-	vector<pair<RegisteredObject::Ptr, size_t>> stored_objects_;
 
+	size_t vfh_id_to_object_id( int vfh_index ){
+		int accum= 0;
+		for(size_t i= 0; i < current_objects_.size(); ++i){
+			accum+= current_objects_[i].first->views.size();
+			if( accum > vfh_index )
+				return i;
+		}
+		assert( 0 && "unreachable" );
+	}
+
+	vector<pair<RegisteredObject::Ptr, size_t>> stored_objects_;
 	vector<pair<RegisteredObject::Ptr, size_t>> current_objects_;
 
-	Clustering stored_clustering_;
-	Clustering current_clustering_;
+	ObjectClustering stored_clustering_;
+	ObjectClustering current_clustering_;
+
+	pcl::PointCloud<pcl::VFHSignature308>::Ptr stored_signatures_;
+	pcl::PointCloud<pcl::VFHSignature308>::Ptr current_signatures_;
 
 	uint32_t current_table_id_;
 
