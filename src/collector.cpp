@@ -16,6 +16,12 @@ namespace {
 		std::vector<PointCloud::Ptr> vec;
 		vec.reserve(rec.objects.size());
 		for( const object_recognition_msgs::RecognizedObject& o : rec.objects){
+			const size_t min_pts= 500;
+			const size_t cloud_pts= o.point_clouds[0].width*o.point_clouds[0].height;
+			if( cloud_pts < min_pts){
+				ROS_WARN("ignoring object with less than %ld points: %ld", min_pts, cloud_pts);
+				continue;
+			}
 			PointCloud::Ptr cloud(new PointCloud);
 			pcl::fromROSMsg( o.point_clouds[0], *cloud);
 			vec.push_back( cloud );
