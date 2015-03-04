@@ -32,8 +32,8 @@ public:
 
 	void buildRegisteredObjects(std::vector<RegisteredObject>&) const;
 
-   /****************
-   * visualization *
+	/****************
+	* visualization *
 	****************/
 	void buildCloudMarkers(visualization_msgs::MarkerArray& cloud_array, const TransformMat& table_to_world) const;
 	void buildHullMarkers(visualization_msgs::MarkerArray& hull_array, const TransformMat& table_to_world) const;
