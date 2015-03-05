@@ -147,13 +147,13 @@ public:
 		// should we track a new table?
 		if( ot->table_id != current_table_id_ ){
 			ROS_INFO("got new table (id: %d) / storing old table (id: %d)", ot->table_id, current_table_id_);
-			stored_objects_.insert( stored_objects_.end(), current_objects_.begin(), current_objects_.end() );
+			stored_objects_= current_objects_;
 			stored_clustering_= current_clustering_;
 			*stored_signatures_= *current_signatures_;
 
 			current_table_id_= ot->table_id;
 		}
-		current_objects_.clear();
+		current_objects_= stored_objects_;
 		current_clustering_= stored_clustering_;
 		*current_signatures_= *stored_signatures_;
 
