@@ -205,7 +205,7 @@ public:
 			std::string object_matching_info= "obj" + std::to_string(cluster_id) + ": ";
 			for(size_t j= 0; j < nr_of_candidates; ++j)
 				object_matching_info+= "obj" + std::to_string(vfh_id_to_object_id(matching_sigs[j])) + "/sig" + std::to_string(matching_sigs[j]) + " (dist: " + std::to_string(matching_sigs_distances[j]) + "), ";
-			ROS_INFO( object_matching_info.c_str() );
+			ROS_INFO( "%s", object_matching_info.c_str() );
 
 			if( matching_sigs_distances[0] < min_distance ){
 				min_distance= matching_sigs_distances[0];
