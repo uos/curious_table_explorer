@@ -185,6 +185,8 @@ public:
 			return cluster_id;
 		}
 
+		size_t cluster_id= this->current_clustering_.new_cluster();
+
 		pcl::search::KdTree<pcl::VFHSignature308> signature_tree;
 		signature_tree.setInputCloud(current_signatures_);
 
@@ -195,10 +197,16 @@ public:
 			pcl::VFHSignature308 cloud_signature= compute_vfh_signature( rp.view );
 			object_signatures.push_back( cloud_signature );
 
-			const size_t nr_of_candidates= 1;
+			const size_t nr_of_candidates= 3;
 			vector<int> matching_sigs; matching_sigs.resize(nr_of_candidates);
 			vector<float> matching_sigs_distances;  matching_sigs_distances.resize(nr_of_candidates);
 			signature_tree.nearestKSearch( cloud_signature, nr_of_candidates, matching_sigs, matching_sigs_distances );
+
+			std::string object_matching_info= "obj" + std::to_string(cluster_id) + ": ";
+			for(size_t j= 0; j < nr_of_candidates; ++j)
+				object_matching_info+= "obj" + std::to_string(vfh_id_to_object_id(matching_sigs[j])) + "/sig" + std::to_string(matching_sigs[j]) + " (dist: " + std::to_string(matching_sigs_distances[j]) + "), ";
+			ROS_INFO( object_matching_info.c_str() );
+
 			if( matching_sigs_distances[0] < min_distance ){
 				min_distance= matching_sigs_distances[0];
 				min_distance_index= matching_sigs[0];
@@ -206,13 +214,13 @@ public:
 		}
 		*current_signatures_+= object_signatures;
 
-		size_t cluster_id= 0;
-		if( min_distance > 0 && min_distance < 200){
-			cluster_id= this->current_objects_[vfh_id_to_object_id(min_distance_index)].second;
-		}
-		else {
-			cluster_id= this->current_clustering_.new_cluster();
-		}
+		//size_t cluster_id= 0;
+		//if( min_distance > 0 && min_distance < 200){
+		//	cluster_id= this->current_objects_[vfh_id_to_object_id(min_distance_index)].second;
+		//}
+		//else {
+		//	cluster_id= this->current_clustering_.new_cluster();
+		//}
 
 		this->current_clustering_[cluster_id].push_back( op );
 		return cluster_id;
