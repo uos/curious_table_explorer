@@ -103,6 +103,7 @@ namespace {
 			ve.setSearchMethod(boost::make_shared<pcl::search::KdTree<Point>>());
 			ve.setInputCloud(cloud);
 			ve.setInputNormals(normals);
+			ve.setNormalizeBins( true );
 			ve.compute(cloud_signature);
 		}
 		assert( cloud_signature.points.size() == 1 );
