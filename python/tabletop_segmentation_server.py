@@ -5,7 +5,7 @@ import sys
 import rospy
 
 import actionlib
-from object_recognition_msgs.msg import ObjectRecognitionAction
+from object_recognition_msgs.msg import ObjectRecognitionAction, ObjectRecognitionResult, RecognizedObjectArray
 
 import ecto, ecto_ros, ecto_pcl, ecto_pcl_ros
 from ecto_ros import ecto_sensor_msgs
@@ -17,14 +17,25 @@ class TableTopSegmentationServer:
 		self.create_plasm()
 		self.plasm.configure_all()
 
+		self.output= None
+		rospy.Subscriber( '/recognized_object_array', RecognizedObjectArray, self.callback_recognized_object_array )
+
 		self.server= actionlib.SimpleActionServer('recognize_objects', ObjectRecognitionAction, self.execute, False)
 		self.server.start()
 		rospy.loginfo('started tabletop segmentation server')
 
+	def callback_recognized_object_array(self, data):
+		self.output= data
+
 	def execute(self, goal):
 		rospy.loginfo('received request - running plasm once')
 		if self.plasm.execute(niter= 1):
-			self.server.set_succeeded()
+			# this is a crude hack to make the result accessable to this action server
+			# it's pretty hard to support direct conversion for RecognizedObjectArray
+			while self.output is None:
+				rospy.sleep(.1)
+			self.server.set_succeeded( ObjectRecognitionResult(self.output) )
+			self.output= None
 			rospy.loginfo('succeeded')
 		else:
 			self.server.set_aborted()
