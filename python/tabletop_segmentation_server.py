@@ -49,7 +49,6 @@ class TableTopSegmentationServer:
 		floor_cropper= ecto_pcl.PassThroughIndices(filter_field_name= "z", filter_limit_min= .20)
 		extract_indices_floor= ecto_pcl.ExtractIndices()
 
-		voxel_grid= ecto_pcl.VoxelGrid(leaf_size=.008)
 		normals= ecto_pcl.NormalEstimation(radius_search= .02, k_search= 0)
 		planar_segmentation= ecto_pcl.SACSegmentationFromNormals(
 			model_type= ecto_pcl.SACMODEL_NORMAL_PLANE,
@@ -83,13 +82,12 @@ class TableTopSegmentationServer:
 			floor_cropper[:] >> extract_indices_floor["indices"],
 			msg2cloud[:] >> extract_indices_floor["input"],
 
-			extract_indices_floor[:] >> voxel_grid[:],
-			voxel_grid[:] >> normals[:],
-			voxel_grid[:] >> planar_segmentation["input"],
+			extract_indices_floor[:] >> normals[:],
+			extract_indices_floor[:] >> planar_segmentation["input"],
 			normals[:]    >> planar_segmentation["normals"],
 
 			planar_segmentation["inliers"] >> extract_table_indices["indices"],
-			voxel_grid[:] >> extract_table_indices["input"],
+			extract_indices_floor[:] >> extract_table_indices["input"],
 			extract_table_indices[:] >> inlier_projection["input"],
 			planar_segmentation["model"] >> inlier_projection["model"],
 			inlier_projection[:] >> extract_table_clusters["input"],
