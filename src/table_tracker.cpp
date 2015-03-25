@@ -64,18 +64,18 @@ void TableTracker::lockTable(const object_recognition_msgs::Table& table, PointC
 	PointCloud::Ptr world_view= boost::make_shared<PointCloud>();
 	pcl::transformPointCloud(*view, *world_view, view_to_world);
 
-	lockToFrame(world_view, world_to_table);
+	iicp_.lockToFrame(world_view, world_to_table);
 }
 
 bool TableTracker::registerTable(const object_recognition_msgs::Table& table, PointCloud::ConstPtr view, const TransformMat& view_to_world){
 	PointCloud::Ptr world_view= boost::make_shared<PointCloud>();
 	pcl::transformPointCloud(*view, *world_view, view_to_world);
 
-	if( !registerView(world_view) )
+	if( !iicp_.registerView(world_view) )
 		return false;
 
 	PointCloudXYZ::Ptr hull= convert( table.convex_hull );
-	const TransformMat hull_to_first_table= this->getWorldToFixedFrame() * view_to_world * convert(table.pose);
+	const TransformMat hull_to_first_table= this->getWorldToTable() * view_to_world * convert(table.pose);
 	pcl::transformPointCloud(*hull, *hull,  hull_to_first_table);
 
 	PointCloudXYZ::Ptr old_hull= convert( this->table_.convex_hull );
@@ -96,11 +96,27 @@ bool TableTracker::registerTable(const object_recognition_msgs::Table& table, Po
 object_recognition_msgs::Table TableTracker::getTable() const {
 	object_recognition_msgs::Table worldTable(this->table_);
 
-	Eigen::Affine3d trans(this->getFixedFrameToWorld().cast<double>());
+	Eigen::Affine3d trans(this->getTableToWorld().cast<double>());
 	tf::poseEigenToMsg(trans, worldTable.pose);
 	worldTable.header.frame_id= "/map";
 
 	return worldTable;
+}
+
+TransformMat TableTracker::getWorldToTable() const {
+	return iicp_.getWorldToFixedFrame();
+}
+
+TransformMat TableTracker::getTableToWorld() const {
+	return iicp_.getFixedFrameToWorld();
+}
+
+void TableTracker::reset() {
+	iicp_.reset();
+}
+
+bool TableTracker::isLocked() const {
+	iicp_.isLocked();
 }
 
 }

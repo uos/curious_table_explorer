@@ -86,7 +86,7 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 
 	if( table_tracker_.isLocked() && table_tracker_.registerTable(table, full_view, world_transform) ){
 		ROS_INFO("registered known table %ld", table_count_);
-		model_constructor_.addTableView(table, view, table_tracker_.getWorldToFixedFrame()*world_transform);
+		model_constructor_.addTableView(table, view, table_tracker_.getWorldToTable()*world_transform);
 	}
 	else {
 		model_constructor_.finalizeTable();
@@ -106,7 +106,7 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 		ROS_INFO("locked onto new table");
 		table_tracker_.lockTable(table, full_view, world_transform);
 
-		model_constructor_.addTableView(table, view, table_tracker_.getWorldToFixedFrame()*world_transform);
+		model_constructor_.addTableView(table, view, table_tracker_.getWorldToTable()*world_transform);
 	}
 
 	this->publish_object_markers();
@@ -123,7 +123,7 @@ bool Collector::dump_models(DumpModelsToFolder::Request& req, DumpModelsToFolder
 void Collector::publish_object_markers() const {
 	visualization_msgs::MarkerArray markers;
 
-	const TransformMat table_to_world= table_tracker_.getFixedFrameToWorld();
+	const TransformMat table_to_world= table_tracker_.getTableToWorld();
 	model_constructor_.buildCenterMarkers(markers, table_to_world);
 	model_constructor_.buildHullMarkers(markers, table_to_world);
 	model_constructor_.buildCloudMarkers(markers, table_to_world);
