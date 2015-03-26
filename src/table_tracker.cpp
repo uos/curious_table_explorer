@@ -46,6 +46,15 @@ namespace {
 
 		return mat;
 	}
+
+	geometry_msgs::Pose convert( const TransformMat& mat ){
+		geometry_msgs::Pose p;
+
+		Eigen::Affine3d trans(mat.cast<double>());
+		tf::poseEigenToMsg(trans, p);
+
+		return p;
+	}
 }
 
 TableTracker::TableTracker() {};
@@ -92,9 +101,7 @@ bool TableTracker::registerTable(const object_recognition_msgs::Table& table, Po
 object_recognition_msgs::Table TableTracker::getTable() const {
 	object_recognition_msgs::Table worldTable(this->table_);
 
-	Eigen::Affine3d trans(this->getTableToWorld().cast<double>());
-	tf::poseEigenToMsg(trans, worldTable.pose);
-	worldTable.header.frame_id= "/map";
+	worldTable.pose= convert( this->getTableToWorld() );
 
 	return worldTable;
 }
