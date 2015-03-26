@@ -53,11 +53,7 @@ TableTracker::TableTracker() {};
 void TableTracker::lockTable(const object_recognition_msgs::Table& table, PointCloud::ConstPtr view, const TransformMat& view_to_world){
 	this->table_= table;
 
-	TransformMat table_to_view;
-
-	tf::Pose table_pose;
-	tf::poseMsgToTF(table.pose, table_pose);
-	pcl_ros::transformAsMatrix(table_pose, table_to_view);
+	TransformMat table_to_view= convert( table.pose );
 
 	const TransformMat world_to_table= table_to_view.inverse() * view_to_world.inverse();
 
