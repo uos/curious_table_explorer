@@ -7,6 +7,7 @@
 
 #include <pcl/registration/icp.h>
 #include <pcl/surface/convex_hull.h>
+#include <pcl/registration/transformation_estimation_2D.h>
 
 #include <pcl_ros/transforms.h>
 
@@ -67,6 +68,9 @@ TableTracker::TableTracker(std::string world_frame) :
 	icp->setMaximumIterations(20);
 	icp->setMaxCorrespondenceDistance(.05);
 
+	pcl::registration::TransformationEstimation2D<Point,Point>::Ptr estimation_2d(new pcl::registration::TransformationEstimation2D<Point,Point>());
+	icp->setTransformationEstimation(estimation_2d);
+
 	iicp_.setICP(icp);
 };
 
@@ -90,7 +94,12 @@ bool TableTracker::registerTable(const object_recognition_msgs::Table& table, Po
 	const TransformMat table_to_view= convert( table.pose );
 	const TransformMat table_to_world= view_to_world * table_to_view;
 
-	const TransformMat view_to_locked_table= this->getWorldToTable() * view_to_world;
+	// world knowledge: the table planes have to align
+	geometry_msgs::Pose table_in_locked_table= convert( this->getWorldToTable() * view_to_world * table_to_view );
+	table_in_locked_table.position.z= 0;
+	table_in_locked_table.orientation= tf::createQuaternionMsgFromYaw( tf::getYaw(table_in_locked_table.orientation) );
+
+	const TransformMat view_to_locked_table= convert(table_in_locked_table) * table_to_view.inverse();
 
 	PointCloud::Ptr locked_table_view= boost::make_shared<PointCloud>();
 	pcl::transformPointCloud(*view, *locked_table_view, view_to_locked_table );
