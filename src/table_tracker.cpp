@@ -102,6 +102,7 @@ object_recognition_msgs::Table TableTracker::getTable() const {
 	object_recognition_msgs::Table worldTable(this->table_);
 
 	worldTable.pose= convert( this->getTableToWorld() );
+	worldTable.header.frame_id= "map";
 
 	return worldTable;
 }
