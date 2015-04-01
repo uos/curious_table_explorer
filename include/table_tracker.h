@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-#include "incremental_view_icp.h"
+#include <pcl/registration/incremental_icp.h>
 
 #include <object_recognition_msgs/Table.h>
 
@@ -28,7 +28,7 @@ public:
 protected:
 	object_recognition_msgs::Table table_;
 
-	utils::IncrementalViewIcp iicp_;
+	pcl::registration::IncrementalICP<Point> iicp_;
 };
 
 }
