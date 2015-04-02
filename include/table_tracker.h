@@ -11,7 +11,7 @@ namespace curious_table_explorer {
 
 class TableTracker {
 public:
-	TableTracker();
+	TableTracker(std::string world_frame= "world");
 
 	void lockTable(const object_recognition_msgs::Table& table, PointCloud::ConstPtr view, const TransformMat& view_to_world);
 
@@ -26,9 +26,15 @@ public:
 	bool isLocked() const;
 
 protected:
+	const std::string world_frame_;
+
 	object_recognition_msgs::Table table_;
 
 	pcl::registration::IncrementalICP<Point> iicp_;
+
+	TransformMat locked_table_to_world_;
+
+	bool locked_;
 };
 
 }

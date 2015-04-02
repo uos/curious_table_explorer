@@ -1,9 +1,11 @@
+#include "common.h"
+
 #include "table_tracker.h"
 
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Pose.h>
 
-#include <pcl/point_types.h>
+#include <pcl/registration/icp.h>
 #include <pcl/surface/convex_hull.h>
 
 #include <pcl_ros/transforms.h>
@@ -57,33 +59,51 @@ namespace {
 	}
 }
 
-TableTracker::TableTracker() {};
+TableTracker::TableTracker(std::string world_frame) :
+	locked_(false),
+	world_frame_(world_frame)
+{
+	auto icp= boost::make_shared<pcl::IterativeClosestPoint<Point,Point>>();
+	icp->setMaximumIterations(20);
+	icp->setMaxCorrespondenceDistance(.05);
+
+	iicp_.setICP(icp);
+};
 
 void TableTracker::lockTable(const object_recognition_msgs::Table& table, PointCloud::ConstPtr view, const TransformMat& view_to_world){
-	this->table_= table;
+	const TransformMat table_to_view= convert( table.pose );
 
-	TransformMat table_to_view= convert( table.pose );
+	table_= table;
+	locked_table_to_world_= view_to_world * table_to_view;
 
-	const TransformMat world_to_table= table_to_view.inverse() * view_to_world.inverse();
+	PointCloud::Ptr table_view= boost::make_shared<PointCloud>();
+	pcl::transformPointCloud(*view, *table_view, static_cast<TransformMat>(table_to_view.inverse()));
 
-	PointCloud::Ptr world_view= boost::make_shared<PointCloud>();
-	pcl::transformPointCloud(*view, *world_view, view_to_world);
-
-	iicp_.lockToFrame(world_view, world_to_table);
+	iicp_.reset();
+	iicp_.registerCloud(table_view);
+	locked_= true;
 }
 
 bool TableTracker::registerTable(const object_recognition_msgs::Table& table, PointCloud::ConstPtr view, const TransformMat& view_to_world){
-	PointCloud::Ptr world_view= boost::make_shared<PointCloud>();
-	pcl::transformPointCloud(*view, *world_view, view_to_world);
+	assert( locked_ );
 
-	if( !iicp_.registerView(world_view) )
+	const TransformMat table_to_view= convert( table.pose );
+	const TransformMat table_to_world= view_to_world * table_to_view;
+
+	const TransformMat view_to_locked_table= this->getWorldToTable() * view_to_world;
+
+	PointCloud::Ptr locked_table_view= boost::make_shared<PointCloud>();
+	pcl::transformPointCloud(*view, *locked_table_view, view_to_locked_table );
+
+	if( !iicp_.registerCloud(locked_table_view) )
 		return false;
 
+	// update convex hull
 	PointCloudXYZ::Ptr hull= convert( table.convex_hull );
-	const TransformMat hull_to_first_table= this->getWorldToTable() * view_to_world * convert(table.pose);
-	pcl::transformPointCloud(*hull, *hull,  hull_to_first_table);
+	const TransformMat table_to_locked_table= this->getWorldToTable() * view_to_world * table_to_view;
+	pcl::transformPointCloud(*hull, *hull,  table_to_locked_table);
 
-	PointCloudXYZ::Ptr old_hull= convert( this->table_.convex_hull );
+	PointCloudXYZ::Ptr old_hull= convert( table_.convex_hull );
 	*hull+= *old_hull;
 
 	pcl::ConvexHull<PointXYZ> convex;
@@ -92,35 +112,38 @@ bool TableTracker::registerTable(const object_recognition_msgs::Table& table, Po
 	PointCloudXYZ new_hull;
 	convex.reconstruct(new_hull);
 
-	this->table_.header= table.header;
-	this->table_.convex_hull= convert(new_hull);
+	table_.header= table.header;
+	table_.convex_hull= convert(new_hull);
 
 	return true;
 }
 
 object_recognition_msgs::Table TableTracker::getTable() const {
-	object_recognition_msgs::Table worldTable(this->table_);
+	object_recognition_msgs::Table worldTable(table_);
 
 	worldTable.pose= convert( this->getTableToWorld() );
-	worldTable.header.frame_id= "map";
+	worldTable.header.frame_id= world_frame_;
 
 	return worldTable;
 }
 
 TransformMat TableTracker::getWorldToTable() const {
-	return iicp_.getWorldToFixedFrame();
+	return this->getTableToWorld().inverse();
 }
 
 TransformMat TableTracker::getTableToWorld() const {
-	return iicp_.getFixedFrameToWorld();
+	return locked_table_to_world_ * iicp_.getAbsoluteTransform();
 }
 
 void TableTracker::reset() {
 	iicp_.reset();
+	locked_table_to_world_= TransformMat::Identity();
+	table_= object_recognition_msgs::Table();
+	locked_= false;
 }
 
 bool TableTracker::isLocked() const {
-	iicp_.isLocked();
+	return locked_;
 }
 
 }
