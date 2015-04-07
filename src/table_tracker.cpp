@@ -128,11 +128,11 @@ object_recognition_msgs::Table TableTracker::getTable() const {
 }
 
 TransformMat TableTracker::getWorldToTable() const {
-	return this->getTableToWorld().inverse();
+	return iicp_.getAbsoluteTransform() * locked_table_to_world_.inverse();
 }
 
 TransformMat TableTracker::getTableToWorld() const {
-	return locked_table_to_world_ * iicp_.getAbsoluteTransform();
+	return this->getWorldToTable().inverse();
 }
 
 void TableTracker::reset() {
