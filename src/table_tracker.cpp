@@ -78,6 +78,8 @@ void TableTracker::lockTable(const object_recognition_msgs::Table& table, PointC
 	const TransformMat table_to_view= convert( table.pose );
 
 	table_= table;
+	for(auto& point : table_.convex_hull)
+		point.z= 0.0;
 	locked_table_to_world_= view_to_world * table_to_view;
 
 	PointCloud::Ptr table_view= boost::make_shared<PointCloud>();
@@ -109,6 +111,8 @@ bool TableTracker::registerTable(const object_recognition_msgs::Table& table, Po
 
 	// update convex hull
 	PointCloudXYZ::Ptr hull= convert( table.convex_hull );
+	for(auto& point : hull->points)
+		point.z= 0.0;
 	const TransformMat table_to_locked_table= this->getWorldToTable() * view_to_world * table_to_view;
 	pcl::transformPointCloud(*hull, *hull,  table_to_locked_table);
 
