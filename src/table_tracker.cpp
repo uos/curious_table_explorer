@@ -80,13 +80,13 @@ void TableTracker::lockTable(const object_recognition_msgs::Table& table, PointC
 	table_= table;
 	for(auto& point : table_.convex_hull)
 		point.z= 0.0;
-	locked_table_to_world_= view_to_world * table_to_view;
-
 	PointCloud::Ptr table_view= boost::make_shared<PointCloud>();
 	pcl::transformPointCloud(*view, *table_view, static_cast<TransformMat>(table_to_view.inverse()));
 
 	iicp_.reset();
 	iicp_.registerCloud(table_view);
+	locked_table_to_world_= view_to_world * table_to_view;
+
 	locked_= true;
 }
 
@@ -100,14 +100,16 @@ bool TableTracker::registerTable(const object_recognition_msgs::Table& table, Po
 	geometry_msgs::Pose table_in_locked_table= convert( this->getWorldToTable() * view_to_world * table_to_view );
 	table_in_locked_table.position.z= 0;
 	table_in_locked_table.orientation= tf::createQuaternionMsgFromYaw( tf::getYaw(table_in_locked_table.orientation) );
+	const TransformMat table_to_old_locked_table= convert(table_in_locked_table);
 
-	const TransformMat view_to_locked_table= convert(table_in_locked_table) * table_to_view.inverse();
+	const TransformMat view_to_locked_table= table_to_old_locked_table * table_to_view.inverse();
 
 	PointCloud::Ptr locked_table_view= boost::make_shared<PointCloud>();
 	pcl::transformPointCloud(*view, *locked_table_view, view_to_locked_table );
 
 	if( !iicp_.registerCloud(locked_table_view) )
 		return false;
+	locked_table_to_world_= table_to_world * table_to_old_locked_table.inverse() * iicp_.getAbsoluteTransform().inverse();
 
 	// update convex hull
 	PointCloudXYZ::Ptr hull= convert( table.convex_hull );
@@ -141,11 +143,11 @@ object_recognition_msgs::Table TableTracker::getTable() const {
 }
 
 TransformMat TableTracker::getWorldToTable() const {
-	return iicp_.getAbsoluteTransform() * locked_table_to_world_.inverse();
+	return locked_table_to_world_.inverse();
 }
 
 TransformMat TableTracker::getTableToWorld() const {
-	return this->getWorldToTable().inverse();
+	return locked_table_to_world_;
 }
 
 void TableTracker::reset() {
