@@ -18,6 +18,11 @@ from nav_msgs.srv import GetPlan
 from curious_table_explorer.msg import SurroundPointAction
 from object_recognition_msgs.msg import ObjectRecognitionAction, ObjectRecognitionGoal
 
+def real_wait_for_transform(tfl, to_frame, from_frame, time, timeout):
+	now= rospy.Time.now()
+	while rospy.Time.now() < now+timeout and not tfl.canTransform(to_frame, from_frame, time):
+		rospy.sleep(rospy.Duration(.01))
+
 class Surrounder:
 	def __init__(self):
 		self.tfl= tf.TransformListener()
@@ -64,10 +69,10 @@ class Surrounder:
 		now= rospy.Time.now()
 		robot_pose= PoseStamped( header= Header(stamp= now, frame_id= 'base_footprint'), pose= Pose(orientation= Quaternion(0,0,0,1)) )
 		try:
-			self.tfl.waitForTransform('map', robot_pose.header.frame_id, now, rospy.Duration(5.0))
+			real_wait_for_transform(self.tfl, 'map', robot_pose.header.frame_id, now, rospy.Duration(5.0))
 			robot_pose= self.tfl.transformPose('map', robot_pose)
 
-			self.tfl.waitForTransform('map', goal.point.header.frame_id, goal.point.header.stamp, rospy.Duration(5.0))
+			real_wait_for_transform(self.tfl, 'map', goal.point.header.frame_id, goal.point.header.stamp, rospy.Duration(5.0))
 			goal.point= self.tfl.transformPoint('map', goal.point)
 		except tf.Exception:
 			rospy.logerr("Failed to lookup map-transforms. Aborting action.")
