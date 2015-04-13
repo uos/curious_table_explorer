@@ -11,6 +11,4 @@ table_object - related
 
 - ModelConstructor::addModelView should be protected and should mark models already taken in this TableView
 
-- refined view registration via pcl::registration::LUM
-
 - Object-Identification at different positions
