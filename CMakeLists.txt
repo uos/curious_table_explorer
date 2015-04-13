@@ -66,6 +66,7 @@ add_executable(collect_object_views
 	src/incremental_view_icp.cpp
 	src/table_tracker.cpp
 	src/model_constructor.cpp
+	src/convert.cpp
 )
 
 add_dependencies(collect_object_views ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})

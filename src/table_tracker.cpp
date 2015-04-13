@@ -2,6 +2,8 @@
 
 #include "table_tracker.h"
 
+#include <utils/convert.h>
+
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Pose.h>
 
@@ -19,48 +21,9 @@
 
 using boost::make_shared;
 
+using curious_table_explorer::utils::convert;
+
 namespace curious_table_explorer {
-
-namespace {
-	std::vector<geometry_msgs::Point> convert( const PointCloudXYZ& cloud ){
-		std::vector<geometry_msgs::Point> pts;
-		pts.reserve(cloud.size());
-		for(const auto& p : cloud.points){
-			geometry_msgs::Point rospt;
-			rospt.x= p.x; rospt.y= p.y; rospt.z= p.z;
-			pts.push_back(rospt);
-		}
-		return pts;
-	}
-
-	PointCloudXYZ::Ptr convert( std::vector<geometry_msgs::Point> pts ){
-		PointCloudXYZ::Ptr cloud= boost::make_shared<PointCloudXYZ>();
-		for(const geometry_msgs::Point& p : pts){
-			PointXYZ pclpt(p.x, p.y, p.z);
-			cloud->push_back(pclpt);
-		}
-		return cloud;
-	}
-
-	TransformMat convert( const geometry_msgs::Pose& pose ){
-		Transform trans;
-		tf::poseMsgToTF( pose, trans );
-
-		TransformMat mat;
-		pcl_ros::transformAsMatrix( trans, mat );
-
-		return mat;
-	}
-
-	geometry_msgs::Pose convert( const TransformMat& mat ){
-		geometry_msgs::Pose p;
-
-		Eigen::Affine3d trans(mat.cast<double>());
-		tf::poseEigenToMsg(trans, p);
-
-		return p;
-	}
-}
 
 TableTracker::TableTracker(std::string world_frame) :
 	locked_(false),
@@ -95,16 +58,16 @@ void TableTracker::lockTable(const object_recognition_msgs::Table& table, PointC
 bool TableTracker::registerTable(const object_recognition_msgs::Table& table, PointCloud::ConstPtr view, const TransformMat& view_to_world){
 	assert( locked_ );
 
-	const TransformMat table_to_view= convert( table.pose );
-	const TransformMat table_to_world= view_to_world * table_to_view;
+	const auto table_to_view= convert<TransformMat>( table.pose );
+	const auto table_to_world= view_to_world * table_to_view;
 
 	// world knowledge: the table planes have to align
-	geometry_msgs::Pose table_in_locked_table= convert( this->getWorldToTable() * view_to_world * table_to_view );
+	auto table_in_locked_table= convert<geometry_msgs::Pose,TransformMat>( this->getWorldToTable() * view_to_world * table_to_view );
 	table_in_locked_table.position.z= 0;
 	table_in_locked_table.orientation= tf::createQuaternionMsgFromYaw( tf::getYaw(table_in_locked_table.orientation) );
-	const TransformMat table_to_old_locked_table= convert(table_in_locked_table);
+	const auto table_to_old_locked_table= convert<TransformMat>(table_in_locked_table);
 
-	const TransformMat view_to_locked_table= table_to_old_locked_table * table_to_view.inverse();
+	const auto view_to_locked_table= table_to_old_locked_table * table_to_view.inverse();
 
 	auto locked_table_view= make_shared<PointCloud>();
 	pcl::transformPointCloud(*view, *locked_table_view, view_to_locked_table );
@@ -114,13 +77,13 @@ bool TableTracker::registerTable(const object_recognition_msgs::Table& table, Po
 	locked_table_to_world_= table_to_world * table_to_old_locked_table.inverse() * iicp_.getAbsoluteTransform().inverse();
 
 	// update convex hull
-	PointCloudXYZ::Ptr hull= convert( table.convex_hull );
+	auto hull= convert<PointCloudXYZ::Ptr>( table.convex_hull );
 	for(auto& point : hull->points)
 		point.z= 0.0;
-	const TransformMat table_to_locked_table= this->getWorldToTable() * view_to_world * table_to_view;
+	const auto table_to_locked_table= this->getWorldToTable() * view_to_world * table_to_view;
 	pcl::transformPointCloud(*hull, *hull,  table_to_locked_table);
 
-	PointCloudXYZ::Ptr old_hull= convert( table_.convex_hull );
+	auto old_hull= convert<PointCloudXYZ::Ptr>( table_.convex_hull );
 	*hull+= *old_hull;
 
 	pcl::ConvexHull<PointXYZ> convex;
@@ -130,7 +93,7 @@ bool TableTracker::registerTable(const object_recognition_msgs::Table& table, Po
 	convex.reconstruct(new_hull);
 
 	table_.header= table.header;
-	table_.convex_hull= convert(new_hull);
+	table_.convex_hull= convert< std::vector<geometry_msgs::Point> >(new_hull);
 
 	return true;
 }
@@ -138,7 +101,7 @@ bool TableTracker::registerTable(const object_recognition_msgs::Table& table, Po
 object_recognition_msgs::Table TableTracker::getTable() const {
 	object_recognition_msgs::Table worldTable(table_);
 
-	worldTable.pose= convert( this->getTableToWorld() );
+	worldTable.pose= convert<geometry_msgs::Pose>( this->getTableToWorld() );
 	worldTable.header.frame_id= world_frame_;
 
 	return worldTable;
