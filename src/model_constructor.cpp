@@ -18,7 +18,9 @@
 #include <sstream>
 #include <vector>
 #include <boost/filesystem.hpp>
+#include <boost/make_shared.hpp>
 
+using boost::make_shared;
 
 using utils::convert;
 
@@ -36,7 +38,7 @@ void ModelConstructor::addTableView(const object_recognition_msgs::Table& table,
 }
 
 void ModelConstructor::addModelView(ModelView mv){
-	PointCloud::Ptr hull_points(new PointCloud);
+	auto hull_points= make_shared<PointCloud>();
 	std::vector<pcl::Vertices> hull_polygons;
 	pcl::CropHull<Point> crop;
 
@@ -136,7 +138,7 @@ bool ModelConstructor::writeTableToFiles(const boost::filesystem::path& folder) 
 			}
 		}
 
-		PointCloud::Ptr full_table(new PointCloud);
+		auto full_table= make_shared<PointCloud>();
 		for(const Model& m : this->models)
 			for(const ModelView& mv : m.views)
 				*full_table+= *mv.getDeskCloud();
@@ -203,7 +205,7 @@ void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_
 		marker.color= distribution(generator);
 		marker.points.clear();
 		for( const ModelView& view : model.views ){
-			PointCloud::Ptr cloud(new PointCloud);
+			auto cloud= make_shared<PointCloud>();
 			pcl::transformPointCloud(*view.getDeskCloud(), *cloud, table_to_world);
 			cloud->header.frame_id= "map";
 
