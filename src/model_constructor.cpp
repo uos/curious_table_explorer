@@ -1,25 +1,22 @@
-#include "common.h"
-#include "model.h"
-#include "model_constructor.h"
+#include <curious_table_explorer/common.h>
+#include <curious_table_explorer/model.h>
+#include <curious_table_explorer/model_constructor.h>
 
-#include "uniform_color_distribution.h"
+#include <curious_table_explorer/RegisteredPointCloud.h>
 
-#include "curious_table_explorer/RegisteredPointCloud.h"
-
-#include <sstream>
-#include <vector>
+#include <utils/uniform_color_distribution.h>
 
 #include <Eigen/Geometry>
 
-#include <boost/filesystem.hpp>
-
 #include <pcl/filters/crop_hull.h>
-
 #include <pcl/io/pcd_io.h>
 
 #include <pcl_ros/transforms.h>
-
 #include <pcl_conversions/pcl_conversions.h>
+
+#include <sstream>
+#include <vector>
+#include <boost/filesystem.hpp>
 
 namespace curious_table_explorer {
 

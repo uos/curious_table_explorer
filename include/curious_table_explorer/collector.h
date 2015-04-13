@@ -1,7 +1,11 @@
 #ifndef _COLLECTOR_H_
 #define _COLLECTOR_H_ 1
 
-#include "common.h"
+#include <curious_table_explorer/common.h>
+#include <curious_table_explorer/table_tracker.h>
+#include <curious_table_explorer/model_constructor.h>
+
+#include <curious_table_explorer/DumpModelsToFolder.h>
 
 #include <ros/ros.h>
 
@@ -13,10 +17,6 @@
 #include <object_recognition_msgs/RecognizedObjectArray.h>
 #include <object_recognition_msgs/TableArray.h>
 
-#include "curious_table_explorer/DumpModelsToFolder.h"
-
-#include "table_tracker.h"
-#include "model_constructor.h"
 
 namespace curious_table_explorer {
 

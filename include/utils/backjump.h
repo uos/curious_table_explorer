@@ -3,6 +3,8 @@
 
 #include <ros/time.h>
 
+namespace utils {
+
 class BackjumpChk {
 public:
 	BackjumpChk(ros::Duration tolerance= ros::Duration(1)) :
@@ -21,4 +23,5 @@ private:
 	ros::Duration _tolerance;
 };
 
+}
 #endif

@@ -1,19 +1,15 @@
 #ifndef _MODEL_CONSTRUCTOR_H_
 #define _MODEL_CONSTRUCTOR_H_ 1
 
-#include "common.h"
-
-#include <vector>
-
-#include <boost/filesystem.hpp>
+#include <curious_table_explorer/common.h>
+#include <curious_table_explorer/RegisteredObject.h>
+#include <curious_table_explorer/model.h>
 
 #include <visualization_msgs/MarkerArray.h>
-
 #include <object_recognition_msgs/Table.h>
 
-#include "curious_table_explorer/RegisteredObject.h"
-
-#include "model.h"
+#include <vector>
+#include <boost/filesystem.hpp>
 
 namespace curious_table_explorer {
 

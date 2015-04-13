@@ -1,13 +1,13 @@
 #ifndef _MODEL_H_
 #define _MODEL_H_
 
-#include "common.h"
+#include <curious_table_explorer/common.h>
 
-#include <vector>
+#include <pcl/Vertices.h>
 
 #include <Eigen/Core>
 
-#include <pcl/Vertices.h>
+#include <vector>
 
 namespace curious_table_explorer {
 

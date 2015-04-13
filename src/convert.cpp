@@ -1,9 +1,9 @@
 #include <utils/convert.h>
 
-#include <common.h>
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
 
-#include <vector>
-#include <boost/make_shared.hpp>
+#include <Eigen/Core>
 
 #include <tf/transform_datatypes.h>
 #include <eigen_conversions/eigen_msg.h>
@@ -11,14 +11,16 @@
 
 #include <geometry_msgs/Point.h>
 
+#include <vector>
+#include <boost/make_shared.hpp>
+
 using boost::make_shared;
 
-namespace curious_table_explorer {
 namespace utils {
 
 template <>
 std::vector<geometry_msgs::Point>
-convert< std::vector<geometry_msgs::Point>, PointCloudXYZ >( const PointCloudXYZ& cloud ){
+convert< std::vector<geometry_msgs::Point>, pcl::PointCloud<pcl::PointXYZ> >( const pcl::PointCloud<pcl::PointXYZ>& cloud ){
 	std::vector<geometry_msgs::Point> pts;
 	pts.reserve(cloud.size());
 	for(const auto& p : cloud.points){
@@ -30,22 +32,22 @@ convert< std::vector<geometry_msgs::Point>, PointCloudXYZ >( const PointCloudXYZ
 }
 
 template <>
-PointCloudXYZ::Ptr
-convert<PointCloudXYZ::Ptr, std::vector<geometry_msgs::Point> >( const std::vector<geometry_msgs::Point>& pts ){
-	auto cloud= make_shared<PointCloudXYZ>();
+pcl::PointCloud<pcl::PointXYZ>::Ptr
+convert< pcl::PointCloud<pcl::PointXYZ>::Ptr, std::vector<geometry_msgs::Point> >( const std::vector<geometry_msgs::Point>& pts ){
+	auto cloud= make_shared<pcl::PointCloud<pcl::PointXYZ> >();
 	cloud->reserve(pts.size());
 	for(const auto& p : pts)
-		cloud->push_back(PointXYZ(p.x, p.y, p.z));
+		cloud->push_back(pcl::PointXYZ(p.x, p.y, p.z));
 	return cloud;
 }
 
 template <>
-TransformMat
-convert<TransformMat, geometry_msgs::Pose>( const geometry_msgs::Pose& pose ){
-	Transform trans;
+Eigen::Matrix4f
+convert<Eigen::Matrix4f, geometry_msgs::Pose>( const geometry_msgs::Pose& pose ){
+	tf::Transform trans;
 	tf::poseMsgToTF( pose, trans );
 
-	TransformMat mat;
+	Eigen::Matrix4f mat;
 	pcl_ros::transformAsMatrix( trans, mat );
 
 	return mat;
@@ -53,7 +55,7 @@ convert<TransformMat, geometry_msgs::Pose>( const geometry_msgs::Pose& pose ){
 
 template <>
 geometry_msgs::Pose
-convert<geometry_msgs::Pose, TransformMat>( const TransformMat& mat ){
+convert<geometry_msgs::Pose, Eigen::Matrix4f>( const Eigen::Matrix4f& mat ){
 	geometry_msgs::Pose p;
 
 	Eigen::Affine3d trans(mat.cast<double>());
@@ -62,5 +64,4 @@ convert<geometry_msgs::Pose, TransformMat>( const TransformMat& mat ){
 	return p;
 }
 
-}
 }

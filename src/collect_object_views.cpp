@@ -4,9 +4,9 @@
  *
  */
 
-#include <ros/ros.h>
+#include <curious_table_explorer/collector.h>
 
-#include "collector.h"
+#include <ros/ros.h>
 
 int main(int argc, char** argv)
 {

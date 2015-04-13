@@ -1,13 +1,13 @@
-#include <pcl_ros/transforms.h>
+#include <curious_table_explorer/collector.h>
 
+#include <curious_table_explorer/ObservedTable.h>
+
+#include <utils/backjump.h>
+
+#include <pcl_ros/transforms.h>
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <vector>
-
-#include "collector.h"
-#include "curious_table_explorer/ObservedTable.h"
-
-#include "backjump.h"
 
 namespace curious_table_explorer {
 
@@ -48,7 +48,7 @@ Collector::Collector(const std::string& table_topic, const std::string& recogniz
 }
 
 void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPtr& tables, const object_recognition_msgs::RecognizedObjectArray::ConstPtr& objs){
-	static BackjumpChk backjump;
+	static utils::BackjumpChk backjump;
 	if(backjump){
 		ROS_WARN("Detected jump back in time. Clearing object buffer");
 		model_constructor_.clear();

@@ -1,7 +1,7 @@
 #ifndef _TABLE_TRACKER_H_
 #define _TABLE_TRACKER_H_
 
-#include "common.h"
+#include <curious_table_explorer/common.h>
 
 #include <pcl/registration/incremental_icp.h>
 

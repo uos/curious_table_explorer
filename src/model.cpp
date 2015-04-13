@@ -1,11 +1,10 @@
-#include "common.h"
-#include "model.h"
+#include <curious_table_explorer/common.h>
+#include <curious_table_explorer/model.h>
 
 #include <pcl/common/common.h>
 #include <pcl/surface/convex_hull.h>
 
 #include <pcl_ros/transforms.h>
-
 
 namespace curious_table_explorer {
 

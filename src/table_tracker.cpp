@@ -1,27 +1,22 @@
-#include "common.h"
-
-#include "table_tracker.h"
+#include <curious_table_explorer/common.h>
+#include <curious_table_explorer/table_tracker.h>
 
 #include <utils/convert.h>
-
-#include <geometry_msgs/Point.h>
-#include <geometry_msgs/Pose.h>
 
 #include <pcl/registration/icp.h>
 #include <pcl/surface/convex_hull.h>
 #include <pcl/registration/transformation_estimation_2D.h>
 
-#include <pcl_ros/transforms.h>
-
 #include <tf/transform_datatypes.h>
 
-#include <eigen_conversions/eigen_msg.h>
+#include <geometry_msgs/Point.h>
+#include <geometry_msgs/Pose.h>
 
 #include <boost/make_shared.hpp>
 
 using boost::make_shared;
 
-using curious_table_explorer::utils::convert;
+using utils::convert;
 
 namespace curious_table_explorer {
 

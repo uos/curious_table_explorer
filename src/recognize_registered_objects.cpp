@@ -4,8 +4,10 @@
  *
  */
 
-#include <unordered_map>
-#include <string>
+#include <curious_table_explorer/collector.h>
+
+#include <curious_table_explorer/RegisteredObject.h>
+#include <curious_table_explorer/ObservedTable.h>
 
 #include <pcl/search/kdtree.h>
 #include <pcl/features/normal_3d.h>
@@ -20,10 +22,8 @@
 #include <object_recognition_msgs/RecognizedObject.h>
 #include <object_recognition_msgs/RecognizedObjectArray.h>
 
-#include <curious_table_explorer/RegisteredObject.h>
-#include <curious_table_explorer/ObservedTable.h>
-
-#include "collector.h"
+#include <unordered_map>
+#include <string>
 
 namespace curious_table_explorer {
 
