@@ -28,6 +28,8 @@ public:
 protected:
 	const std::string world_frame_;
 
+	// contains convex hull & time stamp
+	// use getTable to receive the current pose
 	object_recognition_msgs::Table table_;
 
 	pcl::registration::IncrementalICP<Point> iicp_;
