@@ -17,13 +17,15 @@
 
 #include <boost/make_shared.hpp>
 
+using boost::make_shared;
+
 namespace curious_table_explorer {
 
 namespace {
 	std::vector<geometry_msgs::Point> convert( const PointCloudXYZ& cloud ){
 		std::vector<geometry_msgs::Point> pts;
 		pts.reserve(cloud.size());
-		for(const PointXYZ& p : cloud.points){
+		for(const auto& p : cloud.points){
 			geometry_msgs::Point rospt;
 			rospt.x= p.x; rospt.y= p.y; rospt.z= p.z;
 			pts.push_back(rospt);
@@ -64,23 +66,23 @@ TableTracker::TableTracker(std::string world_frame) :
 	locked_(false),
 	world_frame_(world_frame)
 {
-	auto icp= boost::make_shared<pcl::IterativeClosestPoint<Point,Point>>();
+	auto icp= make_shared<pcl::IterativeClosestPoint<Point,Point>>();
 	icp->setMaximumIterations(20);
 	icp->setMaxCorrespondenceDistance(.05);
 
-	pcl::registration::TransformationEstimation2D<Point,Point>::Ptr estimation_2d(new pcl::registration::TransformationEstimation2D<Point,Point>());
+	auto estimation_2d= make_shared<pcl::registration::TransformationEstimation2D<Point,Point> >();
 	icp->setTransformationEstimation(estimation_2d);
 
 	iicp_.setICP(icp);
 };
 
 void TableTracker::lockTable(const object_recognition_msgs::Table& table, PointCloud::ConstPtr view, const TransformMat& view_to_world){
-	const TransformMat table_to_view= convert( table.pose );
+	const auto table_to_view= convert<TransformMat>( table.pose );
 
 	table_= table;
 	for(auto& point : table_.convex_hull)
 		point.z= 0.0;
-	PointCloud::Ptr table_view= boost::make_shared<PointCloud>();
+	auto table_view= make_shared<PointCloud>();
 	pcl::transformPointCloud(*view, *table_view, static_cast<TransformMat>(table_to_view.inverse()));
 
 	iicp_.reset();
@@ -104,7 +106,7 @@ bool TableTracker::registerTable(const object_recognition_msgs::Table& table, Po
 
 	const TransformMat view_to_locked_table= table_to_old_locked_table * table_to_view.inverse();
 
-	PointCloud::Ptr locked_table_view= boost::make_shared<PointCloud>();
+	auto locked_table_view= make_shared<PointCloud>();
 	pcl::transformPointCloud(*view, *locked_table_view, view_to_locked_table );
 
 	if( !iicp_.registerCloud(locked_table_view) )
