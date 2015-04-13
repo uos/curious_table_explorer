@@ -19,14 +19,41 @@ using boost::make_shared;
 namespace utils {
 
 template <>
+geometry_msgs::Point
+convert< geometry_msgs::Point, pcl::PointXYZ >( const pcl::PointXYZ& p ){
+	geometry_msgs::Point q;
+	q.x= p.x;
+	q.y= p.y;
+	q.z= p.z;
+	return q;
+}
+
+template <>
+geometry_msgs::Point
+convert< geometry_msgs::Point, pcl::PointXYZRGB >( const pcl::PointXYZRGB& p ){
+	geometry_msgs::Point q;
+	q.x= p.x;
+	q.y= p.y;
+	q.z= p.z;
+	return q;
+}
+
+template <>
+geometry_msgs::Point
+convert< geometry_msgs::Point, Eigen::Vector4f >( const Eigen::Vector4f& v ){
+	geometry_msgs::Point q;
+	q.x= v[0];
+	q.y= v[1];
+	q.z= v[2];
+}
+
+template <>
 std::vector<geometry_msgs::Point>
 convert< std::vector<geometry_msgs::Point>, pcl::PointCloud<pcl::PointXYZ> >( const pcl::PointCloud<pcl::PointXYZ>& cloud ){
 	std::vector<geometry_msgs::Point> pts;
 	pts.reserve(cloud.size());
 	for(const auto& p : cloud.points){
-		geometry_msgs::Point rospt;
-		rospt.x= p.x; rospt.y= p.y; rospt.z= p.z;
-		pts.push_back(rospt);
+		pts.push_back( convert<geometry_msgs::Point>(p) );
 	}
 	return pts;
 }

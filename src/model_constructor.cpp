@@ -4,6 +4,7 @@
 
 #include <curious_table_explorer/RegisteredPointCloud.h>
 
+#include <utils/convert.h>
 #include <utils/uniform_color_distribution.h>
 
 #include <Eigen/Geometry>
@@ -18,25 +19,10 @@
 #include <vector>
 #include <boost/filesystem.hpp>
 
+
+using utils::convert;
+
 namespace curious_table_explorer {
-
-namespace {
-	geometry_msgs::Point pcl2ros(Point p){
-		geometry_msgs::Point gp;
-		gp.x= p.x;
-		gp.y= p.y;
-		gp.z= p.z;
-		return gp;
-	}
-
-	geometry_msgs::Point eigen2ros(Eigen::Vector4f v){
-		geometry_msgs::Point gp;
-		gp.x= v[0];
-		gp.y= v[1];
-		gp.z= v[2];
-		return gp;
-	}
-}
 
 ModelConstructor::ModelConstructor() {}
 
@@ -223,7 +209,7 @@ void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_
 
 			marker.points.reserve( marker.points.size() + cloud->size() );
 			for( Point& p : cloud->points )
-				marker.points.push_back( pcl2ros(p) );
+				marker.points.push_back( convert<geometry_msgs::Point>(p) );
 			marker.header= pcl_conversions::fromPCL(cloud->header);
 		}
 		cloud_array.markers.push_back(marker);
@@ -259,9 +245,9 @@ void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_ar
 				ROS_WARN("Invalid triangle found. Ignoring");
 				continue;
 			}
-			marker.points.push_back( pcl2ros(points[v.vertices[0]]) );
-			marker.points.push_back( pcl2ros(points[v.vertices[1]]) );
-			marker.points.push_back( pcl2ros(points[v.vertices[2]]) );
+			marker.points.push_back( convert<geometry_msgs::Point>(points[v.vertices[0]]) );
+			marker.points.push_back( convert<geometry_msgs::Point>(points[v.vertices[1]]) );
+			marker.points.push_back( convert<geometry_msgs::Point>(points[v.vertices[2]]) );
 		}
 		if( marker.points.size() > 0 ){
 			hull_array.markers.push_back(marker);
@@ -278,7 +264,7 @@ void ModelConstructor::buildCenterMarkers(visualization_msgs::MarkerArray& cente
 
 	for( const Model& model : this->models ){
 		marker.color= distribution(generator);
-		marker.pose.position= eigen2ros( table_to_world * model.getCenter() );
+		marker.pose.position= convert<geometry_msgs::Point, Eigen::Vector4f>( table_to_world * model.getCenter() );
 		marker.header= pcl_conversions::fromPCL(model.views[model.views.size()-1].getViewCloud()->header);
 		marker.header.frame_id= "map";
 
