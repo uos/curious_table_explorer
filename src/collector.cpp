@@ -3,32 +3,16 @@
 #include <curious_table_explorer/ObservedTable.h>
 
 #include <utils/backjump.h>
+#include <utils/convert.h>
 
 #include <pcl_ros/transforms.h>
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <vector>
 
-namespace curious_table_explorer {
+using utils::convert;
 
-namespace {
-	std::vector<PointCloud::Ptr> convert(const object_recognition_msgs::RecognizedObjectArray& rec){
-		std::vector<PointCloud::Ptr> vec;
-		vec.reserve(rec.objects.size());
-		for( const object_recognition_msgs::RecognizedObject& o : rec.objects){
-			const size_t min_pts= 500;
-			const size_t cloud_pts= o.point_clouds[0].width*o.point_clouds[0].height;
-			if( cloud_pts < min_pts){
-				ROS_WARN("ignoring object with less than %ld points: %ld", min_pts, cloud_pts);
-				continue;
-			}
-			PointCloud::Ptr cloud(new PointCloud);
-			pcl::fromROSMsg( o.point_clouds[0], *cloud);
-			vec.push_back( cloud );
-		}
-		return vec;
-	}
-}
+namespace curious_table_explorer {
 
 Collector::Collector(const std::string& table_topic, const std::string& recognized_objects_topic) :
 	table_count_(0),
@@ -79,7 +63,18 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 		return;
 	}
 
-	std::vector<PointCloud::Ptr> view= convert(*objs);
+	std::vector<PointCloud::Ptr> view;
+	{
+		std::vector<PointCloud::Ptr> full_view= convert< std::vector<PointCloud::Ptr> >(*objs);
+		view.reserve( full_view.size() );
+		for( auto& o : full_view ){
+			if( o->size() < 500 ){
+				ROS_WARN("ignoring object view with only %ld points", o->size());
+				continue;
+			}
+			view.push_back( o );
+		}
+	}
 
 	PointCloud::Ptr full_view(new PointCloud);
 	for( const PointCloud::Ptr& p : view )

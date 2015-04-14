@@ -9,7 +9,11 @@
 #include <eigen_conversions/eigen_msg.h>
 #include <pcl_ros/transforms.h>
 
+#include <pcl_conversions/pcl_conversions.h>
+
 #include <geometry_msgs/Point.h>
+
+#include <object_recognition_msgs/RecognizedObjectArray.h>
 
 #include <vector>
 #include <boost/make_shared.hpp>
@@ -66,6 +70,19 @@ convert< pcl::PointCloud<pcl::PointXYZ>::Ptr, std::vector<geometry_msgs::Point> 
 	for(const auto& p : pts)
 		cloud->push_back(pcl::PointXYZ(p.x, p.y, p.z));
 	return cloud;
+}
+
+template <>
+std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr>
+convert< std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr>, object_recognition_msgs::RecognizedObjectArray >( const object_recognition_msgs::RecognizedObjectArray& rec ){
+	std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr> vec;
+	vec.reserve( rec.objects.size() );
+	for( const auto& o : rec.objects ){
+		auto cloud= make_shared< pcl::PointCloud<pcl::PointXYZRGB> >();
+		pcl::fromROSMsg( o.point_clouds[0], *cloud );
+		vec.push_back( cloud );
+	}
+	return vec;
 }
 
 template <>
