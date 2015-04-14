@@ -35,16 +35,16 @@ Collector::Collector(const std::string& table_topic, const std::string& recogniz
 	sync_table_(5),
 	table_tracker_("map")
 {
-	this->sub_table_.subscribe(this->nh_,table_topic, 5);
-	this->sub_objects_.subscribe(this->nh_, recognized_objects_topic, 5);
-	this->sync_table_.connectInput(this->sub_table_, this->sub_objects_);
-	this->sync_table_.registerCallback(boost::bind(&Collector::observe_table, this, _1, _2));
+	sub_table_.subscribe(nh_,table_topic, 5);
+	sub_objects_.subscribe(nh_, recognized_objects_topic, 5);
+	sync_table_.connectInput(sub_table_, sub_objects_);
+	sync_table_.registerCallback(boost::bind(&Collector::observe_table, this, _1, _2));
 
-	this->pub_markers_= this->nh_.advertise<visualization_msgs::MarkerArray>("/tracked_object_views", 5, true);
-	this->pub_tables_=  this->nh_.advertise<object_recognition_msgs::TableArray>("/tracked_table", 5, true);
-	this->pub_models_=  this->nh_.advertise<ObservedTable>("/generated_models", 5, true);
+	pub_markers_= nh_.advertise<visualization_msgs::MarkerArray>("/tracked_object_views", 5, true);
+	pub_tables_=  nh_.advertise<object_recognition_msgs::TableArray>("/tracked_table", 5, true);
+	pub_models_=  nh_.advertise<ObservedTable>("/generated_models", 5, true);
 
-	this->dump_service_= this->nh_.advertiseService("dump_models_to_folder", &Collector::dump_models, this);
+	dump_service_= nh_.advertiseService("dump_models_to_folder", &Collector::dump_models, this);
 }
 
 void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPtr& tables, const object_recognition_msgs::RecognizedObjectArray::ConstPtr& objs){
@@ -70,8 +70,8 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 	try {
 		tf::StampedTransform tf_world;
 		const std_msgs::Header& fst_cloud_hdr= objs->objects[0].point_clouds[0].header;
-		this->tfl_.waitForTransform("/map", fst_cloud_hdr.frame_id, fst_cloud_hdr.stamp, ros::Duration(0.5));
-		this->tfl_.lookupTransform("/map", fst_cloud_hdr.frame_id, fst_cloud_hdr.stamp, tf_world);
+		tfl_.waitForTransform("/map", fst_cloud_hdr.frame_id, fst_cloud_hdr.stamp, ros::Duration(0.5));
+		tfl_.lookupTransform("/map", fst_cloud_hdr.frame_id, fst_cloud_hdr.stamp, tf_world);
 		pcl_ros::transformAsMatrix(tf_world, world_transform);
 	}
 	catch(tf::TransformException e){
@@ -96,13 +96,13 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 		nh_.param<std::string>("view_storage_path", path, "/tmp/curious_table_explorer");
 
 		std::stringstream tablename;
-		tablename << "table" << std::setfill('0') << std::setw(3) << this->table_count_;
+		tablename << "table" << std::setfill('0') << std::setw(3) << table_count_;
 
 		model_constructor_.writeTableToFiles(boost::filesystem::path(path)/tablename.str());
 
 		model_constructor_.clear();
 
-		this->table_count_++;
+		table_count_++;
 
 		ROS_INFO("locked onto new table");
 		table_tracker_.lockTable(table, full_view, world_transform);
@@ -135,10 +135,10 @@ void Collector::publish_object_markers() const {
 void Collector::publish_tables() const {
 	object_recognition_msgs::TableArray tabs;
 
-	tabs.tables.push_back(this->table_tracker_.getTable());
+	tabs.tables.push_back(table_tracker_.getTable());
 	tabs.header= tabs.tables[tabs.tables.size()-1].header;
 
-	this->pub_tables_.publish( tabs );
+	pub_tables_.publish( tabs );
 }
 
 void Collector::publish_observed_table() const {
@@ -150,7 +150,7 @@ void Collector::publish_observed_table() const {
 
 	model_constructor_.buildRegisteredObjects(ot.objects);
 
-	this->pub_models_.publish( ot );
+	pub_models_.publish( ot );
 }
 
 }
