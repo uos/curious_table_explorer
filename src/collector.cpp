@@ -54,13 +54,13 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 
 	assert( objs->objects[0].point_clouds.size() == 1 && "objects are expected to contain exactly one segmented point cloud from latest view" );
 
-	TransformMat world_transform;
+	TransformMat view_to_world;
 	try {
 		tf::StampedTransform tf_world;
 		const std_msgs::Header& header= objs->objects[0].point_clouds[0].header;
 		tfl_.waitForTransform("/map", header.frame_id, header.stamp, ros::Duration(0.5));
 		tfl_.lookupTransform("/map", header.frame_id, header.stamp, tf_world);
-		pcl_ros::transformAsMatrix(tf_world, world_transform);
+		pcl_ros::transformAsMatrix(tf_world, view_to_world);
 	}
 	catch(tf::TransformException e){
 		ROS_WARN("%s", e.what());
@@ -84,9 +84,9 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 	for( const auto& object : view )
 		*full_view+= *object;
 
-	if( table_tracker_.isLocked() && table_tracker_.registerTable(table, full_view, world_transform) ){
+	if( table_tracker_.isLocked() && table_tracker_.registerTable(table, full_view, view_to_world) ){
 		ROS_INFO("registered known table %ld", table_count_);
-		model_constructor_.addTableView(table, view, table_tracker_.getWorldToTable()*world_transform);
+		model_constructor_.addTableView(table, view, table_tracker_.getWorldToTable()*view_to_world);
 	}
 	else {
 		model_constructor_.finalizeTable();
@@ -104,9 +104,9 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 		table_count_++;
 
 		ROS_INFO("locked onto new table");
-		table_tracker_.lockTable(table, full_view, world_transform);
+		table_tracker_.lockTable(table, full_view, view_to_world);
 
-		model_constructor_.addTableView(table, view, table_tracker_.getWorldToTable()*world_transform);
+		model_constructor_.addTableView(table, view, table_tracker_.getWorldToTable()*view_to_world);
 	}
 
 	this->publish_object_markers();
