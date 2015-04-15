@@ -67,18 +67,7 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 		return;
 	}
 
-	std::vector<PointCloud::Ptr> view;
-	{
-		std::vector<PointCloud::Ptr> full_view= convert< std::vector<PointCloud::Ptr> >(*objs);
-		view.reserve( full_view.size() );
-		for( auto& o : full_view ){
-			if( o->size() < 500 ){
-				ROS_WARN("ignoring object view with only %ld points", o->size());
-				continue;
-			}
-			view.push_back( o );
-		}
-	}
+	auto view= convert< std::vector<PointCloud::Ptr> >(*objs);
 
 	auto full_view= make_shared<PointCloud>();
 	for( const auto& object : view )
