@@ -58,8 +58,8 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 	try {
 		tf::StampedTransform tf_world;
 		const std_msgs::Header& header= objs->objects[0].point_clouds[0].header;
-		tfl_.waitForTransform("/map", header.frame_id, header.stamp, ros::Duration(0.5));
-		tfl_.lookupTransform("/map", header.frame_id, header.stamp, tf_world);
+		tfl_.waitForTransform("map", header.frame_id, header.stamp, ros::Duration(0.5));
+		tfl_.lookupTransform("map", header.frame_id, header.stamp, tf_world);
 		pcl_ros::transformAsMatrix(tf_world, view_to_world);
 	}
 	catch(tf::TransformException e){
