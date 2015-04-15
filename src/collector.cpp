@@ -8,7 +8,10 @@
 #include <pcl_ros/transforms.h>
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <boost/make_shared.hpp>
 #include <vector>
+
+using boost::make_shared;
 
 using utils::convert;
 
@@ -76,9 +79,9 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 		}
 	}
 
-	PointCloud::Ptr full_view(new PointCloud);
-	for( const PointCloud::Ptr& p : view )
-		*full_view+= *p;
+	auto full_view= make_shared<PointCloud>();
+	for( const auto& object : view )
+		*full_view+= *object;
 
 	if( table_tracker_.isLocked() && table_tracker_.registerTable(table, full_view, world_transform) ){
 		ROS_INFO("registered known table %ld", table_count_);
