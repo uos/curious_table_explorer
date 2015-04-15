@@ -10,6 +10,7 @@
 
 #include <boost/make_shared.hpp>
 #include <vector>
+#include <cassert>
 
 using boost::make_shared;
 
@@ -42,16 +43,16 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 		table_tracker_.reset();
 	}
 
-	if( tables->tables.size() != 1 ){
-		ROS_WARN("table message is expected to contain exactly one table. Ignoring.");
-		return;
-	}
+	assert( tables->tables.size() == 1 && "table message is expected to contain exactly one table" );
+
 	const object_recognition_msgs::Table& table= tables->tables[0];
 
-	if( objs->objects.size() == 0 || objs->objects[0].point_clouds.size() == 0 ){
+	if( objs->objects.empty() ){
 		ROS_WARN("received empty objects array. Ignoring.");
 		return;
 	}
+
+	assert( objs->objects[0].point_clouds.size() == 1 && "objects are expected to contain exactly one segmented point cloud from latest view" );
 
 	TransformMat world_transform;
 	try {
