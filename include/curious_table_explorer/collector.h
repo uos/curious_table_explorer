@@ -13,6 +13,7 @@
 #include <message_filters/time_synchronizer.h>
 
 #include <tf/transform_listener.h>
+#include <tf/transform_broadcaster.h>
 
 #include <object_recognition_msgs/RecognizedObjectArray.h>
 #include <object_recognition_msgs/TableArray.h>
@@ -27,6 +28,8 @@ public:
 	void publish_object_markers() const;
 	void publish_tables() const;
 	void publish_observed_table() const;
+
+	void publish_table_frame();
 
 	bool dump_models(curious_table_explorer::DumpModelsToFolder::Request&, curious_table_explorer::DumpModelsToFolder::Response&);
 protected:
@@ -49,6 +52,7 @@ protected:
 	ros::ServiceServer dump_service_;
 
 	tf::TransformListener tfl_;
+	tf::TransformBroadcaster tfb_;
 
 };
 

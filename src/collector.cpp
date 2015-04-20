@@ -75,6 +75,7 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 
 	if( table_tracker_.isLocked() && table_tracker_.registerTable(table, full_view, view_to_world) ){
 		ROS_INFO("registered known table %ld", table_count_);
+		this->publish_table_frame();
 		model_constructor_.addTableView(table, view, table_tracker_.getWorldToTable()*view_to_world);
 	}
 	else {
@@ -139,6 +140,21 @@ void Collector::publish_observed_table() const {
 	model_constructor_.buildRegisteredObjects(ot.objects);
 
 	pub_models_.publish( ot );
+}
+
+void Collector::publish_table_frame() {
+	tf::Transform trans;
+	const TransformMat& t= table_tracker_.getTableToWorld();
+
+	trans.setOrigin( tf::Vector3(t(0,3), t(1,3), t(2,3)));
+	trans.setBasis( tf::Matrix3x3(
+		t(0,0), t(0,1), t(0,2),
+		t(1,0), t(1,1), t(1,2),
+		t(2,0), t(2,1), t(2,2)
+	) );
+
+	const std_msgs::Header& header= table_tracker_.getTable().header;
+	tfb_.sendTransform(tf::StampedTransform(trans, header.stamp, header.frame_id, "tracked_table"));
 }
 
 }
