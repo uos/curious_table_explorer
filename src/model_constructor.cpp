@@ -29,7 +29,7 @@ namespace curious_table_explorer {
 ModelConstructor::ModelConstructor() {}
 
 void ModelConstructor::clear(){
-	this->models.clear();
+	models_.clear();
 }
 
 void ModelConstructor::addTableView(const object_recognition_msgs::Table& table, const std::vector<PointCloud::Ptr>& view, const TransformMat& view_to_table){
@@ -44,7 +44,7 @@ void ModelConstructor::addModelView(ModelView mv){
 
 	PointCloud::ConstPtr view= mv.getDeskCloud();
 
-	for( Model& m : this->models ){
+	for( Model& m : models_ ){
 		hull_points->clear();
 		hull_polygons.clear();
 
@@ -64,8 +64,8 @@ void ModelConstructor::addModelView(ModelView mv){
 		}
 	}
 
-	this->models.emplace_back();
-	Model& fresh_model= this->models.back();
+	models_.emplace_back();
+	Model& fresh_model= models_.back();
 	fresh_model.addView(mv);
 	Eigen::Vector4f center= fresh_model.getCenter();
 	ROS_INFO("found no matching model. Adding new one %f / %f / %f", center[0], center[1], center[2]);
@@ -83,8 +83,8 @@ void ModelConstructor::finalizeTable() {
 void ModelConstructor::buildRegisteredObjects(std::vector<RegisteredObject>& objects) const {
 
 	Eigen::Translation<float, 3> trans(0, 0, 0);
-	objects.reserve(models.size());
-	for(const Model& m : models){
+	objects.reserve(models_.size());
+	for(const Model& m : models_){
 		assert( m.views.size() > 0 );
 
 		RegisteredObject obj;
@@ -118,7 +118,7 @@ void ModelConstructor::buildRegisteredObjects(std::vector<RegisteredObject>& obj
  *************************/
 
 bool ModelConstructor::writeTableToFiles(const boost::filesystem::path& folder) const {
-	if( this->models.size() == 0 )
+	if( models_.size() == 0 )
 		return true;
 
 	ROS_INFO("writing table content to '%s'", folder.c_str());
@@ -130,16 +130,16 @@ bool ModelConstructor::writeTableToFiles(const boost::filesystem::path& folder) 
 	/* if this failed the code below will error out */
 
 	try {
-		for(size_t mi= 0; mi < this->models.size(); ++mi){
-			for(size_t vi= 0; vi < this->models[mi].views.size(); ++vi){
+		for(size_t mi= 0; mi < models_.size(); ++mi){
+			for(size_t vi= 0; vi < models_[mi].views.size(); ++vi){
 				std::stringstream file;
 				file << "object" << std::setfill('0') << std::setw(2) << mi << "_view" << std::setfill('0') << std::setw(2) << vi << ".pcd";
-				writer.writeBinary( (folder/file.str()).native(), *this->models[mi].views[vi].getDeskCloud());
+				writer.writeBinary( (folder/file.str()).native(), *models_[mi].views[vi].getDeskCloud());
 			}
 		}
 
 		auto full_table= make_shared<PointCloud>();
-		for(const Model& m : this->models)
+		for(const Model& m : models_)
 			for(const ModelView& mv : m.views)
 				*full_table+= *mv.getDeskCloud();
 		writer.writeBinary((folder/"full_table.pcd").native(), *full_table);
@@ -201,7 +201,7 @@ void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_
 
 	visualization_msgs::Marker marker= cloudMarker();
 
-	for( const Model& model : this->models ){
+	for( const Model& model : models_ ){
 		marker.color= distribution(generator);
 		marker.points.clear();
 		for( const ModelView& view : model.views ){
@@ -225,7 +225,7 @@ void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_ar
 
 	visualization_msgs::Marker marker= hullMarker();
 
-	for( const Model& model : this->models ){
+	for( const Model& model : models_ ){
 		marker.color= distribution(generator);
 		marker.points.clear();
 
@@ -264,7 +264,7 @@ void ModelConstructor::buildCenterMarkers(visualization_msgs::MarkerArray& cente
 
 	visualization_msgs::Marker marker= centerMarker();
 
-	for( const Model& model : this->models ){
+	for( const Model& model : models_ ){
 		marker.color= distribution(generator);
 		marker.pose.position= convert<geometry_msgs::Point, Eigen::Vector4f>( table_to_world * model.getCenter() );
 		marker.header= pcl_conversions::fromPCL(model.views[model.views.size()-1].getViewCloud()->header);

@@ -36,7 +36,7 @@ public:
 	void buildCenterMarkers(visualization_msgs::MarkerArray& center_array, const TransformMat& table_to_world) const;
 
 protected:
-	std::vector<Model> models;
+	std::vector<Model> models_;
 };
 
 }
