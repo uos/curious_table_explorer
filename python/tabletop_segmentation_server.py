@@ -55,7 +55,6 @@ class TableTopSegmentationServer:
 			distance_threshold=.02,
 			max_iterations= 100)
 		extract_table_indices= ecto_pcl.ExtractIndices(negative= False)
-		inlier_projection= ecto_pcl.ProjectInliers(model_type= ecto_pcl.SACMODEL_NORMAL_PLANE)
 		extract_table_clusters= ecto_pcl.EuclideanClusterExtraction(cluster_tolerance= .03)
 		extract_largest_table_cluster= ecto_pcl.ExtractLargestCluster()
 		convex_table= ecto_pcl.ConvexHull(dimensionality= 2)
@@ -84,15 +83,13 @@ class TableTopSegmentationServer:
 
 			extract_indices_floor[:] >> normals[:],
 			extract_indices_floor[:] >> planar_segmentation["input"],
-			normals[:]    >> planar_segmentation["normals"],
+			normals[:] >> planar_segmentation["normals"],
 
 			planar_segmentation["inliers"] >> extract_table_indices["indices"],
 			extract_indices_floor[:] >> extract_table_indices["input"],
-			extract_table_indices[:] >> inlier_projection["input"],
-			planar_segmentation["model"] >> inlier_projection["model"],
-			inlier_projection[:] >> extract_table_clusters["input"],
+			extract_table_indices[:] >> extract_table_clusters["input"],
 			extract_table_clusters[:] >> extract_largest_table_cluster["clusters"],
-			inlier_projection[:] >> extract_largest_table_cluster["input"],
+			extract_table_indices[:] >> extract_largest_table_cluster["input"],
 			extract_largest_table_cluster[:] >> convex_table[:],
 
 			convex_table[:] >> convex2tables[:],
