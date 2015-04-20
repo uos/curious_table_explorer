@@ -24,8 +24,12 @@ def real_wait_for_transform(tfl, to_frame, from_frame, time, timeout):
 		rospy.sleep(rospy.Duration(.01))
 
 class Surrounder:
-	def __init__(self):
+	def __init__(self, min_dist= 0.7, max_dist= 1.5):
 		self.tfl= tf.TransformListener()
+
+		self.min_dist= min_dist
+		self.max_dist= max_dist
+
 		self.pose_pub= rospy.Publisher('/planning_pose', PoseStamped, queue_size= 20)
 
 		rospy.wait_for_service('/move_base_node/make_plan')
@@ -87,7 +91,7 @@ class Surrounder:
 			angle= (current_angle+delta) % (2*pi)
 			vec= array([ cos(angle), sin(angle) ])
 			valid_distance_found= 0
-			for dist in linspace(0.7, 1.5, 7):
+			for dist in linspace(self.max_dist, self.min_dist, 10):
 				if self.check_preempted():
 					return
 
@@ -97,23 +101,29 @@ class Surrounder:
 				self.pose_pub.publish(test_pose)
 
 				plan= self.get_plan(robot_pose, test_pose)
-				if plan == None:
+				if plan == None or len(plan.poses) == 0:
+					continue
+				self.move_base_client.send_goal_and_wait( MoveBaseGoal(test_pose), rospy.Duration(40.0))
+				if self.move_base_client.get_state() != GoalStatus.SUCCEEDED:
+					rospy.loginfo("move base failed - (%d) %s" % (self.move_base_client.get_state(), self.move_base_client.get_goal_status_text() ) )
 					continue
 
-				if len(plan.poses) > 0:
-					# skip the first two found solutions - They are too near to obstacles to approach in practice
-					if valid_distance_found < 2:
-						valid_distance_found+= 1
+				# try to get nearer to the target
+				for near_dist in linspace(self.min_dist, dist, 5, endpoint= False):
+					nrp= center_point+ near_dist*vec
+					near_test_pose= PoseStamped(header= robot_pose.header, pose= Pose(Point(nrp[0], nrp[1], 0.0), Quaternion( *quaternion_from_euler(0.0,0.0, ro) )))
+					plan= self.get_plan( test_pose, near_test_pose )
+					if plan == None or len(plan.poses) == 0:
 						continue
-					rospy.loginfo("found working dist %s for angle %s" % (dist, angle))
-					self.move_base_client.send_goal_and_wait( MoveBaseGoal(test_pose), rospy.Duration(40.0))
-					if self.move_base_client.get_state() == GoalStatus.SUCCEEDED:
-						# move_base often returns one or two seconds _before_ it stopped moving. Make sure we get a "clean" picture for recognition
-						rospy.sleep(rospy.Duration(2.5))
-						self.object_recognition_client.send_goal_and_wait( ObjectRecognitionGoal(), rospy.Duration() )
-						break
-					else:
-						rospy.loginfo("%d - %s" % (self.move_base_client.get_state(), self.move_base_client.get_goal_status_text()))
+					self.move_base_client.send_goal_and_wait( MoveBaseGoal(near_test_pose), rospy.Duration(20.0))
+					if self.move_base_client.get_state() != GoalStatus.SUCCEEDED:
+						continue
+					break
+
+				# move_base often returns one or two seconds _before_ it stopped moving. Make sure we get a "clean" picture for recognition
+				rospy.sleep(rospy.Duration(2.5))
+				self.object_recognition_client.send_goal_and_wait( ObjectRecognitionGoal(), rospy.Duration() )
+				break # next delta
 		self.server.set_succeeded()
 
 if __name__ == '__main__':
