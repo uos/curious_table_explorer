@@ -64,19 +64,18 @@ void Model::updateCenter(ModelView& m){
 }
 
 
-void Model::getConvexHull(PointCloud& hull_points) const {
-	hull_points= *this->hull_points;
+const PointCloud::Ptr& Model::getConvexHullPoints() const {
+	return this->hull_points;
 }
 
-void Model::getConvexHull(PointCloud& hull_points, std::vector<pcl::Vertices>& hull_polygons) const {
-	hull_points= *this->hull_points;
-	hull_polygons= this->hull_polygons;
+const std::vector<pcl::Vertices>& Model::getConvexHullVertices() const {
+	return this->hull_polygons;
 }
 
 void Model::updateConvexHull(ModelView& m){
 	PointCloud::Ptr cloud(new PointCloud);
 
-	this->getConvexHull(*cloud);
+	*cloud+= *this->getConvexHullPoints();
 	*cloud+= *m.getDeskCloud();
 
 	pcl::ConvexHull<Point> chull;

@@ -17,6 +17,7 @@
 
 #include <sstream>
 #include <vector>
+
 #include <boost/filesystem.hpp>
 #include <boost/make_shared.hpp>
 
@@ -38,17 +39,13 @@ void ModelConstructor::addTableView(const object_recognition_msgs::Table& table,
 }
 
 void ModelConstructor::addModelView(ModelView mv){
-	auto hull_points= make_shared<PointCloud>();
-	std::vector<pcl::Vertices> hull_polygons;
 	pcl::CropHull<Point> crop;
 
 	PointCloud::ConstPtr view= mv.getDeskCloud();
 
 	for( Model& m : models_ ){
-		hull_points->clear();
-		hull_polygons.clear();
-
-		m.getConvexHull(*hull_points, hull_polygons);
+		const PointCloud::Ptr& hull_points= m.getConvexHullPoints();
+		const std::vector<pcl::Vertices>& hull_polygons= m.getConvexHullVertices();
 
 		crop.setInputCloud(view);
 		crop.setHullCloud(hull_points);
@@ -229,11 +226,10 @@ void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_ar
 		marker.color= distribution(generator);
 		marker.points.clear();
 
-		PointCloud points;
-		std::vector<pcl::Vertices> vertices;
-		model.getConvexHull(points, vertices);
+		auto points= make_shared<PointCloud>();
+		const std::vector<pcl::Vertices>& vertices= model.getConvexHullVertices();
 
-		pcl::transformPointCloud(points, points, table_to_world);
+		pcl::transformPointCloud(*model.getConvexHullPoints(), *points, table_to_world);
 		marker.header.frame_id= "map";
 		marker.header.stamp= ros::Time::now();
 
@@ -243,13 +239,13 @@ void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_ar
 				ROS_WARN("Non-triangle found in convex hull (size=%ld)", v.vertices.size() );
 				continue;
 			}
-			if (v.vertices[0] >= points.size() || v.vertices[1] >= points.size() || v.vertices[2] >= points.size()){
+			if (v.vertices[0] >= points->size() || v.vertices[1] >= points->size() || v.vertices[2] >= points->size()){
 				ROS_WARN("Invalid triangle found. Ignoring");
 				continue;
 			}
-			marker.points.push_back( convert<geometry_msgs::Point>(points[v.vertices[0]]) );
-			marker.points.push_back( convert<geometry_msgs::Point>(points[v.vertices[1]]) );
-			marker.points.push_back( convert<geometry_msgs::Point>(points[v.vertices[2]]) );
+			marker.points.push_back( convert<geometry_msgs::Point>((*points)[v.vertices[0]]) );
+			marker.points.push_back( convert<geometry_msgs::Point>((*points)[v.vertices[1]]) );
+			marker.points.push_back( convert<geometry_msgs::Point>((*points)[v.vertices[2]]) );
 		}
 		if( marker.points.size() > 0 ){
 			hull_array.markers.push_back(marker);

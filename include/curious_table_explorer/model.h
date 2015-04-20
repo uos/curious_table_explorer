@@ -32,8 +32,8 @@ public:
 
 	Eigen::Vector4f getCenter() const;
 
-	void getConvexHull(PointCloud& cloud) const;
-	void getConvexHull(PointCloud& cloud, std::vector<pcl::Vertices>& hull_polygons) const;
+	const PointCloud::Ptr& getConvexHullPoints() const;
+	const std::vector<pcl::Vertices>& getConvexHullVertices() const;
 
 	std::vector<ModelView> views;
 
