@@ -38,6 +38,9 @@ class Surrounder:
 		self.move_base_client= actionlib.SimpleActionClient('/move_base', MoveBaseAction)
 		self.move_base_client.wait_for_server()
 
+		self.move_base_straight_client= actionlib.SimpleActionClient('/move_base_straight', MoveBaseAction)
+		self.move_base_client.wait_for_server()
+
 		self.object_recognition_client= actionlib.SimpleActionClient('recognize_objects', ObjectRecognitionAction)
 		self.object_recognition_client.wait_for_server()
 
@@ -115,9 +118,7 @@ class Surrounder:
 					plan= self.get_plan( test_pose, near_test_pose )
 					if plan == None or len(plan.poses) == 0:
 						continue
-					self.move_base_client.send_goal_and_wait( MoveBaseGoal(near_test_pose), rospy.Duration(20.0))
-					if self.move_base_client.get_state() != GoalStatus.SUCCEEDED:
-						continue
+					self.move_base_straight_client.send_goal_and_wait( MoveBaseGoal(near_test_pose), rospy.Duration(20.0))
 					break
 
 				# move_base often returns one or two seconds _before_ it stopped moving. Make sure we get a "clean" picture for recognition

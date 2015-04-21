@@ -45,6 +45,7 @@
   <run_depend>std_msgs</run_depend>
   <run_depend>tf</run_depend>
   <run_depend>visualization_msgs</run_depend>
+  <run_depend>move_base_straight</run_depend>
 
   <buildtool_depend>catkin</buildtool_depend>
 </package>

@@ -2,4 +2,9 @@
 <launch>
   <node name="tabletop_segmentation_server" pkg="curious_table_explorer" type="tabletop_segmentation_server.py" output="screen"/>
   <node name="point_surrounder" pkg="curious_table_explorer" type="surrounder.py" output="screen"/>
+
+  <node name="move_base_straight" pkg="move_base_straight" type="move_base_straight.py">
+    <remap from="/base_scan" to="/lms200_scan_filtered"/>
+    <remap from="/base_controller/command" to="/cmd_vel"/>
+  </node>
 </launch>
