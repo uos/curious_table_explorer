@@ -34,8 +34,8 @@ void ModelConstructor::clear(){
 }
 
 void ModelConstructor::addTableView(const object_recognition_msgs::Table& table, const std::vector<PointCloud::Ptr>& view, const TransformMat& view_to_table){
-	for(const PointCloud::Ptr& pc : view)
-		this->addModelView( ModelView(pc, view_to_table) );
+	for(const auto& cloud : view)
+		this->addModelView( ModelView(cloud, view_to_table) );
 }
 
 void ModelConstructor::addModelView(ModelView mv){
