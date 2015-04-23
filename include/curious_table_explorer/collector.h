@@ -6,6 +6,7 @@
 #include <curious_table_explorer/model_constructor.h>
 
 #include <curious_table_explorer/DumpModelsToFolder.h>
+#include <curious_table_explorer/FinalizeTable.h>
 
 #include <ros/ros.h>
 
@@ -32,8 +33,10 @@ public:
 	void publishTableFrame();
 
 	bool dumpModels(curious_table_explorer::DumpModelsToFolder::Request&, curious_table_explorer::DumpModelsToFolder::Response&);
+	bool finalizeTable(curious_table_explorer::FinalizeTable::Request&, curious_table_explorer::FinalizeTable::Response&);
 protected:
 	void observeTable(const object_recognition_msgs::TableArray::ConstPtr&, const object_recognition_msgs::RecognizedObjectArray::ConstPtr&);
+	void finalizeTable();
 
 	TableTracker table_tracker_;
 	ModelConstructor model_constructor_;
@@ -50,6 +53,7 @@ protected:
 	message_filters::Subscriber<object_recognition_msgs::RecognizedObjectArray> sub_objects_;
 	message_filters::TimeSynchronizer<object_recognition_msgs::TableArray, object_recognition_msgs::RecognizedObjectArray> sync_table_;
 	ros::ServiceServer dump_service_;
+	ros::ServiceServer finalize_table_service_;
 
 	tf::TransformListener tfl_;
 	tf::TransformBroadcaster tfb_;

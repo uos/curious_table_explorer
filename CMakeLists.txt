@@ -35,6 +35,7 @@ add_action_files(
 add_service_files(
 	FILES
 	DumpModelsToFolder.srv
+	FinalizeTable.srv
 )
 
 generate_messages(

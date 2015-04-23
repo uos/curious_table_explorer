@@ -33,6 +33,7 @@ Collector::Collector(const std::string& table_topic, const std::string& recogniz
 	pub_models_=  nh_.advertise<ObservedTable>("/generated_models", 5, true);
 
 	dump_service_= nh_.advertiseService("dump_models_to_folder", &Collector::dumpModels, this);
+	finalize_table_service_= nh_.advertiseService("finalize_table", &Collector::finalizeTable, this);
 }
 
 void Collector::observeTable(const object_recognition_msgs::TableArray::ConstPtr& tables, const object_recognition_msgs::RecognizedObjectArray::ConstPtr& objs){
@@ -79,19 +80,7 @@ void Collector::observeTable(const object_recognition_msgs::TableArray::ConstPtr
 		model_constructor_.addTableView(table, view, table_tracker_.getWorldToTable()*view_to_world);
 	}
 	else {
-		model_constructor_.finalizeTable();
-
-		std::string path;
-		nh_.param<std::string>("view_storage_path", path, "/tmp/curious_table_explorer");
-
-		std::stringstream tablename;
-		tablename << "table" << std::setfill('0') << std::setw(3) << table_count_;
-
-		model_constructor_.writeTableToFiles(boost::filesystem::path(path)/tablename.str());
-
-		model_constructor_.clear();
-
-		table_count_++;
+		this->finalizeTable();
 
 		ROS_INFO("locked onto new table");
 		table_tracker_.lockTable(table, full_view, view_to_world);
@@ -108,6 +97,28 @@ void Collector::observeTable(const object_recognition_msgs::TableArray::ConstPtr
 bool Collector::dumpModels(DumpModelsToFolder::Request& req, DumpModelsToFolder::Response& res) {
 	res.success= model_constructor_.writeTableToFiles(req.path == "" ? "." : req.path);
 	return true;
+}
+
+bool Collector::finalizeTable(FinalizeTable::Request&, FinalizeTable::Response&) {
+	this->finalizeTable();
+	return true;
+}
+
+void Collector::finalizeTable() {
+		model_constructor_.finalizeTable();
+
+		std::string path;
+		nh_.param<std::string>("view_storage_path", path, "/tmp/curious_table_explorer");
+
+		std::stringstream tablename;
+		tablename << "table" << std::setfill('0') << std::setw(3) << table_count_;
+
+		model_constructor_.writeTableToFiles(boost::filesystem::path(path)/tablename.str());
+
+		model_constructor_.clear();
+		table_tracker_.reset();
+
+		table_count_++;
 }
 
 void Collector::publishObjectMarkers() const {
