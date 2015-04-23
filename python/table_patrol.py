@@ -11,6 +11,7 @@ from geometry_msgs.msg import PointStamped, Point, PoseStamped, Pose, Quaternion
 from object_recognition_msgs.msg import Table
 
 from curious_table_explorer.msg import SurroundPointAction, SurroundPointGoal
+from curious_table_explorer.srv import FinalizeTable
 
 class TablePatrol:
 	def __init__(self):
@@ -20,6 +21,7 @@ class TablePatrol:
 
 		self.client= actionlib.SimpleActionClient('/surround_point', SurroundPointAction)
 		self.client.wait_for_server()
+		self.finalize_table= rospy.ServiceProxy('finalize_table', FinalizeTable)
 
 	def add_table(self, table):
 		self.tf_listener.waitForTransform('/map', table.header.frame_id, table.header.stamp, rospy.Duration(3.0))
@@ -43,6 +45,7 @@ class TablePatrol:
 			)
 		)
 		self.client.wait_for_result()
+		self.finalize_table()
 
 if __name__ == '__main__':
 	rospy.init_node('table_patrol')
