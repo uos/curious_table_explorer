@@ -25,15 +25,15 @@ class Collector {
 public:
 	Collector(const std::string& table_topic, const std::string& recognized_objects_topic);
 
-	void publish_object_markers() const;
-	void publish_tables() const;
-	void publish_observed_table() const;
+	void publishObjectMarkers() const;
+	void publishTables() const;
+	void publishObservedTable() const;
 
-	void publish_table_frame();
+	void publishTableFrame();
 
-	bool dump_models(curious_table_explorer::DumpModelsToFolder::Request&, curious_table_explorer::DumpModelsToFolder::Response&);
+	bool dumpModels(curious_table_explorer::DumpModelsToFolder::Request&, curious_table_explorer::DumpModelsToFolder::Response&);
 protected:
-	void observe_table(const object_recognition_msgs::TableArray::ConstPtr&, const object_recognition_msgs::RecognizedObjectArray::ConstPtr&);
+	void observeTable(const object_recognition_msgs::TableArray::ConstPtr&, const object_recognition_msgs::RecognizedObjectArray::ConstPtr&);
 
 	TableTracker table_tracker_;
 	ModelConstructor model_constructor_;

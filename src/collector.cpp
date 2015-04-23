@@ -26,16 +26,16 @@ Collector::Collector(const std::string& table_topic, const std::string& recogniz
 	sub_table_.subscribe(nh_,table_topic, 5);
 	sub_objects_.subscribe(nh_, recognized_objects_topic, 5);
 	sync_table_.connectInput(sub_table_, sub_objects_);
-	sync_table_.registerCallback(boost::bind(&Collector::observe_table, this, _1, _2));
+	sync_table_.registerCallback(boost::bind(&Collector::observeTable, this, _1, _2));
 
 	pub_markers_= nh_.advertise<visualization_msgs::MarkerArray>("/tracked_object_views", 5, true);
 	pub_tables_=  nh_.advertise<object_recognition_msgs::TableArray>("/tracked_table", 5, true);
 	pub_models_=  nh_.advertise<ObservedTable>("/generated_models", 5, true);
 
-	dump_service_= nh_.advertiseService("dump_models_to_folder", &Collector::dump_models, this);
+	dump_service_= nh_.advertiseService("dump_models_to_folder", &Collector::dumpModels, this);
 }
 
-void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPtr& tables, const object_recognition_msgs::RecognizedObjectArray::ConstPtr& objs){
+void Collector::observeTable(const object_recognition_msgs::TableArray::ConstPtr& tables, const object_recognition_msgs::RecognizedObjectArray::ConstPtr& objs){
 	static utils::BackjumpChk backjump;
 	if(backjump){
 		ROS_WARN("Detected jump back in time. Clearing object buffer");
@@ -75,7 +75,7 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 
 	if( table_tracker_.isLocked() && table_tracker_.registerTable(table, full_view, view_to_world) ){
 		ROS_INFO("registered known table %ld", table_count_);
-		this->publish_table_frame();
+		this->publishTableFrame();
 		model_constructor_.addTableView(table, view, table_tracker_.getWorldToTable()*view_to_world);
 	}
 	else {
@@ -99,18 +99,18 @@ void Collector::observe_table(const object_recognition_msgs::TableArray::ConstPt
 		model_constructor_.addTableView(table, view, table_tracker_.getWorldToTable()*view_to_world);
 	}
 
-	this->publish_object_markers();
-	this->publish_tables();
+	this->publishObjectMarkers();
+	this->publishTables();
 
-	this->publish_observed_table();
+	this->publishObservedTable();
 }
 
-bool Collector::dump_models(DumpModelsToFolder::Request& req, DumpModelsToFolder::Response& res) {
+bool Collector::dumpModels(DumpModelsToFolder::Request& req, DumpModelsToFolder::Response& res) {
 	res.success= model_constructor_.writeTableToFiles(req.path == "" ? "." : req.path);
 	return true;
 }
 
-void Collector::publish_object_markers() const {
+void Collector::publishObjectMarkers() const {
 	visualization_msgs::MarkerArray markers;
 
 	const TransformMat table_to_world= table_tracker_.getTableToWorld();
@@ -121,7 +121,7 @@ void Collector::publish_object_markers() const {
 	pub_markers_.publish( markers );
 }
 
-void Collector::publish_tables() const {
+void Collector::publishTables() const {
 	object_recognition_msgs::TableArray tabs;
 
 	tabs.tables.push_back(table_tracker_.getTable());
@@ -130,7 +130,7 @@ void Collector::publish_tables() const {
 	pub_tables_.publish( tabs );
 }
 
-void Collector::publish_observed_table() const {
+void Collector::publishObservedTable() const {
 	ObservedTable ot;
 
 	ot.table= table_tracker_.getTable();
@@ -142,7 +142,7 @@ void Collector::publish_observed_table() const {
 	pub_models_.publish( ot );
 }
 
-void Collector::publish_table_frame() {
+void Collector::publishTableFrame() {
 	tf::Transform trans;
 	const TransformMat& t= table_tracker_.getTableToWorld();
 
