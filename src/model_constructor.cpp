@@ -41,7 +41,7 @@ void ModelConstructor::addTableView(const object_recognition_msgs::Table& table,
 void ModelConstructor::addModelView(ModelView mv){
 	pcl::CropHull<Point> crop;
 
-	PointCloud::ConstPtr view= mv.getDeskCloud();
+	PointCloud::ConstPtr view= mv.registeredCloud();
 
 	for( Model& m : models_ ){
 		const PointCloud::Ptr& hull_points= m.getConvexHullPoints();
@@ -96,7 +96,7 @@ void ModelConstructor::buildRegisteredObjects(std::vector<RegisteredObject>& obj
 		for( const ModelView& mv : m.views ){
 			RegisteredPointCloud rpc;
 
-			PointCloud pc(*mv.getViewCloud());
+			PointCloud pc(*mv.viewCloud());
 			pcl::toROSMsg(pc, rpc.view);
 
 			//TODO: get desk-Transform, adjust it to be an object_frame_transform (using trans) and add it to rpc.object_frame_transform
@@ -131,14 +131,14 @@ bool ModelConstructor::writeTableToFiles(const boost::filesystem::path& folder) 
 			for(size_t vi= 0; vi < models_[mi].views.size(); ++vi){
 				std::stringstream file;
 				file << "object" << std::setfill('0') << std::setw(2) << mi << "_view" << std::setfill('0') << std::setw(2) << vi << ".pcd";
-				writer.writeBinary( (folder/file.str()).native(), *models_[mi].views[vi].getDeskCloud());
+				writer.writeBinary( (folder/file.str()).native(), *models_[mi].views[vi].registeredCloud());
 			}
 		}
 
 		auto full_table= make_shared<PointCloud>();
 		for(const Model& m : models_)
 			for(const ModelView& mv : m.views)
-				*full_table+= *mv.getDeskCloud();
+				*full_table+= *mv.registeredCloud();
 		writer.writeBinary((folder/"full_table.pcd").native(), *full_table);
 	}
 	catch(pcl::IOException e){
@@ -203,7 +203,7 @@ void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_
 		marker.points.clear();
 		for( const ModelView& view : model.views ){
 			auto cloud= make_shared<PointCloud>();
-			pcl::transformPointCloud(*view.getDeskCloud(), *cloud, table_to_world);
+			pcl::transformPointCloud(*view.registeredCloud(), *cloud, table_to_world);
 			cloud->header.frame_id= "map";
 
 			marker.points.reserve( marker.points.size() + cloud->size() );
@@ -263,7 +263,7 @@ void ModelConstructor::buildCenterMarkers(visualization_msgs::MarkerArray& cente
 	for( const Model& model : models_ ){
 		marker.color= distribution(generator);
 		marker.pose.position= convert<geometry_msgs::Point, Eigen::Vector4f>( table_to_world * model.getCenter() );
-		marker.header= pcl_conversions::fromPCL(model.views[model.views.size()-1].getViewCloud()->header);
+		marker.header= pcl_conversions::fromPCL(model.views[model.views.size()-1].viewCloud()->header);
 		marker.header.frame_id= "map";
 
 		center_array.markers.push_back(marker);

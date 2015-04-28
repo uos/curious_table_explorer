@@ -6,33 +6,31 @@
 
 #include <pcl_ros/transforms.h>
 
+#include <boost/make_shared.hpp>
+
+using boost::make_shared;
+
 namespace curious_table_explorer {
 
 // ModelView implementation
 
-ModelView::ModelView(PointCloud::Ptr c, const tf::Transform& w) :
-	cloud(c)
-{
-	pcl_ros::transformAsMatrix(w, this->desk_transform);
-}
-
-ModelView::ModelView(PointCloud::Ptr c, const Eigen::Matrix4f w) :
-	cloud(c),
-	desk_transform(w)
+ModelView::ModelView(PointCloud::Ptr c, const TransformMat w) :
+	cloud_(c),
+	transform(w)
 {}
 
-PointCloud::ConstPtr ModelView::getViewCloud() const{
-	return this->cloud;
+PointCloud::Ptr ModelView::viewCloud() const {
+	return cloud_;
 }
 
-PointCloud::ConstPtr ModelView::getDeskCloud() const {
-	PointCloud::Ptr p(new PointCloud);
-	pcl::transformPointCloud( *this->cloud, *p, this->desk_transform );
-	p->header= this->cloud->header;
-	p->header.frame_id= "desk";
+PointCloud::Ptr ModelView::registeredCloud() const {
+	auto p= make_shared<PointCloud>();
+	pcl::transformPointCloud( *cloud_, *p, this->transform );
+	p->header= cloud_->header;
+	// we don't know the frame of the generated cloud
+	p->header.frame_id= "unknown";
 	return p;
 }
-
 
 // Model implementation
 
@@ -53,7 +51,7 @@ Eigen::Vector4f Model::getCenter() const {
 }
 
 void Model::updateCenter(ModelView& m){
-	PointCloud pc(*m.getDeskCloud());
+	PointCloud pc(*m.registeredCloud());
 
 	if( this->views.size() > 0 ){
 		pc.push_back(this->min_);
@@ -76,7 +74,7 @@ void Model::updateConvexHull(ModelView& m){
 	PointCloud::Ptr cloud(new PointCloud);
 
 	*cloud+= *this->getConvexHullPoints();
-	*cloud+= *m.getDeskCloud();
+	*cloud+= *m.registeredCloud();
 
 	pcl::ConvexHull<Point> chull;
 	chull.setInputCloud(cloud);

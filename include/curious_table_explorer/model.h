@@ -13,15 +13,15 @@ namespace curious_table_explorer {
 
 class ModelView {
 public:
-	ModelView(PointCloud::Ptr c, const Transform& w);
 	ModelView(PointCloud::Ptr c, const TransformMat w);
 
-	PointCloud::ConstPtr getViewCloud() const;
-	PointCloud::ConstPtr getDeskCloud() const;
+	PointCloud::Ptr viewCloud() const;
+	PointCloud::Ptr registeredCloud() const;
+	
+	TransformMat transform;
 
 private:
-	PointCloud::Ptr cloud;
-	TransformMat desk_transform;
+	PointCloud::Ptr cloud_;
 };
 
 class Model {
