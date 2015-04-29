@@ -19,7 +19,7 @@ public:
 
 	void addTableView(const object_recognition_msgs::Table& table, const std::vector<PointCloud::Ptr>& view, const TransformMat& view_to_table);
 
-	void addModelView(ModelView mv);
+	void addModelView(const ModelView& mv);
 
 	void clear();
 	void finalizeTable();

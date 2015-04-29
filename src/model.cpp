@@ -35,51 +35,53 @@ PointCloud::Ptr ModelView::registeredCloud() const {
 // Model implementation
 
 Model::Model() :
-	hull_points(new PointCloud)
-{
-}
+	hull_points_(new PointCloud)
+{}
 
-void Model::addView(ModelView m){
+void Model::addView(const ModelView& m){
 	this->updateCenter( m );
 	this->updateConvexHull( m );
 
-	this->views.push_back(m);
+	views_.push_back(m);
 }
 
-Eigen::Vector4f Model::getCenter() const {
-	return (this->min_.getVector4fMap() + this->max_.getVector4fMap()) / 2;
+const std::vector<ModelView>& Model::views() const {
+	return views_;
 }
 
-void Model::updateCenter(ModelView& m){
+Eigen::Vector4f Model::center() const {
+	return (min_.getVector4fMap() + max_.getVector4fMap()) / 2;
+}
+
+void Model::updateCenter(const ModelView& m){
 	PointCloud pc(*m.registeredCloud());
 
-	if( this->views.size() > 0 ){
-		pc.push_back(this->min_);
-		pc.push_back(this->max_);
+	if( views_.size() > 0 ){
+		pc.push_back(min_);
+		pc.push_back(max_);
 	}
 
-	pcl::getMinMax3D(pc, this->min_, this->max_);
+	pcl::getMinMax3D(pc, min_, max_);
 }
 
-
-const PointCloud::Ptr& Model::getConvexHullPoints() const {
-	return this->hull_points;
+const PointCloud::Ptr& Model::convexHullPoints() const {
+	return hull_points_;
 }
 
-const std::vector<pcl::Vertices>& Model::getConvexHullVertices() const {
-	return this->hull_polygons;
+const std::vector<pcl::Vertices>& Model::convexHullVertices() const {
+	return hull_polygons_;
 }
 
-void Model::updateConvexHull(ModelView& m){
-	PointCloud::Ptr cloud(new PointCloud);
+void Model::updateConvexHull(const ModelView& m){
+	auto cloud= make_shared<PointCloud>();
 
-	*cloud+= *this->getConvexHullPoints();
+	*cloud+= *this->convexHullPoints();
 	*cloud+= *m.registeredCloud();
 
 	pcl::ConvexHull<Point> chull;
 	chull.setInputCloud(cloud);
 
-	chull.reconstruct(*this->hull_points, this->hull_polygons);
+	chull.reconstruct(*hull_points_, hull_polygons_);
 }
 
 }

@@ -17,7 +17,7 @@ public:
 
 	PointCloud::Ptr viewCloud() const;
 	PointCloud::Ptr registeredCloud() const;
-	
+
 	TransformMat transform;
 
 private:
@@ -28,25 +28,27 @@ class Model {
 public:
 	Model();
 
-	void addView(ModelView m);
+	void addView(const ModelView&);
 
-	Eigen::Vector4f getCenter() const;
+	Eigen::Vector4f center() const;
 
-	const PointCloud::Ptr& getConvexHullPoints() const;
-	const std::vector<pcl::Vertices>& getConvexHullVertices() const;
+	const PointCloud::Ptr& convexHullPoints() const;
+	const std::vector<pcl::Vertices>& convexHullVertices() const;
 
-	std::vector<ModelView> views;
+	const std::vector<ModelView>& views() const;
 
 protected:
-	void updateCenter(ModelView& m);
+	std::vector<ModelView> views_;
+
+	void updateCenter(const ModelView& m);
 
 	Point min_;
 	Point max_;
 
-	void updateConvexHull(ModelView& m);
+	void updateConvexHull(const ModelView& m);
 
-	PointCloud::Ptr hull_points;
-	std::vector<pcl::Vertices> hull_polygons;
+	PointCloud::Ptr hull_points_;
+	std::vector<pcl::Vertices> hull_polygons_;
 };
 
 }

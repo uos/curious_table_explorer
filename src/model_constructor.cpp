@@ -34,18 +34,20 @@ void ModelConstructor::clear(){
 }
 
 void ModelConstructor::addTableView(const object_recognition_msgs::Table& table, const std::vector<PointCloud::Ptr>& view, const TransformMat& view_to_table){
-	for(const auto& cloud : view)
-		this->addModelView( ModelView(cloud, view_to_table) );
+	for(const auto& cloud : view){
+		ModelView mv(cloud, view_to_table);
+		this->addModelView( mv );
+	}
 }
 
-void ModelConstructor::addModelView(ModelView mv){
+void ModelConstructor::addModelView(const ModelView& mv){
 	pcl::CropHull<Point> crop;
 
 	PointCloud::ConstPtr view= mv.registeredCloud();
 
 	for( Model& m : models_ ){
-		const PointCloud::Ptr& hull_points= m.getConvexHullPoints();
-		const std::vector<pcl::Vertices>& hull_polygons= m.getConvexHullVertices();
+		const PointCloud::Ptr& hull_points= m.convexHullPoints();
+		const std::vector<pcl::Vertices>& hull_polygons= m.convexHullVertices();
 
 		crop.setInputCloud(view);
 		crop.setHullCloud(hull_points);
@@ -55,7 +57,7 @@ void ModelConstructor::addModelView(ModelView mv){
 		crop.filter(overlap);
 
 		if(overlap.size() > 0){
-			ROS_INFO("adding view to model with %ld views already (%ld points overlap)", m.views.size(), overlap.size());
+			ROS_INFO("adding view to model with %ld views already (%ld points overlap)", m.views().size(), overlap.size());
 			m.addView(mv);
 			return;
 		}
@@ -64,8 +66,8 @@ void ModelConstructor::addModelView(ModelView mv){
 	models_.emplace_back();
 	Model& fresh_model= models_.back();
 	fresh_model.addView(mv);
-	Eigen::Vector4f center= fresh_model.getCenter();
-	ROS_INFO("found no matching model. Adding new one %f / %f / %f", center[0], center[1], center[2]);
+	auto center= convert<geometry_msgs::Point>(fresh_model.center());
+	ROS_INFO("found no matching model. Adding new one %f / %f / %f", center.x, center.y, center.z);
 }
 
 
@@ -79,21 +81,19 @@ void ModelConstructor::finalizeTable() {
 
 void ModelConstructor::buildRegisteredObjects(std::vector<RegisteredObject>& objects) const {
 
-	Eigen::Translation<float, 3> trans(0, 0, 0);
 	objects.reserve(models_.size());
 	for(const Model& m : models_){
-		assert( m.views.size() > 0 );
+		assert( m.views().size() > 0 );
 
 		RegisteredObject obj;
 
-		trans= Eigen::Translation<float,3>(m.getCenter().head<3>());
-		obj.object_pose.pose.position.x= trans.x();
-		obj.object_pose.pose.position.y= trans.y();
-		obj.object_pose.pose.position.z= trans.z();
+		Eigen::Vector4f trans= m.center();
+
+		obj.object_pose.pose.position= convert<geometry_msgs::Point>(trans);
 		obj.object_pose.pose.orientation.w= 1;
 
-		obj.views.reserve(m.views.size());
-		for( const ModelView& mv : m.views ){
+		obj.views.reserve(m.views().size());
+		for( const ModelView& mv : m.views() ){
 			RegisteredPointCloud rpc;
 
 			PointCloud pc(*mv.viewCloud());
@@ -128,16 +128,16 @@ bool ModelConstructor::writeTableToFiles(const boost::filesystem::path& folder) 
 
 	try {
 		for(size_t mi= 0; mi < models_.size(); ++mi){
-			for(size_t vi= 0; vi < models_[mi].views.size(); ++vi){
+			for(size_t vi= 0; vi < models_[mi].views().size(); ++vi){
 				std::stringstream file;
 				file << "object" << std::setfill('0') << std::setw(2) << mi << "_view" << std::setfill('0') << std::setw(2) << vi << ".pcd";
-				writer.writeBinary( (folder/file.str()).native(), *models_[mi].views[vi].registeredCloud());
+				writer.writeBinary( (folder/file.str()).native(), *models_[mi].views()[vi].registeredCloud());
 			}
 		}
 
 		auto full_table= make_shared<PointCloud>();
 		for(const Model& m : models_)
-			for(const ModelView& mv : m.views)
+			for(const ModelView& mv : m.views())
 				*full_table+= *mv.registeredCloud();
 		writer.writeBinary((folder/"full_table.pcd").native(), *full_table);
 	}
@@ -201,7 +201,7 @@ void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_
 	for( const Model& model : models_ ){
 		marker.color= distribution(generator);
 		marker.points.clear();
-		for( const ModelView& view : model.views ){
+		for( const ModelView& view : model.views() ){
 			auto cloud= make_shared<PointCloud>();
 			pcl::transformPointCloud(*view.registeredCloud(), *cloud, table_to_world);
 			cloud->header.frame_id= "map";
@@ -227,9 +227,9 @@ void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_ar
 		marker.points.clear();
 
 		auto points= make_shared<PointCloud>();
-		const std::vector<pcl::Vertices>& vertices= model.getConvexHullVertices();
+		const std::vector<pcl::Vertices>& vertices= model.convexHullVertices();
 
-		pcl::transformPointCloud(*model.getConvexHullPoints(), *points, table_to_world);
+		pcl::transformPointCloud(*model.convexHullPoints(), *points, table_to_world);
 		marker.header.frame_id= "map";
 		marker.header.stamp= ros::Time::now();
 
@@ -262,8 +262,8 @@ void ModelConstructor::buildCenterMarkers(visualization_msgs::MarkerArray& cente
 
 	for( const Model& model : models_ ){
 		marker.color= distribution(generator);
-		marker.pose.position= convert<geometry_msgs::Point, Eigen::Vector4f>( table_to_world * model.getCenter() );
-		marker.header= pcl_conversions::fromPCL(model.views[model.views.size()-1].viewCloud()->header);
+		marker.pose.position= convert<geometry_msgs::Point, Eigen::Vector4f>( table_to_world * model.center() );
+		marker.header= pcl_conversions::fromPCL(model.views()[model.views().size()-1].viewCloud()->header);
 		marker.header.frame_id= "map";
 
 		center_array.markers.push_back(marker);
