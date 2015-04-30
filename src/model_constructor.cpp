@@ -80,7 +80,6 @@ void ModelConstructor::finalizeTable() {
  ***************************/
 
 void ModelConstructor::buildRegisteredObjects(std::vector<RegisteredObject>& objects) const {
-
 	objects.reserve(models_.size());
 	for(const Model& m : models_){
 		assert( m.views().size() > 0 );
@@ -89,7 +88,9 @@ void ModelConstructor::buildRegisteredObjects(std::vector<RegisteredObject>& obj
 
 		Eigen::Vector4f trans= m.center();
 
+		// the object's position is object-centered
 		obj.object_pose.pose.position= convert<geometry_msgs::Point>(trans);
+		// the orientation aligns with the table frame
 		obj.object_pose.pose.orientation.w= 1;
 
 		obj.views.reserve(m.views().size());
@@ -99,8 +100,9 @@ void ModelConstructor::buildRegisteredObjects(std::vector<RegisteredObject>& obj
 			PointCloud pc(*mv.viewCloud());
 			pcl::toROSMsg(pc, rpc.view);
 
-			//TODO: get desk-Transform, adjust it to be an object_frame_transform (using trans) and add it to rpc.object_frame_transform
-			rpc.object_frame_transform.transform.rotation.w= 1;
+			TransformMat object_frame_transform= mv.transform;
+			//TODO: adjust transform to object center
+			rpc.object_frame_transform.transform= convert<geometry_msgs::Transform>(object_frame_transform);
 			obj.views.push_back(rpc);
 		}
 		obj.object_pose.header= obj.views.back().view.header;
