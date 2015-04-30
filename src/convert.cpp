@@ -6,6 +6,7 @@
 #include <Eigen/Core>
 
 #include <tf/transform_datatypes.h>
+#include <tf_conversions/tf_eigen.h>
 #include <eigen_conversions/eigen_msg.h>
 #include <pcl_ros/transforms.h>
 
@@ -108,4 +109,26 @@ convert<geometry_msgs::Pose, Eigen::Matrix4f>( const Eigen::Matrix4f& mat ){
 	return p;
 }
 
+template <>
+geometry_msgs::Transform
+convert<geometry_msgs::Transform, Eigen::Matrix4f>( const Eigen::Matrix4f& mat ){
+	geometry_msgs::Transform tm;
+
+	Eigen::Affine3d trans(mat.cast<double>());
+   tf::transformEigenToMsg(trans, tm);
+
+	return tm;
 }
+
+template <>
+tf::Transform
+convert<tf::Transform, Eigen::Matrix4f>( const Eigen::Matrix4f& mat ){
+   tf::Transform tftrans;
+
+	Eigen::Affine3d trans(mat.cast<double>());
+   tf::transformEigenToTF( trans, tftrans );
+
+	return tftrans;
+}
+
+} // namespace utils

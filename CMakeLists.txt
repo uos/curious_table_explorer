@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
 	roscpp
 	sensor_msgs
 	tf
+	tf_conversions
 	visualization_msgs
 )
 

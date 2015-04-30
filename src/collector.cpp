@@ -154,15 +154,7 @@ void Collector::publishObservedTable() const {
 }
 
 void Collector::publishTableFrame() {
-	tf::Transform trans;
-	const TransformMat& t= table_tracker_.getTableToWorld();
-
-	trans.setOrigin( tf::Vector3(t(0,3), t(1,3), t(2,3)));
-	trans.setBasis( tf::Matrix3x3(
-		t(0,0), t(0,1), t(0,2),
-		t(1,0), t(1,1), t(1,2),
-		t(2,0), t(2,1), t(2,2)
-	) );
+	tf::Transform trans( convert<tf::Transform>(table_tracker_.getTableToWorld()) );
 
 	const std_msgs::Header& header= table_tracker_.getTable().header;
 	tfb_.sendTransform(tf::StampedTransform(trans, header.stamp, header.frame_id, "tracked_table"));
