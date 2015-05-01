@@ -49,8 +49,8 @@ const std::vector<ModelView>& Model::views() const {
 	return views_;
 }
 
-Eigen::Vector4f Model::center() const {
-	return (min_.getVector4fMap() + max_.getVector4fMap()) / 2;
+Eigen::Vector4d Model::center() const {
+	return (min_.getVector4fMap() + max_.getVector4fMap()).cast<double>() / 2;
 }
 
 void Model::updateCenter(const ModelView& m){

@@ -30,7 +30,7 @@ public:
 
 	void addView(const ModelView&);
 
-	Eigen::Vector4f center() const;
+	Eigen::Vector4d center() const;
 
 	const PointCloud::Ptr& convexHullPoints() const;
 	const std::vector<pcl::Vertices>& convexHullVertices() const;

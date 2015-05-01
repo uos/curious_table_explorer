@@ -86,10 +86,10 @@ void ModelConstructor::buildRegisteredObjects(std::vector<RegisteredObject>& obj
 
 		RegisteredObject obj;
 
-		Eigen::Vector4f trans= m.center();
+		Eigen::Vector4d center= m.center();
 
 		// the object's position is object-centered
-		obj.object_pose.pose.position= convert<geometry_msgs::Point>(trans);
+		obj.object_pose.pose.position= convert<geometry_msgs::Point>(center);
 		// the orientation aligns with the table frame
 		obj.object_pose.pose.orientation.w= 1;
 
@@ -264,7 +264,7 @@ void ModelConstructor::buildCenterMarkers(visualization_msgs::MarkerArray& cente
 
 	for( const Model& model : models_ ){
 		marker.color= distribution(generator);
-		marker.pose.position= convert<geometry_msgs::Point, Eigen::Vector4f>( table_to_world * model.center() );
+		marker.pose.position= convert<geometry_msgs::Point, Eigen::Vector4d>( table_to_world * model.center() );
 		marker.header= pcl_conversions::fromPCL(model.views()[model.views().size()-1].viewCloud()->header);
 		marker.header.frame_id= "map";
 

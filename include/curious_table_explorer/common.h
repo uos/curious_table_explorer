@@ -18,7 +18,7 @@ typedef pcl::PointCloud<PointXYZ> PointCloudXYZ;
 
 using tf::Transform;
 
-typedef Eigen::Matrix4f TransformMat;
+typedef Eigen::Affine3d TransformMat;
 
 }
 #endif

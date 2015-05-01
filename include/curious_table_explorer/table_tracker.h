@@ -32,7 +32,7 @@ protected:
 	// use getTable to receive the current pose
 	object_recognition_msgs::Table table_;
 
-	pcl::registration::IncrementalICP<Point> iicp_;
+	pcl::registration::IncrementalICP<Point,double> iicp_;
 
 	TransformMat locked_table_to_world_;
 

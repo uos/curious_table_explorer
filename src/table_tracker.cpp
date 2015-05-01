@@ -24,11 +24,11 @@ TableTracker::TableTracker(std::string world_frame) :
 	locked_(false),
 	world_frame_(world_frame)
 {
-	auto icp= make_shared<pcl::IterativeClosestPoint<Point,Point>>();
+	auto icp= make_shared< pcl::IterativeClosestPoint<Point,Point,double> >();
 	icp->setMaximumIterations(20);
 	icp->setMaxCorrespondenceDistance(.05);
 
-	auto estimation_2d= make_shared<pcl::registration::TransformationEstimation2D<Point,Point> >();
+	auto estimation_2d= make_shared< pcl::registration::TransformationEstimation2D<Point,Point,double> >();
 	icp->setTransformationEstimation(estimation_2d);
 
 	iicp_.setICP(icp);

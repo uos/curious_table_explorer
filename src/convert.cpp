@@ -45,7 +45,7 @@ convert< geometry_msgs::Point, pcl::PointXYZRGB >( const pcl::PointXYZRGB& p ){
 
 template <>
 geometry_msgs::Point
-convert< geometry_msgs::Point, Eigen::Vector4f >( const Eigen::Vector4f& v ){
+convert< geometry_msgs::Point, Eigen::Vector4d >( const Eigen::Vector4d& v ){
 	geometry_msgs::Point q;
 	q.x= v[0];
 	q.y= v[1];
@@ -87,23 +87,18 @@ convert< std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr>, object_recognition
 }
 
 template <>
-Eigen::Matrix4f
-convert<Eigen::Matrix4f, geometry_msgs::Pose>( const geometry_msgs::Pose& pose ){
-	tf::Transform trans;
-	tf::poseMsgToTF( pose, trans );
+Eigen::Affine3d
+convert<Eigen::Affine3d, geometry_msgs::Pose>( const geometry_msgs::Pose& pose ){
+	Eigen::Affine3d trans;
+	tf::poseMsgToEigen( pose, trans );
 
-	Eigen::Matrix4f mat;
-	pcl_ros::transformAsMatrix( trans, mat );
-
-	return mat;
+	return trans;
 }
 
 template <>
 geometry_msgs::Pose
-convert<geometry_msgs::Pose, Eigen::Matrix4f>( const Eigen::Matrix4f& mat ){
+convert<geometry_msgs::Pose, Eigen::Affine3d>( const Eigen::Affine3d& trans ){
 	geometry_msgs::Pose p;
-
-	Eigen::Affine3d trans(mat.cast<double>());
 	tf::poseEigenToMsg(trans, p);
 
 	return p;
@@ -111,24 +106,35 @@ convert<geometry_msgs::Pose, Eigen::Matrix4f>( const Eigen::Matrix4f& mat ){
 
 template <>
 geometry_msgs::Transform
-convert<geometry_msgs::Transform, Eigen::Matrix4f>( const Eigen::Matrix4f& mat ){
+convert<geometry_msgs::Transform, Eigen::Affine3d>( const Eigen::Affine3d& trans ){
 	geometry_msgs::Transform tm;
-
-	Eigen::Affine3d trans(mat.cast<double>());
-   tf::transformEigenToMsg(trans, tm);
+	tf::transformEigenToMsg(trans, tm);
 
 	return tm;
 }
 
 template <>
 tf::Transform
-convert<tf::Transform, Eigen::Matrix4f>( const Eigen::Matrix4f& mat ){
-   tf::Transform tftrans;
-
-	Eigen::Affine3d trans(mat.cast<double>());
-   tf::transformEigenToTF( trans, tftrans );
+convert<tf::Transform, Eigen::Affine3d>( const Eigen::Affine3d& trans ){
+	tf::Transform tftrans;
+	tf::transformEigenToTF( trans, tftrans );
 
 	return tftrans;
+}
+
+template<>
+Eigen::Affine3d
+convert<Eigen::Affine3d, tf::Transform>( const tf::Transform& tftrans ){
+	Eigen::Affine3d trans;
+	tf::transformTFToEigen( tftrans, trans );
+
+	return trans;
+}
+
+template<>
+Eigen::Affine3d
+convert<Eigen::Affine3d, tf::StampedTransform>( const tf::StampedTransform& tftrans ){
+	return convert<Eigen::Affine3d, tf::Transform>(tftrans);
 }
 
 } // namespace utils
