@@ -100,8 +100,8 @@ void ModelConstructor::buildRegisteredObjects(std::vector<RegisteredObject>& obj
 			PointCloud pc(*mv.viewCloud());
 			pcl::toROSMsg(pc, rpc.view);
 
-			TransformMat object_frame_transform= mv.transform;
-			//TODO: adjust transform to object center
+			TransformMat object_frame_transform= Eigen::Translation3d(center.head<3>())*mv.transform;
+
 			rpc.object_frame_transform.transform= convert<geometry_msgs::Transform>(object_frame_transform);
 			obj.views.push_back(rpc);
 		}
