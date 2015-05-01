@@ -192,7 +192,7 @@ public:
 
 		pcl::PointCloud<pcl::VFHSignature308> object_signatures;
 		float min_distance= 1.0/0.0;
-		int min_distance_index= 0;
+		//int min_distance_index= 0;
 		for( const RegisteredPointCloud& rp : op->views ){
 			pcl::VFHSignature308 cloud_signature= compute_vfh_signature( rp.view );
 			object_signatures.push_back( cloud_signature );
@@ -209,7 +209,7 @@ public:
 
 			if( matching_sigs_distances[0] < min_distance ){
 				min_distance= matching_sigs_distances[0];
-				min_distance_index= matching_sigs[0];
+				//min_distance_index= matching_sigs[0];
 			}
 		}
 		*current_signatures_+= object_signatures;
@@ -244,10 +244,10 @@ protected:
 	ObjectClustering stored_clustering_;
 	ObjectClustering current_clustering_;
 
+	uint32_t current_table_id_;
+
 	pcl::PointCloud<pcl::VFHSignature308>::Ptr stored_signatures_;
 	pcl::PointCloud<pcl::VFHSignature308>::Ptr current_signatures_;
-
-	uint32_t current_table_id_;
 
 	ros::NodeHandle nh_;
 	ros::Subscriber sub_objects_;

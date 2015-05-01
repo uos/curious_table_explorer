@@ -15,8 +15,8 @@ namespace curious_table_explorer {
 // ModelView implementation
 
 ModelView::ModelView(PointCloud::Ptr c, const TransformMat w) :
-	cloud_(c),
-	transform(w)
+	transform(w),
+	cloud_(c)
 {}
 
 PointCloud::Ptr ModelView::viewCloud() const {
@@ -50,7 +50,7 @@ const std::vector<ModelView>& Model::views() const {
 }
 
 Eigen::Vector4d Model::center() const {
-	return (min_.getVector4fMap() + max_.getVector4fMap()).cast<double>() / 2;
+	return (min_.getVector4fMap() + max_.getVector4fMap()).cast<double>() / 2.0;
 }
 
 void Model::updateCenter(const ModelView& m){

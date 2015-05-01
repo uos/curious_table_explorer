@@ -21,8 +21,8 @@ using utils::convert;
 namespace curious_table_explorer {
 
 TableTracker::TableTracker(std::string world_frame) :
-	locked_(false),
-	world_frame_(world_frame)
+	world_frame_(world_frame),
+	locked_(false)
 {
 	auto icp= make_shared< pcl::IterativeClosestPoint<Point,Point,double> >();
 	icp->setMaximumIterations(20);

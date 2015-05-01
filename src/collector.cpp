@@ -19,9 +19,9 @@ using utils::convert;
 namespace curious_table_explorer {
 
 Collector::Collector(const std::string& table_topic, const std::string& recognized_objects_topic) :
+	table_tracker_("map"),
 	table_count_(0),
-	sync_table_(5),
-	table_tracker_("map")
+	sync_table_(5)
 {
 	sub_table_.subscribe(nh_,table_topic, 5);
 	sub_objects_.subscribe(nh_, recognized_objects_topic, 5);
