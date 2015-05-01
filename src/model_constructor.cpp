@@ -102,6 +102,8 @@ void ModelConstructor::buildRegisteredObjects(std::vector<RegisteredObject>& obj
 
 			TransformMat object_frame_transform= Eigen::Translation3d(center.head<3>())*mv.transform;
 
+			rpc.object_frame_transform.header= rpc.view.header;
+			rpc.object_frame_transform.child_frame_id= "object";
 			rpc.object_frame_transform.transform= convert<geometry_msgs::Transform>(object_frame_transform);
 			obj.views.push_back(rpc);
 		}
