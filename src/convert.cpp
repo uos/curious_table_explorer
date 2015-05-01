@@ -50,6 +50,7 @@ convert< geometry_msgs::Point, Eigen::Vector4d >( const Eigen::Vector4d& v ){
 	q.x= v[0];
 	q.y= v[1];
 	q.z= v[2];
+	return q;
 }
 
 template <>
