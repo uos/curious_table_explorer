@@ -76,17 +76,16 @@ void Collector::observeTable(const object_recognition_msgs::TableArray::ConstPtr
 
 	if( table_tracker_.isLocked() && table_tracker_.registerTable(table, full_view, view_to_world) ){
 		ROS_INFO("registered known table %ld", table_count_);
-		this->publishTableFrame();
-		model_constructor_.addTableView(table, view, table_tracker_.getWorldToTable()*view_to_world);
 	}
 	else {
 		this->finalizeTable();
 
 		ROS_INFO("locked onto new table");
 		table_tracker_.lockTable(table, full_view, view_to_world);
-
-		model_constructor_.addTableView(table, view, table_tracker_.getWorldToTable()*view_to_world);
 	}
+
+	this->publishTableFrame();
+	model_constructor_.addTableView(table, view, table_tracker_.getWorldToTable()*view_to_world);
 
 	this->publishObjectMarkers();
 	this->publishTables();
