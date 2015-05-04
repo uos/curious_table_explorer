@@ -46,12 +46,11 @@ void ModelConstructor::addModelView(const ModelView& mv){
 	PointCloud::ConstPtr view= mv.registeredCloud();
 
 	for( Model& m : models_ ){
-		const PointCloud::Ptr& hull_points= m.convexHullPoints();
-		const std::vector<pcl::Vertices>& hull_polygons= m.convexHullVertices();
+		const PointCloud::Ptr& hull_points= m.convexHull();
 
 		crop.setInputCloud(view);
 		crop.setHullCloud(hull_points);
-		crop.setHullIndices(hull_polygons);
+		crop.setDim(2);
 
 		PointCloud overlap;
 		crop.filter(overlap);
@@ -175,10 +174,13 @@ namespace {
 	}
 
 	visualization_msgs::Marker hullMarker(){
-		visualization_msgs::Marker m= cloudMarker();
+		visualization_msgs::Marker m;
+		m.type= visualization_msgs::Marker::LINE_STRIP;
+		m.action= visualization_msgs::Marker::ADD;
 		m.ns= "cutax_hulls";
-		m.type= visualization_msgs::Marker::TRIANGLE_LIST;
-		m.scale.x= m.scale.y= m.scale.z= 1;
+		m.id= 0;
+		m.lifetime= ros::Duration(0.0);
+		m.scale.x= .01;
 		return m;
 	}
 
@@ -227,33 +229,23 @@ void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_ar
 	visualization_msgs::Marker marker= hullMarker();
 
 	for( const Model& model : models_ ){
+		if( model.convexHull()->size() == 0 )
+			continue;
+
 		marker.color= distribution(generator);
-		marker.points.clear();
 
 		auto points= make_shared<PointCloud>();
-		const std::vector<pcl::Vertices>& vertices= model.convexHullVertices();
+		pcl::transformPointCloud(*model.convexHull(), *points, table_to_world);
 
-		pcl::transformPointCloud(*model.convexHullPoints(), *points, table_to_world);
 		marker.header.frame_id= "map";
 		marker.header.stamp= ros::Time::now();
 
-		marker.points.reserve( 3*vertices.size() );
-		for( const pcl::Vertices& v : vertices ){
-			if( v.vertices.size() != 3 ){
-				ROS_WARN("Non-triangle found in convex hull (size=%ld)", v.vertices.size() );
-				continue;
-			}
-			if (v.vertices[0] >= points->size() || v.vertices[1] >= points->size() || v.vertices[2] >= points->size()){
-				ROS_WARN("Invalid triangle found. Ignoring");
-				continue;
-			}
-			marker.points.push_back( convert<geometry_msgs::Point>((*points)[v.vertices[0]]) );
-			marker.points.push_back( convert<geometry_msgs::Point>((*points)[v.vertices[1]]) );
-			marker.points.push_back( convert<geometry_msgs::Point>((*points)[v.vertices[2]]) );
-		}
-		if( marker.points.size() > 0 ){
-			hull_array.markers.push_back(marker);
-		}
+		marker.points.clear();
+		for( const auto& p : points->points )
+			marker.points.push_back( convert<geometry_msgs::Point>(p) );
+		marker.points.push_back( convert<geometry_msgs::Point>(points->points[0]) );
+
+		hull_array.markers.push_back(marker);
 		++marker.id;
 	}
 }
