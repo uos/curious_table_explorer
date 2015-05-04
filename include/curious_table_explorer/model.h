@@ -37,6 +37,8 @@ public:
 
 	const std::vector<ModelView>& views() const;
 
+	// used in mark&clear scheme
+	bool touched;
 protected:
 	std::vector<ModelView> views_;
 

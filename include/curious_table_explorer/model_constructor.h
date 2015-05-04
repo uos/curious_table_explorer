@@ -8,8 +8,10 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <object_recognition_msgs/Table.h>
 
-#include <vector>
 #include <boost/filesystem.hpp>
+
+#include <vector>
+#include <list>
 
 namespace curious_table_explorer {
 
@@ -36,7 +38,7 @@ public:
 	void buildCenterMarkers(visualization_msgs::MarkerArray& center_array, const TransformMat& table_to_world) const;
 
 protected:
-	std::vector<Model> models_;
+	std::list<Model> models_;
 };
 
 }

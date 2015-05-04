@@ -38,6 +38,19 @@ void ModelConstructor::addTableView(const object_recognition_msgs::Table& table,
 		ModelView mv(cloud, view_to_table);
 		this->addModelView( mv );
 	}
+
+	// drop small models if they can't be observed anymore
+	auto model= models_.begin();
+	while( model != models_.end() ){
+		if( !model->touched && model->views().size() < 3 ){
+			ROS_INFO("dropping model with only %ld views. It vanished.", model->views().size());
+			models_.erase( model++ );
+		}
+		else {
+			model->touched= false;
+			++model;
+		}
+	}
 }
 
 void ModelConstructor::addModelView(const ModelView& mv){
@@ -47,7 +60,7 @@ void ModelConstructor::addModelView(const ModelView& mv){
 	for( auto& p : view->points )
 		p.z= 0.0;
 
-	for( Model& m : models_ ){
+	for( auto& m : models_ ){
 		crop.setInputCloud(view);
 		crop.setHullCloud(m.convexHullPoints());
 		crop.setHullIndices(m.convexHullVertices());
@@ -59,6 +72,7 @@ void ModelConstructor::addModelView(const ModelView& mv){
 		if(overlap.size() > 0){
 			ROS_INFO("adding view to model with %ld views already (%ld points overlap)", m.views().size(), overlap.size());
 			m.addView(mv);
+			m.touched= true;
 			return;
 		}
 	}
@@ -66,6 +80,7 @@ void ModelConstructor::addModelView(const ModelView& mv){
 	models_.emplace_back();
 	Model& fresh_model= models_.back();
 	fresh_model.addView(mv);
+	fresh_model.touched= true;
 	auto center= convert<geometry_msgs::Point>(fresh_model.center());
 	ROS_INFO("found no matching model. Adding new one %f / %f / %f", center.x, center.y, center.z);
 }
@@ -131,11 +146,12 @@ bool ModelConstructor::writeTableToFiles(const boost::filesystem::path& folder) 
 	/* if this failed the code below will error out */
 
 	try {
-		for(size_t mi= 0; mi < models_.size(); ++mi){
-			for(size_t vi= 0; vi < models_[mi].views().size(); ++vi){
+		size_t mi= 0;
+		for(auto m= models_.begin(); m != models_.end(); ++mi, ++m){
+			for(size_t vi= 0; vi < m->views().size(); ++vi){
 				std::stringstream file;
 				file << "object" << std::setfill('0') << std::setw(2) << mi << "_view" << std::setfill('0') << std::setw(2) << vi << ".pcd";
-				writer.writeBinary( (folder/file.str()).native(), *models_[mi].views()[vi].registeredCloud());
+				writer.writeBinary( (folder/file.str()).native(), *m->views()[vi].registeredCloud());
 			}
 		}
 

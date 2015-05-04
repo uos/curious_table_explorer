@@ -35,6 +35,7 @@ PointCloud::Ptr ModelView::registeredCloud() const {
 // Model implementation
 
 Model::Model() :
+	touched(false),
 	hull_points_(new PointCloud)
 {}
 
