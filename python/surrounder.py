@@ -118,6 +118,9 @@ class Surrounder:
 					plan= self.get_plan( test_pose, near_test_pose )
 					if plan == None or len(plan.poses) == 0:
 						continue
+					# keep a tolerance of 5cm from the nearst "reachable" point - in practice this leads to collisions
+					nrp= center_point+ min(near_dist+.05, dist)*vec
+					near_test_pose= PoseStamped(header= robot_pose.header, pose= Pose(Point(nrp[0], nrp[1], 0.0), Quaternion( *quaternion_from_euler(0.0,0.0, ro) )))
 					self.move_base_straight_client.send_goal_and_wait( MoveBaseGoal(near_test_pose), rospy.Duration(20.0))
 					break
 
