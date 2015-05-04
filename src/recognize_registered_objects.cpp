@@ -9,6 +9,8 @@
 #include <curious_table_explorer/RegisteredObject.h>
 #include <curious_table_explorer/ObservedTable.h>
 
+#include <utils/convert.h>
+
 #include <pcl/search/kdtree.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/features/vfh.h>
@@ -22,8 +24,14 @@
 #include <object_recognition_msgs/RecognizedObject.h>
 #include <object_recognition_msgs/RecognizedObjectArray.h>
 
+#include <boost/make_shared.hpp>
+
 #include <unordered_map>
 #include <string>
+
+using boost::make_shared;
+
+using utils::convert;
 
 namespace curious_table_explorer {
 
@@ -32,9 +40,9 @@ using std::vector;
 using std::unordered_map;
 
 namespace {
-	object_recognition_msgs::RecognizedObjectArray convert( const ObservedTable& ot ){
-		object_recognition_msgs::RecognizedObjectArray oa;
-		oa.header= ot.header;
+	object_recognition_msgs::RecognizedObjectArray::Ptr recognizedObjectsWithoutViews( const ObservedTable& ot ){
+		auto oa= make_shared<object_recognition_msgs::RecognizedObjectArray>();
+		oa->header= ot.header;
 
 		if( ot.objects.size() == 0 )
 			return oa;
@@ -42,41 +50,23 @@ namespace {
 		std::string database_type("{\"type\":\"empty\"}");
 		std::string key_prefix("obj");
 
-		// get the transformer to convert object poses table->view frame
-		tf::Transformer transformer;
-		tf::StampedTransform table2world;
-		{
-		tf::Transform trans;
-		tf::poseMsgToTF( ot.table.pose, trans );
+		TransformMat table2view= convert<TransformMat>(ot.table.pose);
 
-		table2world= tf::StampedTransform( trans, ros::Time(), ot.header.frame_id, ot.objects[0].object_pose.header.frame_id );
-		}
-		transformer.setTransform( table2world );
-
+		oa->objects.reserve( ot.objects.size() );
 		for( const RegisteredObject& obj : ot.objects ){
-			oa.objects.emplace_back();
-			object_recognition_msgs::RecognizedObject& ro= oa.objects.back();
+			oa->objects.emplace_back();
+			object_recognition_msgs::RecognizedObject& ro= oa->objects.back();
 
 			ro.type.db= database_type;
 			ro.type.key= key_prefix;
 
 			ro.header= ot.header;
-
 			ro.pose.header= ro.header;
 
-			{
-			geometry_msgs::PoseStamped psout;
-			tf::Stamped<tf::Pose> pin, pout;
-			tf::poseStampedMsgToTF( obj.object_pose, pin );
-			pin.stamp_= ros::Time();
-			transformer.transformPose( ot.header.frame_id, pin, pout);
-			pout.stamp_= obj.object_pose.header.stamp;
-			tf::poseStampedTFToMsg( pout, psout );
-
-			ro.pose.header= psout.header;
-			ro.pose.pose.pose= psout.pose;
-			}
-
+			// convert object poses to view frame for visualization
+			ro.pose.pose.pose= convert<geometry_msgs::Pose, TransformMat>( table2view * convert<TransformMat>(obj.object_pose.pose) );
+			ro.header= obj.object_pose.header;
+			ro.header.frame_id= ot.header.frame_id;
 		}
 
 		return oa;
@@ -84,23 +74,22 @@ namespace {
 
 
 	pcl::VFHSignature308 compute_vfh_signature( const sensor_msgs::PointCloud2& pc ){
-		PointCloud::Ptr cloud= boost::make_shared<PointCloud>();
+		auto cloud= make_shared<PointCloud>();
 		pcl::fromROSMsg(pc, *cloud);
-		pcl::PointCloud<pcl::Normal>::Ptr normals= boost::make_shared<pcl::PointCloud<pcl::Normal>>();
+		auto normals= make_shared<pcl::PointCloud<pcl::Normal>>();
 		{
 			// TODO: this should probably happen in segmentation already
 			pcl::NormalEstimation<Point, pcl::Normal> ne;
 			ne.setRadiusSearch(.01);
-			ne.setSearchMethod(boost::make_shared<pcl::search::KdTree<Point>>());
+			ne.setSearchMethod(make_shared<pcl::search::KdTree<Point>>());
 			ne.setInputCloud(cloud);
 			ne.compute(*normals);
-			// TODO: is this necessary? ecto's NormalEstimation does the same
 			normals->header= cloud->header;
 		}
 		pcl::PointCloud<pcl::VFHSignature308> cloud_signature;
 		{
 			pcl::VFHEstimation<Point, pcl::Normal, pcl::VFHSignature308> ve;
-			ve.setSearchMethod(boost::make_shared<pcl::search::KdTree<Point>>());
+			ve.setSearchMethod(make_shared<pcl::search::KdTree<Point>>());
 			ve.setInputCloud(cloud);
 			ve.setInputNormals(normals);
 			ve.setNormalizeBins( true );
@@ -110,6 +99,7 @@ namespace {
 		return cloud_signature.points[0];
 	}
 }
+
 
 typedef vector<RegisteredObject::Ptr> ObjectCluster;
 
@@ -134,15 +124,15 @@ class Recognizer {
 public:
 	Recognizer(const std::string topic) :
 		current_table_id_(0),
-		stored_signatures_(new pcl::PointCloud<pcl::VFHSignature308>),
-		current_signatures_(new pcl::PointCloud<pcl::VFHSignature308>)
+		stored_signatures_(make_shared< pcl::PointCloud<pcl::VFHSignature308> >()),
+		current_signatures_(make_shared< pcl::PointCloud<pcl::VFHSignature308> >())
 	{
-		this->sub_objects_= nh_.subscribe(topic, 3, &Recognizer::recognition_callback, this);
-		this->pub_result_= nh_.advertise<object_recognition_msgs::RecognizedObjectArray>("/clustering_result", 5, true);
+		sub_objects_= nh_.subscribe(topic, 3, &Recognizer::recognition_callback, this);
+		pub_result_= nh_.advertise<object_recognition_msgs::RecognizedObjectArray>("/clustering_result", 5, true);
 	}
 
 	void recognition_callback(const ObservedTable::ConstPtr& ot){
-		object_recognition_msgs::RecognizedObjectArray recognition_result= convert( *ot );
+		object_recognition_msgs::RecognizedObjectArray::Ptr recognition_result= recognizedObjectsWithoutViews( *ot );
 
 		// should we track a new table?
 		if( ot->table_id != current_table_id_ ){
@@ -160,15 +150,14 @@ public:
 		for(size_t obji= 0; obji < ot->objects.size(); ++obji){
 			const RegisteredObject& o= ot->objects[obji];
 
-			RegisteredObject::Ptr op= boost::make_shared<RegisteredObject>(o);
+			auto op= boost::make_shared<RegisteredObject>(o);
 
 			size_t cluster_id= this->classify( op );
 
-			pair<RegisteredObject::Ptr, size_t> rec_object(op, cluster_id);
-			current_objects_.push_back( rec_object );
+			current_objects_.push_back( pair<RegisteredObject::Ptr, size_t>(op, cluster_id) );
 
-			recognition_result.objects[obji].confidence= 1.0;
-			recognition_result.objects[obji].type.key+= std::to_string( cluster_id );
+			recognition_result->objects[obji].confidence= 1.0;
+			recognition_result->objects[obji].type.key+= std::to_string( cluster_id );
 		}
 
 		pub_result_.publish( recognition_result );
@@ -180,12 +169,12 @@ public:
 		if( current_signatures_->points.size() == 0 ) {
 			for( const RegisteredPointCloud& rp : op->views )
 				current_signatures_->push_back( compute_vfh_signature( rp.view ) );
-			size_t cluster_id= this->current_clustering_.new_cluster();
-			this->current_clustering_[cluster_id].push_back( op );
+			size_t cluster_id= current_clustering_.new_cluster();
+			current_clustering_[cluster_id].push_back( op );
 			return cluster_id;
 		}
 
-		size_t cluster_id= this->current_clustering_.new_cluster();
+		size_t cluster_id= current_clustering_.new_cluster();
 
 		pcl::search::KdTree<pcl::VFHSignature308> signature_tree;
 		signature_tree.setInputCloud(current_signatures_);
@@ -216,13 +205,13 @@ public:
 
 		//size_t cluster_id= 0;
 		//if( min_distance > 0 && min_distance < 200){
-		//	cluster_id= this->current_objects_[vfh_id_to_object_id(min_distance_index)].second;
+		//	cluster_id= current_objects_[vfh_id_to_object_id(min_distance_index)].second;
 		//}
 		//else {
-		//	cluster_id= this->current_clustering_.new_cluster();
+		//	cluster_id= current_clustering_.new_cluster();
 		//}
 
-		this->current_clustering_[cluster_id].push_back( op );
+		current_clustering_[cluster_id].push_back( op );
 		return cluster_id;
 	}
 

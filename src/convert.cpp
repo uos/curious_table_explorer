@@ -123,6 +123,14 @@ convert<tf::Transform, Eigen::Affine3d>( const Eigen::Affine3d& trans ){
 	return tftrans;
 }
 
+template <>
+tf::Transform
+convert<tf::Transform, geometry_msgs::Pose>( const geometry_msgs::Pose& pose ){
+	tf::Transform trans;
+	tf::poseMsgToTF( pose, trans );
+	return trans;
+}
+
 template<>
 Eigen::Affine3d
 convert<Eigen::Affine3d, tf::Transform>( const tf::Transform& tftrans ){

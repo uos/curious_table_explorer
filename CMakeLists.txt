@@ -91,6 +91,7 @@ target_link_libraries(
 	recognize_registered_objects
 	${PCL_LIBRARIES}
 	${catkin_LIBRARIES}
+	convert
 )
 
 install(TARGETS collect_object_views RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
