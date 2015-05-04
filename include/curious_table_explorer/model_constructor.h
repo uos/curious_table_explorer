@@ -39,6 +39,8 @@ public:
 	void buildCenterMarkers(visualization_msgs::MarkerArray& center_array, const TransformMat& table_to_world) const;
 
 protected:
+	void cropSmallUntouched();
+
 	std::list<Model> models_;
 };
 

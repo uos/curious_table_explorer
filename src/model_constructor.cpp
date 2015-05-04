@@ -35,18 +35,7 @@ void ModelConstructor::addTableView(const object_recognition_msgs::Table& table,
 		this->addModelView( mv );
 	}
 
-	// drop small models if they can't be observed anymore
-	auto model= models_.begin();
-	while( model != models_.end() ){
-		if( !model->touched && model->views().size() < 3 ){
-			ROS_INFO("dropping model with only %ld views. It vanished.", model->views().size());
-			models_.erase( model++ );
-		}
-		else {
-			model->touched= false;
-			++model;
-		}
-	}
+	this->cropSmallUntouched();
 }
 
 void ModelConstructor::addModelView(const ModelView& mv){
@@ -81,9 +70,24 @@ void ModelConstructor::addModelView(const ModelView& mv){
 	ROS_INFO("found no matching model. Adding new one %f / %f / %f", center.x, center.y, center.z);
 }
 
-
 void ModelConstructor::finalizeTable() {
-	// post-registration can be performed here
+	for( auto& m : models_ )
+		m.touched= false;
+	this->cropSmallUntouched();
+}
+
+void ModelConstructor::cropSmallUntouched(){
+	auto model= models_.begin();
+	while( model != models_.end() ){
+		if( !model->touched && model->views().size() < 3 ){
+		    ROS_INFO("dropping model with too few views (only %ld).", model->views().size());
+		    models_.erase( model++ );
+		}
+		else {
+		    model->touched= false;
+		    ++model;
+		}
+	}
 }
 
 /***************************
