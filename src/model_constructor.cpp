@@ -1,25 +1,21 @@
-#include <curious_table_explorer/common.h>
-#include <curious_table_explorer/model.h>
 #include <curious_table_explorer/model_constructor.h>
-
-#include <curious_table_explorer/RegisteredPointCloud.h>
 
 #include <utils/convert.h>
 #include <utils/uniform_color_distribution.h>
+
+#include <pcl_ros/transforms.h>
+#include <pcl_conversions/pcl_conversions.h>
+
+#include <curious_table_explorer/RegisteredPointCloud.h>
 
 #include <Eigen/Geometry>
 
 #include <pcl/filters/crop_hull.h>
 #include <pcl/io/pcd_io.h>
 
-#include <pcl_ros/transforms.h>
-#include <pcl_conversions/pcl_conversions.h>
+#include <boost/make_shared.hpp>
 
 #include <sstream>
-#include <vector>
-
-#include <boost/filesystem.hpp>
-#include <boost/make_shared.hpp>
 
 using boost::make_shared;
 

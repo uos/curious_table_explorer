@@ -2,8 +2,9 @@
 #define _MODEL_CONSTRUCTOR_H_ 1
 
 #include <curious_table_explorer/common.h>
-#include <curious_table_explorer/RegisteredObject.h>
 #include <curious_table_explorer/model.h>
+
+#include <curious_table_explorer/RegisteredObject.h>
 
 #include <visualization_msgs/MarkerArray.h>
 #include <object_recognition_msgs/Table.h>
