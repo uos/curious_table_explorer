@@ -84,6 +84,7 @@ target_link_libraries(
 
 add_executable(recognize_registered_objects
 	src/recognize_registered_objects.cpp
+	src/recognizer.cpp
 )
 add_dependencies(recognize_registered_objects ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
