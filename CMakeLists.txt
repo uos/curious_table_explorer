@@ -62,13 +62,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 include_directories(include ${PCL_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
+add_library(convert STATIC src/convert.cpp)
+
 add_executable(collect_object_views
 	src/collect_object_views.cpp
 	src/collector.cpp
 	src/model.cpp
 	src/table_tracker.cpp
 	src/model_constructor.cpp
-	src/convert.cpp
 )
 
 add_dependencies(collect_object_views ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
@@ -77,6 +78,7 @@ target_link_libraries(
 	collect_object_views
 	${PCL_LIBRARIES}
 	${catkin_LIBRARIES}
+	convert
 )
 
 
