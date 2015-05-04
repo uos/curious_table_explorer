@@ -43,7 +43,9 @@ void ModelConstructor::addTableView(const object_recognition_msgs::Table& table,
 void ModelConstructor::addModelView(const ModelView& mv){
 	pcl::CropHull<Point> crop;
 
-	PointCloud::ConstPtr view= mv.registeredCloud();
+	auto view= make_shared<PointCloud>(*mv.registeredCloud());
+	for( auto& p : view->points )
+		p.z= 0.0;
 
 	for( Model& m : models_ ){
 		crop.setInputCloud(view);
