@@ -33,7 +33,7 @@ void ModelConstructor::clear(){
 	models_.clear();
 }
 
-void ModelConstructor::addTableView(const object_recognition_msgs::Table& table, const std::vector<PointCloud::Ptr>& view, const TransformMat& view_to_table){
+void ModelConstructor::addTableView(const object_recognition_msgs::Table& table, const std::vector<PointCloud::Ptr>& view, const TransformMat& view_to_table) {
 	for(const auto& cloud : view){
 		ModelView mv(cloud, view_to_table);
 		this->addModelView( mv );
@@ -46,10 +46,9 @@ void ModelConstructor::addModelView(const ModelView& mv){
 	PointCloud::ConstPtr view= mv.registeredCloud();
 
 	for( Model& m : models_ ){
-		const PointCloud::Ptr& hull_points= m.convexHull();
-
 		crop.setInputCloud(view);
-		crop.setHullCloud(hull_points);
+		crop.setHullCloud(m.convexHullPoints());
+		crop.setHullIndices(m.convexHullVertices());
 		crop.setDim(2);
 
 		PointCloud overlap;
@@ -229,13 +228,19 @@ void ModelConstructor::buildHullMarkers(visualization_msgs::MarkerArray& hull_ar
 	visualization_msgs::Marker marker= hullMarker();
 
 	for( const Model& model : models_ ){
-		if( model.convexHull()->size() == 0 )
+		if( model.convexHullVertices().size() == 0 || model.convexHullVertices()[0].vertices.size() == 0)
 			continue;
 
 		marker.color= distribution(generator);
 
 		auto points= make_shared<PointCloud>();
-		pcl::transformPointCloud(*model.convexHull(), *points, table_to_world);
+
+		// that beauty is required because uint32_t != int
+		std::vector<int> vertices;
+		const std::vector<uint32_t>& old_vertices= model.convexHullVertices()[0].vertices;
+		vertices.assign( old_vertices.begin(), old_vertices.end() );
+
+		pcl::transformPointCloud(*model.convexHullPoints(), vertices, *points, table_to_world);
 
 		marker.header.frame_id= "map";
 		marker.header.stamp= ros::Time::now();

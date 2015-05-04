@@ -64,8 +64,12 @@ void Model::updateCenter(const ModelView& m){
 	pcl::getMinMax3D(pc, min_, max_);
 }
 
-const PointCloud::Ptr& Model::convexHull() const {
+const PointCloud::Ptr& Model::convexHullPoints() const {
 	return hull_points_;
+}
+
+const std::vector<pcl::Vertices>& Model::convexHullVertices() const {
+	return hull_polygons_;
 }
 
 void Model::updateConvexHull(const ModelView& m){
@@ -75,13 +79,13 @@ void Model::updateConvexHull(const ModelView& m){
 	for( auto& p : cloud->points )
 		p.z= 0;
 
-	*cloud+= *this->convexHull();
+	*cloud+= *this->convexHullPoints();
 
 	pcl::ConvexHull<Point> chull;
 	chull.setInputCloud(cloud);
 	chull.setDimension(2);
 
-	chull.reconstruct(*hull_points_);
+	chull.reconstruct(*hull_points_, hull_polygons_);
 }
 
 }
