@@ -15,17 +15,19 @@
 
 namespace curious_table_explorer {
 
-typedef std::vector<RegisteredObject::Ptr> ObjectCluster;
+typedef std::vector<RegisteredObject::Ptr> InstanceCluster;
 
-struct ObjectClustering {
-	ObjectClustering();
+struct InstanceClustering {
+	InstanceClustering();
 
 	size_t new_cluster();
 
-	ObjectCluster& operator[](size_t id);
+	InstanceCluster& operator[](size_t id);
 
+	std::unordered_map<size_t, InstanceCluster> clusters;
+
+private:
 	size_t next_cluster_id;
-	std::unordered_map<size_t, ObjectCluster> clusters;
 };
 
 
@@ -36,21 +38,25 @@ public:
 	void recognition_callback(const ObservedTable::ConstPtr& ot);
 
 	// classify object and return index in current_clustering
-	size_t classify( RegisteredObject::Ptr& op );
+	size_t classify( const RegisteredObject& op );
 
 protected:
-	size_t vfh_id_to_object_id( int vfh_index );
+	typedef std::pair<RegisteredObject::Ptr, size_t> InstanceWithCluster;
+	typedef std::pair<size_t, size_t> InstanceAndViewIndex;
 
-	std::vector<std::pair<RegisteredObject::Ptr, size_t>> stored_objects_;
-	std::vector<std::pair<RegisteredObject::Ptr, size_t>> current_objects_;
 
-	ObjectClustering stored_clustering_;
-	ObjectClustering current_clustering_;
+	typedef pcl::VFHSignature308 Signature;
 
-	uint32_t current_table_id_;
+	pcl::PointCloud<pcl::VFHSignature308>::Ptr signatures_;
+	std::vector<InstanceAndViewIndex> signature_lookup_;
+	size_t stored_signature_cnt_;
 
-	pcl::PointCloud<pcl::VFHSignature308>::Ptr stored_signatures_;
-	pcl::PointCloud<pcl::VFHSignature308>::Ptr current_signatures_;
+	std::vector<InstanceWithCluster> instances_;
+	size_t stored_instance_cnt_;
+
+	InstanceClustering clustering_;
+
+	size_t current_table_id_;
 
 	ros::NodeHandle nh_;
 	ros::Subscriber sub_objects_;
