@@ -113,11 +113,11 @@ Recognizer::Recognizer() :
 	stored_instance_cnt_(0),
 	current_table_id_(0)
 {
-	sub_objects_= nh_.subscribe("/generated_models", 5, &Recognizer::recognition_callback, this);
+	sub_objects_= nh_.subscribe("/generated_models", 5, &Recognizer::recognitionCB, this);
 	pub_result_= nh_.advertise<object_recognition_msgs::RecognizedObjectArray>("/clustering_result", 5, true);
 }
 
-void Recognizer::recognition_callback(const ObservedTable::ConstPtr& ot) {
+void Recognizer::recognitionCB(const ObservedTable::ConstPtr& ot) {
 	object_recognition_msgs::RecognizedObjectArray::Ptr recognition_result= recognizedObjectsWithoutViews( *ot );
 
 	// should we track a new table?
@@ -143,7 +143,7 @@ void Recognizer::recognition_callback(const ObservedTable::ConstPtr& ot) {
 
 // classify object and return index in current_clustering
 size_t Recognizer::classify( const RegisteredObject& object ) {
-	
+
 	pcl::PointCloud<Signature> object_signatures;
 
 	object_signatures.reserve( object.views.size() );
@@ -155,7 +155,7 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 	// KdTree would fail with empty input
 	if( signatures_->size() == 0 ){
 		cluster_id= clustering_.new_cluster();
-	}	
+	}
 	else {
 		cluster_id= 0;
 /*

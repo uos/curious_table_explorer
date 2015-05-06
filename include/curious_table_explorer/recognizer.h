@@ -35,7 +35,7 @@ class Recognizer {
 public:
 	Recognizer();
 
-	void recognition_callback(const ObservedTable::ConstPtr& ot);
+	void recognitionCB(const ObservedTable::ConstPtr& ot);
 
 	// classify object and return index in current_clustering
 	size_t classify( const RegisteredObject& op );
@@ -45,7 +45,6 @@ protected:
 
 	typedef std::pair<RegisteredObject::Ptr, size_t> InstanceWithCluster;
 	typedef std::pair<size_t, size_t> InstanceAndViewIndex;
-
 
 	typedef pcl::VFHSignature308 Signature;
 
