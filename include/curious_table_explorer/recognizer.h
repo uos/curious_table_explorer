@@ -41,6 +41,8 @@ public:
 	size_t classify( const RegisteredObject& op );
 
 protected:
+	void resetToStored();
+
 	typedef std::pair<RegisteredObject::Ptr, size_t> InstanceWithCluster;
 	typedef std::pair<size_t, size_t> InstanceAndViewIndex;
 

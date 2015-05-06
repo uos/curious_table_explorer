@@ -129,11 +129,7 @@ void Recognizer::recognition_callback(const ObservedTable::ConstPtr& ot) {
 		current_table_id_= ot->table_id;
 	}
 
-	// drop unstored views
-	instances_.resize(stored_instance_cnt_);
-	//TODO: undo clustering for unstored instances
-	signatures_->resize(stored_signature_cnt_);
-	signature_lookup_.resize(stored_signature_cnt_);
+	this->resetToStored();
 
 	for(size_t obji= 0; obji < ot->objects.size(); ++obji){
 		size_t cluster_id= this->classify( ot->objects[obji] );
@@ -217,6 +213,16 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 
 	return cluster_id;
 
+}
+
+void Recognizer::resetToStored() {
+	for( size_t i= instances_.size(); i > stored_instance_cnt_; --i ){
+		// as clusters are vectors, the last item is guaranteed to be this instance
+		clustering_[instances_[i-1].second].pop_back();
+	}
+	instances_.resize(stored_instance_cnt_);
+	signatures_->resize(stored_signature_cnt_);
+	signature_lookup_.resize(stored_signature_cnt_);
 }
 
 }
