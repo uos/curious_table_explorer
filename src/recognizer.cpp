@@ -40,7 +40,7 @@ namespace {
 			return oa;
 
 		std::string database_type("{\"type\":\"empty\"}");
-		std::string key_prefix("obj");
+		std::string key_prefix("c");
 
 		TransformMat table2view= convert<TransformMat>(ot.table.pose);
 
@@ -128,8 +128,9 @@ void Recognizer::recognitionCB(const ObservedTable::ConstPtr& ot) {
 
 		current_table_id_= ot->table_id;
 	}
-
-	this->resetToStored();
+	else {
+		this->resetToStored();
+	}
 
 	for(size_t obji= 0; obji < ot->objects.size(); ++obji){
 		size_t cluster_id= this->classify( ot->objects[obji] );
@@ -141,15 +142,16 @@ void Recognizer::recognitionCB(const ObservedTable::ConstPtr& ot) {
 	pub_result_.publish( recognition_result );
 }
 
-// classify object and return index in current_clustering
+// classify object and return index in clustering_
 size_t Recognizer::classify( const RegisteredObject& object ) {
 
 	pcl::PointCloud<Signature> object_signatures;
 
 	object_signatures.reserve( object.views.size() );
-	for( const RegisteredPointCloud rp : object.views ){
+	for( const RegisteredPointCloud rp : object.views )
 		object_signatures.push_back( compute_vfh_signature( rp.view ) );
-	}
+
+	size_t instance_id= instances_.size();
 
 	size_t cluster_id;
 	// KdTree would fail with empty input
@@ -157,53 +159,50 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 		cluster_id= clustering_.new_cluster();
 	}
 	else {
-		cluster_id= 0;
-/*
-	pcl::search::KdTree<Signature> signature_tree;
-	signature_tree.setInputCloud(current_signatures_);
+		pcl::search::KdTree<Signature> signature_tree;
+		signature_tree.setInputCloud(signatures_);
 
-	pcl::PointCloud<Signature> object_signatures;
-	float min_distance= 1.0/0.0;
-	//int min_distance_index= 0;
-	for( const RegisteredPointCloud& rp : op->views ){
-		Signature cloud_signature= compute_vfh_signature( rp.view );
-		object_signatures.push_back( cloud_signature );
+		std::map<size_t, double> cluster_voting;
 
-		const size_t nr_of_candidates= 3;
-		std::vector<int> matching_sigs; matching_sigs.resize(nr_of_candidates);
-		std::vector<float> matching_sigs_distances;  matching_sigs_distances.resize(nr_of_candidates);
-		signature_tree.nearestKSearch( cloud_signature, nr_of_candidates, matching_sigs, matching_sigs_distances );
+		for( const auto& sig : object_signatures ){
+			const size_t nr_of_candidates= 3;
+			std::vector<int> matching_sigs; matching_sigs.resize(nr_of_candidates);
+			std::vector<float> matching_sigs_distances;  matching_sigs_distances.resize(nr_of_candidates);
+			signature_tree.nearestKSearch( sig, nr_of_candidates, matching_sigs, matching_sigs_distances );
 
-		std::string object_matching_info= "obj" + std::to_string(cluster_id) + ": ";
-		for(size_t j= 0; j < nr_of_candidates; ++j)
-			object_matching_info+= "obj" + std::to_string(vfh_id_to_object_id(matching_sigs[j])) + "/sig" + std::to_string(matching_sigs[j]) + " (dist: " + std::to_string(matching_sigs_distances[j]) + "), ";
-		ROS_INFO_STREAM( object_matching_info.c_str() );
+			std::string object_matching_info= "instance " + std::to_string(instance_id) + ": ";
+			for(size_t j= 0; j < nr_of_candidates; ++j){
+				const size_t jinstance= signature_lookup_[matching_sigs[j]].first;
+				const size_t jview= signature_lookup_[matching_sigs[j]].second;
+				const size_t jcluster= instances_[jinstance].second;
+				object_matching_info+= "cluster" + std::to_string(jcluster) + " / instance" + std::to_string(jinstance) + " / view" + std::to_string(jview) + " (dist: " + std::to_string(matching_sigs_distances[j]) + "), ";
+			}
+			ROS_INFO_STREAM( object_matching_info );
 
-		if( matching_sigs_distances[0] < min_distance ){
-			min_distance= matching_sigs_distances[0];
-			//min_distance_index= matching_sigs[0];
+			//TODO: magic number
+			if( matching_sigs_distances[0] < 100 ){
+				cluster_voting[ instances_[signature_lookup_[matching_sigs[0]].first].second ]+= 1;
+			}
 		}
-	}
-	*current_signatures_+= object_signatures;
 
-	//size_t cluster_id= 0;
-	//if( min_distance > 0 && min_distance < 200){
-	//	cluster_id= current_objects_[vfh_id_to_object_id(min_distance_index)].second;
-	//}
-	//else {
-	//	cluster_id= current_clustering_.new_cluster();
-	//}
-
-	current_clustering_[cluster_id].push_back( op );
-	return cluster_id;
-*/
+		if( cluster_voting.empty() )
+			cluster_id= clustering_.new_cluster();
+		else {
+			cluster_id= cluster_voting.begin()->first;
+			float best_rating= cluster_voting.begin()->second;
+			for( const auto& bucket : cluster_voting ){
+				if( bucket.second > best_rating ){
+					best_rating= bucket.second;
+					cluster_id= bucket.first;
+				}
+			}
+		}
 	}
 
 	auto shared_object= boost::make_shared<RegisteredObject>(object);
 	clustering_[cluster_id].push_back( shared_object );
 
 	instances_.emplace_back( shared_object, cluster_id );
-	size_t instance_id= instances_.size()-1;
 
 	*signatures_+= object_signatures;
 

@@ -11,7 +11,7 @@
 
 #include <vector>
 #include <utility>
-#include <unordered_map>
+#include <map>
 
 namespace curious_table_explorer {
 
@@ -24,7 +24,7 @@ struct InstanceClustering {
 
 	InstanceCluster& operator[](size_t id);
 
-	std::unordered_map<size_t, InstanceCluster> clusters;
+	std::map<size_t, InstanceCluster> clusters;
 
 private:
 	size_t next_cluster_id;
