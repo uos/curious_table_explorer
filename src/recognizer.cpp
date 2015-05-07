@@ -196,6 +196,8 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 					cluster_id= bucket.first;
 				}
 			}
+			if( best_rating < object_signatures.size() * 2.0 / 3.0 )
+				cluster_id= clustering_.new_cluster();
 		}
 	}
 
