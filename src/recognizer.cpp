@@ -155,7 +155,7 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 
 	size_t cluster_id;
 	// KdTree would fail with empty input
-	if( signatures_->size() == 0 ){
+	if( signatures_->empty() ){
 		cluster_id= clustering_.new_cluster();
 	}
 	else {
@@ -165,7 +165,7 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 		std::map<size_t, double> cluster_voting;
 
 		for( const auto& sig : object_signatures ){
-			const size_t nr_of_candidates= 3;
+			const size_t nr_of_candidates= 1;
 			std::vector<int> matching_sigs; matching_sigs.resize(nr_of_candidates);
 			std::vector<float> matching_sigs_distances;  matching_sigs_distances.resize(nr_of_candidates);
 			signature_tree.nearestKSearch( sig, nr_of_candidates, matching_sigs, matching_sigs_distances );
@@ -198,6 +198,8 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 			}
 		}
 	}
+
+	ROS_INFO_STREAM("instance " << std::to_string(instance_id) << ": cluster" << cluster_id);
 
 	auto shared_object= boost::make_shared<RegisteredObject>(object);
 	clustering_[cluster_id].push_back( shared_object );
