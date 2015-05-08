@@ -218,8 +218,11 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 
 void Recognizer::resetToStored() {
 	for( size_t i= instances_.size(); i > stored_instance_cnt_; --i ){
+		const size_t cluster= instances_[i-1].second;
 		// as clusters are vectors, the last item is guaranteed to be this instance
-		clustering_[instances_[i-1].second].pop_back();
+		clustering_[cluster].pop_back();
+		if( cluster == clustering_.clusters.size()-1 && clustering_[cluster].empty() )
+			clustering_.clusters.pop_back();
 	}
 	instances_.resize(stored_instance_cnt_);
 	signatures_->resize(stored_signature_cnt_);
