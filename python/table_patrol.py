@@ -45,6 +45,7 @@ class TablePatrol:
 			)
 		)
 		self.client.wait_for_result()
+		rospy.sleep(rospy.Duration(30))
 		self.finalize_table()
 
 if __name__ == '__main__':
@@ -57,3 +58,4 @@ if __name__ == '__main__':
 
 	while not rospy.is_shutdown():
 		patrol.patrol_once()
+		rospy.sleep(rospy.Duration(30))
