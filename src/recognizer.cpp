@@ -93,13 +93,11 @@ namespace {
 }
 
 
-InstanceClustering::InstanceClustering()
-	: next_cluster_id(0)
-{};
+InstanceClustering::InstanceClustering() {};
 
 size_t InstanceClustering::new_cluster() {
-	clusters[next_cluster_id]= InstanceCluster();
-	return next_cluster_id++;
+	clusters.emplace_back();
+	return clusters.size()-1;
 };
 
 InstanceCluster& InstanceClustering::operator[](size_t id) {

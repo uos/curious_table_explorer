@@ -24,10 +24,7 @@ struct InstanceClustering {
 
 	InstanceCluster& operator[](size_t id);
 
-	std::map<size_t, InstanceCluster> clusters;
-
-private:
-	size_t next_cluster_id;
+	std::vector<InstanceCluster> clusters;
 };
 
 
