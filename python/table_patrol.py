@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
 	patrol= TablePatrol()
 
-	patrol.add_table( Table(header= Header(frame_id='/map'), pose= Pose( Point(1,0,1), Quaternion(1,0,0,1))) )
+#	patrol.add_table( Table(header= Header(frame_id='/map'), pose= Pose( Point(1,0,1), Quaternion(1,0,0,1))) )
 	patrol.add_table( Table(header= Header(frame_id='/map'), pose= Pose( Point(-.5,-3.25,1), Quaternion(0,0,0,1))) )
 
 	while not rospy.is_shutdown():
