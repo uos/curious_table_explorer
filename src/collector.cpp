@@ -123,6 +123,11 @@ void Collector::finalizeTable() {
 void Collector::publishObjectMarkers() const {
 	visualization_msgs::MarkerArray markers;
 
+	visualization_msgs::Marker eraser;
+	eraser.header.frame_id= "map";
+	eraser.action= 3; // glimpse into the future: DELETEALL
+	markers.markers.push_back( eraser );
+
 	const TransformMat table_to_world= table_tracker_.getTableToWorld();
 	model_constructor_.buildCenterMarkers(markers, table_to_world);
 	model_constructor_.buildHullMarkers(markers, table_to_world);

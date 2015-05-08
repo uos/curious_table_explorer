@@ -182,7 +182,7 @@ namespace {
 		visualization_msgs::Marker m;
 		m.type= visualization_msgs::Marker::POINTS;
 		m.action= visualization_msgs::Marker::ADD;
-		m.ns= "cutax_clouds";
+		m.ns= "clouds";
 		m.id= 0;
 		m.lifetime= ros::Duration(0.0);
 		m.scale.x= m.scale.y= .001;
@@ -194,10 +194,11 @@ namespace {
 		visualization_msgs::Marker m;
 		m.type= visualization_msgs::Marker::LINE_STRIP;
 		m.action= visualization_msgs::Marker::ADD;
-		m.ns= "cutax_hulls";
+		m.ns= "hulls";
 		m.id= 0;
 		m.lifetime= ros::Duration(0.0);
 		m.scale.x= .01;
+		m.frame_locked= true; // more intuitive behaviour in rviz
 		return m;
 	}
 
@@ -205,7 +206,7 @@ namespace {
 		visualization_msgs::Marker m;
 		m.type= visualization_msgs::Marker::SPHERE;
 		m.action= visualization_msgs::Marker::ADD;
-		m.ns= "cutax_centers";
+		m.ns= "centers";
 		m.id= 0;
 		m.lifetime= ros::Duration(0.0);
 		m.scale.x= m.scale.y= m.scale.z= .05;
@@ -220,7 +221,6 @@ void ModelConstructor::buildCloudMarkers(visualization_msgs::MarkerArray& cloud_
 	utils::uniform_color_distribution distribution;
 
 	visualization_msgs::Marker marker= cloudMarker();
-
 	for( const Model& model : models_ ){
 		marker.color= distribution(generator);
 		marker.points.clear();
