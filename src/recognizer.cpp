@@ -177,7 +177,7 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 	pcl::PointCloud<Signature> object_signatures;
 
 	object_signatures.reserve( object.views.size() );
-	for( const RegisteredPointCloud rp : object.views )
+	for( const RegisteredPointCloud& rp : object.views )
 		object_signatures.push_back( compute_vfh_signature( rp.view ) );
 
 	size_t instance_id= instances_.size();
