@@ -195,7 +195,7 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 
 		size_t isig= 0;
 		for( const auto& sig : object_signatures ){
-			const size_t nr_of_candidates= 1;
+			const size_t nr_of_candidates= 3;
 			std::vector<int> matching_sigs; matching_sigs.resize(nr_of_candidates);
 			std::vector<float> matching_sigs_distances;  matching_sigs_distances.resize(nr_of_candidates);
 			signature_tree.nearestKSearch( sig, nr_of_candidates, matching_sigs, matching_sigs_distances );
