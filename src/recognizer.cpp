@@ -40,7 +40,6 @@ namespace {
 			return oa;
 
 		std::string database_type("{\"type\":\"empty\"}");
-		std::string key_prefix("c");
 
 		TransformMat table2view= convert<TransformMat>(ot.table.pose);
 
@@ -50,7 +49,6 @@ namespace {
 			object_recognition_msgs::RecognizedObject& ro= oa->objects.back();
 
 			ro.type.db= database_type;
-			ro.type.key= key_prefix;
 
 			ro.header= ot.header;
 			ro.pose.header= ro.header;
@@ -134,7 +132,7 @@ void Recognizer::recognitionCB(const ObservedTable::ConstPtr& ot) {
 		size_t cluster_id= this->classify( ot->objects[obji] );
 
 		recognition_result->objects[obji].confidence= 1.0;
-		recognition_result->objects[obji].type.key+= std::to_string( cluster_id );
+		recognition_result->objects[obji].type.key= std::string("c") + std::to_string( cluster_id ) + ",i" + std::to_string(obji);
 	}
 
 	pub_result_.publish( recognition_result );
@@ -162,18 +160,21 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 
 		std::map<size_t, double> cluster_voting;
 
+		size_t isig= 0;
 		for( const auto& sig : object_signatures ){
 			const size_t nr_of_candidates= 1;
 			std::vector<int> matching_sigs; matching_sigs.resize(nr_of_candidates);
 			std::vector<float> matching_sigs_distances;  matching_sigs_distances.resize(nr_of_candidates);
 			signature_tree.nearestKSearch( sig, nr_of_candidates, matching_sigs, matching_sigs_distances );
 
-			std::string object_matching_info= "instance " + std::to_string(instance_id) + ": ";
+			std::string object_matching_info= "instance " + std::to_string(instance_id) + "/" + std::to_string(isig) + ":\n";
+			ROS_INFO_STREAM( "sig: " << std::endl << sig << std::endl << signatures_->points[matching_sigs[0]]);
+
 			for(size_t j= 0; j < nr_of_candidates; ++j){
 				const size_t jinstance= signature_lookup_[matching_sigs[j]].first;
 				const size_t jview= signature_lookup_[matching_sigs[j]].second;
 				const size_t jcluster= instances_[jinstance].second;
-				object_matching_info+= "cluster" + std::to_string(jcluster) + " / instance" + std::to_string(jinstance) + " / view" + std::to_string(jview) + " (dist: " + std::to_string(matching_sigs_distances[j]) + "), ";
+				object_matching_info+= "cluster" + std::to_string(jcluster) + " / instance" + std::to_string(jinstance) + " / view" + std::to_string(jview) + " (dist: " + std::to_string(matching_sigs_distances[j]) + ")\n";
 			}
 			ROS_INFO_STREAM( object_matching_info );
 
@@ -181,6 +182,7 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 			if( matching_sigs_distances[0] < 100 ){
 				cluster_voting[ instances_[signature_lookup_[matching_sigs[0]].first].second ]+= 1;
 			}
+			++isig;
 		}
 
 		if( cluster_voting.empty() )
