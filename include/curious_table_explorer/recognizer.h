@@ -17,6 +17,7 @@ namespace curious_table_explorer {
 
 typedef std::vector<RegisteredObject::Ptr> InstanceCluster;
 
+
 struct InstanceClustering {
 	InstanceClustering();
 
@@ -37,15 +38,15 @@ public:
 	// classify object and return index in current_clustering
 	size_t classify( const RegisteredObject& op );
 
+	typedef pcl::Histogram<308> Signature;
+
 protected:
 	void resetToStored();
 
 	typedef std::pair<RegisteredObject::Ptr, size_t> InstanceWithCluster;
 	typedef std::pair<size_t, size_t> InstanceAndViewIndex;
 
-	typedef pcl::VFHSignature308 Signature;
-
-	pcl::PointCloud<pcl::VFHSignature308>::Ptr signatures_;
+	pcl::PointCloud<Signature>::Ptr signatures_;
 	std::vector<InstanceAndViewIndex> signature_lookup_;
 	size_t stored_signature_cnt_;
 

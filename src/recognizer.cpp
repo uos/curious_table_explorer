@@ -17,7 +17,11 @@
 #include <object_recognition_msgs/RecognizedObject.h>
 #include <object_recognition_msgs/RecognizedObjectArray.h>
 
+#include <pcl/point_representation.h>
 #include <pcl/search/kdtree.h>
+#include <pcl/search/impl/kdtree.hpp>
+#include <pcl/kdtree/impl/kdtree_flann.hpp>
+
 #include <pcl/features/normal_3d.h>
 #include <pcl/features/vfh.h>
 
@@ -28,6 +32,28 @@
 using utils::convert;
 
 using boost::make_shared;
+
+/* pcl addition
+ * this is required to use pcl::search::KdTree<curious_table_explorer::Recognizer::Signature>
+ * otherwise the default pcl::DefaultPointRepresentation template is used which confusingly
+ * only represents the first 3 elements
+ */
+namespace pcl {
+template <>
+class DefaultPointRepresentation<curious_table_explorer::Recognizer::Signature> : public PointRepresentation<curious_table_explorer::Recognizer::Signature>
+{
+public:
+	DefaultPointRepresentation() {
+		nr_dimensions_= curious_table_explorer::Recognizer::Signature::descriptorSize();
+		trivial_= true;
+	}
+
+	virtual void copyToFloatArray(const curious_table_explorer::Recognizer::Signature& s, float* out) const {
+		for( size_t i= 0; i < static_cast<size_t>(nr_dimensions_); ++i )
+			out[i]= s.histogram[i];
+	}
+};
+}
 
 namespace curious_table_explorer {
 
@@ -63,7 +89,7 @@ namespace {
 	}
 
 
-	pcl::VFHSignature308 compute_vfh_signature( const sensor_msgs::PointCloud2& pc ){
+	Recognizer::Signature compute_vfh_signature( const sensor_msgs::PointCloud2& pc ){
 		auto cloud= make_shared<PointCloud>();
 		pcl::fromROSMsg(pc, *cloud);
 		auto normals= make_shared<pcl::PointCloud<pcl::Normal>>();
@@ -83,11 +109,18 @@ namespace {
 			ve.setInputCloud(cloud);
 			ve.setInputNormals(normals);
 			ve.setNormalizeBins( true );
+			//ve.setNormalizeDistance( true );
 			ve.compute(cloud_signature);
 		}
 		assert( cloud_signature.points.size() == 1 );
-		return cloud_signature.points[0];
+
+		Recognizer::Signature s;
+		for( size_t i= 0; i < 308; ++i )
+			s.histogram[i]= cloud_signature.points[0].histogram[i];
+
+		return s;
 	}
+
 }
 
 
