@@ -87,40 +87,6 @@ namespace {
 
 		return oa;
 	}
-
-
-	Recognizer::Signature compute_vfh_signature( const sensor_msgs::PointCloud2& pc ){
-		auto cloud= make_shared<PointCloud>();
-		pcl::fromROSMsg(pc, *cloud);
-		auto normals= make_shared<pcl::PointCloud<pcl::Normal>>();
-		{
-			// TODO: this should probably happen in segmentation already
-			pcl::NormalEstimation<Point, pcl::Normal> ne;
-			ne.setRadiusSearch(.01);
-			ne.setSearchMethod(make_shared<pcl::search::KdTree<Point>>());
-			ne.setInputCloud(cloud);
-			ne.compute(*normals);
-			normals->header= cloud->header;
-		}
-		pcl::PointCloud<pcl::VFHSignature308> cloud_signature;
-		{
-			pcl::VFHEstimation<Point, pcl::Normal, pcl::VFHSignature308> ve;
-			ve.setSearchMethod(make_shared<pcl::search::KdTree<Point>>());
-			ve.setInputCloud(cloud);
-			ve.setInputNormals(normals);
-			ve.setNormalizeBins( true );
-			//ve.setNormalizeDistance( true );
-			ve.compute(cloud_signature);
-		}
-		assert( cloud_signature.points.size() == 1 );
-
-		Recognizer::Signature s;
-		for( size_t i= 0; i < 308; ++i )
-			s.histogram[i]= cloud_signature.points[0].histogram[i];
-
-		return s;
-	}
-
 }
 
 
@@ -178,7 +144,7 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 
 	object_signatures.reserve( object.views.size() );
 	for( const RegisteredPointCloud& rp : object.views )
-		object_signatures.push_back( compute_vfh_signature( rp.view ) );
+		object_signatures.push_back( this->computeSignature( rp.view ) );
 
 	size_t instance_id= instances_.size();
 
@@ -262,6 +228,38 @@ void Recognizer::resetToStored() {
 	instances_.resize(stored_instance_cnt_);
 	signatures_->resize(stored_signature_cnt_);
 	signature_lookup_.resize(stored_signature_cnt_);
+}
+
+Recognizer::Signature Recognizer::computeSignature( const sensor_msgs::PointCloud2& pc ){
+	auto cloud= make_shared<PointCloud>();
+	pcl::fromROSMsg(pc, *cloud);
+	auto normals= make_shared<pcl::PointCloud<pcl::Normal>>();
+	{
+		// TODO: this should probably happen in segmentation already
+		pcl::NormalEstimation<Point, pcl::Normal> ne;
+		ne.setRadiusSearch(.01);
+		ne.setSearchMethod(make_shared<pcl::search::KdTree<Point>>());
+		ne.setInputCloud(cloud);
+		ne.compute(*normals);
+		normals->header= cloud->header;
+	}
+	pcl::PointCloud<pcl::VFHSignature308> cloud_signature;
+	{
+		pcl::VFHEstimation<Point, pcl::Normal, pcl::VFHSignature308> ve;
+		ve.setSearchMethod(make_shared<pcl::search::KdTree<Point>>());
+		ve.setInputCloud(cloud);
+		ve.setInputNormals(normals);
+		ve.setNormalizeBins( true );
+		//ve.setNormalizeDistance( true );
+		ve.compute(cloud_signature);
+	}
+	assert( cloud_signature.points.size() == 1 );
+
+	Recognizer::Signature s;
+	for( size_t i= 0; i < 308; ++i )
+		s.histogram[i]= cloud_signature.points[0].histogram[i];
+
+	return s;
 }
 
 }

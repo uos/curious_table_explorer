@@ -41,12 +41,15 @@ public:
 	typedef pcl::Histogram<308> Signature;
 
 protected:
-	void resetToStored();
-
 	typedef std::pair<RegisteredObject::Ptr, size_t> InstanceWithCluster;
 	typedef std::pair<size_t, size_t> InstanceAndViewIndex;
 
+	void resetToStored();
+
+	static Signature computeSignature( const sensor_msgs::PointCloud2& );
+
 	pcl::PointCloud<Signature>::Ptr signatures_;
+
 	std::vector<InstanceAndViewIndex> signature_lookup_;
 	size_t stored_signature_cnt_;
 
