@@ -177,7 +177,7 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 			ROS_INFO_STREAM( object_matching_info );
 
 			//TODO: magic number
-			if( matching_sigs_distances[0] < 100 ){
+			if( matching_sigs_distances[0] < 300 ){
 				cluster_voting[ instances_[signature_lookup_[matching_sigs[0]].first].second ]+= 1;
 			}
 			++isig;
