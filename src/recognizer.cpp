@@ -250,7 +250,7 @@ Recognizer::Signature Recognizer::computeSignature( const sensor_msgs::PointClou
 		ve.setInputCloud(cloud);
 		ve.setInputNormals(normals);
 		ve.setNormalizeBins( true );
-		//ve.setNormalizeDistance( true );
+		ve.setNormalizeDistance( true );
 		ve.compute(cloud_signature);
 	}
 	assert( cloud_signature.points.size() == 1 );
