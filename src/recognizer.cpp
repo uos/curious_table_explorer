@@ -167,7 +167,6 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 			signature_tree.nearestKSearch( sig, nr_of_candidates, matching_sigs, matching_sigs_distances );
 
 			std::string object_matching_info= "instance " + std::to_string(instance_id) + "/" + std::to_string(isig) + ":\n";
-			ROS_INFO_STREAM( "sig: " << std::endl << sig << std::endl << signatures_->points[matching_sigs[0]]);
 
 			for(size_t j= 0; j < nr_of_candidates; ++j){
 				const size_t jinstance= signature_lookup_[matching_sigs[j]].first;
@@ -195,6 +194,7 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 					cluster_id= bucket.first;
 				}
 			}
+			ROS_INFO_STREAM( best_rating << " of " << object_signatures.size() << " signatures agree this is cluster " << cluster_id );
 			if( best_rating < object_signatures.size() * 2.0 / 3.0 )
 				cluster_id= clustering_.new_cluster();
 		}
