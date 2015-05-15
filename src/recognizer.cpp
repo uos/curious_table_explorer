@@ -146,7 +146,7 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 	for( const RegisteredPointCloud& rp : object.views )
 		object_signatures.push_back( this->computeSignature( rp.view ) );
 
-	size_t instance_id= instances_.size();
+	size_t instance_id= instances_.size()-stored_instance_cnt_;
 
 	size_t cluster_id;
 	// KdTree would fail with empty input
@@ -211,7 +211,7 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 
 	signature_lookup_.reserve( signature_lookup_.size() + object_signatures.size() );
 	for( size_t i= 0; i < object_signatures.size(); ++i )
-		signature_lookup_.emplace_back( instance_id, i );
+		signature_lookup_.emplace_back( instances_.size()-1, i );
 
 	return cluster_id;
 
