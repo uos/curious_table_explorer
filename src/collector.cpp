@@ -104,6 +104,8 @@ bool Collector::finalizeTable(FinalizeTable::Request&, FinalizeTable::Response&)
 }
 
 void Collector::finalizeTable() {
+		if( !table_tracker_.isLocked() )
+			return;
 		model_constructor_.finalizeTable();
 
 		std::string path;
