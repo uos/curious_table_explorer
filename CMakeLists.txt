@@ -76,9 +76,9 @@ add_dependencies(collect_object_views ${PROJECT_NAME}_generate_messages_cpp ${ca
 
 target_link_libraries(
 	collect_object_views
+	convert
 	${PCL_LIBRARIES}
 	${catkin_LIBRARIES}
-	convert
 )
 
 
@@ -90,9 +90,9 @@ add_dependencies(recognize_registered_objects ${PROJECT_NAME}_generate_messages_
 
 target_link_libraries(
 	recognize_registered_objects
+	convert
 	${PCL_LIBRARIES}
 	${catkin_LIBRARIES}
-	convert
 )
 
 install(TARGETS collect_object_views RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
