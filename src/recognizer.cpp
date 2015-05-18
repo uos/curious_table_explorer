@@ -166,15 +166,16 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 			std::vector<float> matching_sigs_distances;  matching_sigs_distances.resize(nr_of_candidates);
 			signature_tree.nearestKSearch( sig, nr_of_candidates, matching_sigs, matching_sigs_distances );
 
-			std::string object_matching_info= "instance " + std::to_string(instance_id) + "/" + std::to_string(isig) + ":\n";
+			std::ostringstream object_matching_info;
+			object_matching_info << "instance" << instance_id << "/view" << isig << ": ";
 
 			for(size_t j= 0; j < nr_of_candidates; ++j){
 				const size_t jinstance= signature_lookup_[matching_sigs[j]].first;
 				const size_t jview= signature_lookup_[matching_sigs[j]].second;
 				const size_t jcluster= instances_[jinstance].second;
-				object_matching_info+= "cluster" + std::to_string(jcluster) + " / instance" + std::to_string(jinstance) + " / view" + std::to_string(jview) + " (dist: " + std::to_string(matching_sigs_distances[j]) + ")\n";
+				object_matching_info << "c" << jcluster << "/i" << jinstance << "/v" << jview << "(d:" << std::setprecision(5) << matching_sigs_distances[j] << "), ";
 			}
-			ROS_INFO_STREAM( object_matching_info );
+			ROS_INFO_STREAM( object_matching_info.str() );
 
 			//TODO: magic number
 			if( matching_sigs_distances[0] < 300 ){
@@ -183,8 +184,10 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 			++isig;
 		}
 
-		if( cluster_voting.empty() )
+		if( cluster_voting.empty() ){
 			cluster_id= clustering_.new_cluster();
+			ROS_INFO_STREAM( "instance" << instance_id << ": adding new cluster" << cluster_id << " for unknown object" );
+		}
 		else {
 			cluster_id= cluster_voting.begin()->first;
 			float best_rating= cluster_voting.begin()->second;
@@ -194,13 +197,16 @@ size_t Recognizer::classify( const RegisteredObject& object ) {
 					cluster_id= bucket.first;
 				}
 			}
-			ROS_INFO_STREAM( best_rating << " of " << object_signatures.size() << " signatures agree this is cluster " << cluster_id );
-			if( best_rating < object_signatures.size() * 2.0 / 3.0 )
+			ROS_INFO_STREAM( "instance" << instance_id << ": " << best_rating << " of " << object_signatures.size() << " signatures agree this is cluster " << cluster_id );
+			if( best_rating < object_signatures.size() * 2.0 / 3.0 ){
 				cluster_id= clustering_.new_cluster();
+				ROS_INFO_STREAM( "instance" << instance_id << ": not enough evidence for successful recognition: adding new cluster" << cluster_id );
+			}
+			else {
+				ROS_INFO_STREAM( "instance" << instance_id << ": " << "recognized instance as cluster" << cluster_id );
+			}
 		}
 	}
-
-	ROS_INFO_STREAM("instance " << std::to_string(instance_id) << ": cluster" << cluster_id);
 
 	auto shared_object= boost::make_shared<RegisteredObject>(object);
 	clustering_[cluster_id].push_back( shared_object );
