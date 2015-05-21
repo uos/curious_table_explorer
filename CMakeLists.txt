@@ -95,4 +95,4 @@ target_link_libraries(
 	${catkin_LIBRARIES}
 )
 
-install(TARGETS collect_object_views RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(TARGETS collect_object_views recognize_registered_objects RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
