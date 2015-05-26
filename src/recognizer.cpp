@@ -354,9 +354,10 @@ float Recognizer::rateInstanceInCluster( const pcl::PointCloud<Signature>& insta
 	std::vector<int> match; match.resize(1);
 	std::vector<float> match_sqdist; match_sqdist.resize(1);
 
-	for( const auto& sig : instance_signatures )
+	for( const auto& sig : instance_signatures ){
 		signature_tree.nearestKSearch( sig, 1, match, match_sqdist );
 		dist_sum+= std::sqrt( match_sqdist[0] );
+	}
 
 	return dist_sum / static_cast<float>(instance_signatures.size());
 }
