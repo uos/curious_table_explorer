@@ -62,6 +62,8 @@ public:
 
 	size_t clusterOfInstance(size_t) const;
 
+	bool validCluster(size_t) const;
+
 	void storeOverlay();
 	void clearOverlay();
 

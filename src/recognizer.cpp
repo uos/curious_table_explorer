@@ -212,6 +212,10 @@ size_t Clustering::clusterOfInstance(size_t instance_id) const {
 		return cluster_id->second;
 }
 
+bool Clustering::validCluster(size_t cluster_id) const {
+	return cluster_id < next_cluster_id_overlay_;
+}
+
 void Clustering::storeOverlay(){
 	for( const auto& cl : cluster_overlay_ )
 		cluster_[cl.first]= cl.second;
@@ -322,7 +326,34 @@ size_t Recognizer::classify( const RegisteredObject& object, size_t instance_on_
 }
 
 float Recognizer::rateInstanceInCluster( const pcl::PointCloud<Signature>& instance_signatures, size_t cluster_id ){
-	return 0.0;
+	assert( clustering_.validCluster(cluster_id) );
+
+	float dist_sum= 0.0;
+
+	auto cluster_sigs= make_shared< pcl::PointCloud<Signature> >();
+	try {
+		for( const size_t& instance : clustering_.overlay(cluster_id) )
+			*cluster_sigs+= *cache_.signaturesOfInstance(instance);
+	}
+	catch(...) {}
+
+	try {
+		for( const auto& instance : clustering_.cluster(cluster_id) )
+			*cluster_sigs+= *cache_.signaturesOfInstance(instance);
+	}
+	catch(...) {}
+
+	pcl::search::KdTree<Signature> signature_tree;
+	signature_tree.setInputCloud(cluster_sigs);
+
+	std::vector<int> match; match.resize(1);
+	std::vector<float> match_sqdist; match_sqdist.resize(1);
+
+	for( const auto& sig : instance_signatures )
+		signature_tree.nearestKSearch( sig, 1, match, match_sqdist );
+		dist_sum+= std::sqrt( match_sqdist[0] );
+
+	return dist_sum / static_cast<float>(instance_signatures.size());
 }
 
 }
