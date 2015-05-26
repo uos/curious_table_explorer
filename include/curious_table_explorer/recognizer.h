@@ -15,17 +15,65 @@
 
 namespace curious_table_explorer {
 
-typedef std::vector<RegisteredObject::Ptr> InstanceCluster;
+typedef pcl::Histogram<308> Signature;
 
 
-struct InstanceClustering {
-	InstanceClustering();
+class InstanceCache {
+public:
+	typedef std::pair<size_t, size_t> InstanceViewIndex;
 
-	size_t new_cluster();
+	InstanceCache();
 
-	InstanceCluster& operator[](size_t id);
+	size_t addInstance(RegisteredObject::ConstPtr, pcl::PointCloud<Signature>::ConstPtr);
 
-	std::vector<InstanceCluster> clusters;
+	const std::vector<RegisteredObject::ConstPtr>& instances() const;
+
+	pcl::PointCloud<Signature>::ConstPtr signatures() const;
+	pcl::PointCloud<Signature>::ConstPtr signaturesOfInstance(size_t) const;
+
+	InstanceViewIndex indicesOfSignature(size_t) const;
+
+	void storeCurrentState();
+	void resetToStored();
+protected:
+
+	pcl::PointCloud<Signature>::Ptr sigs_;
+	std::vector<InstanceViewIndex> sigs_lookup_;
+
+	size_t stored_signature_cnt_;
+
+	std::vector<RegisteredObject::ConstPtr> instances_;
+	std::vector<pcl::PointCloud<Signature>::ConstPtr> instance_sigs_;
+
+	size_t stored_instance_cnt_;
+};
+
+
+class Clustering {
+public:
+	Clustering();
+
+	size_t newCluster();
+
+	void addInstance(size_t instance, size_t cluster);
+
+	const std::vector<size_t>& cluster(size_t) const;
+	const std::vector<size_t>& overlay(size_t) const;
+
+	size_t clusterOfInstance(size_t) const;
+
+	void storeOverlay();
+	void clearOverlay();
+
+protected:
+	std::map< size_t, std::vector<size_t> > cluster_;
+	std::map< size_t, std::vector<size_t> > cluster_overlay_;
+
+	std::map<size_t, size_t> instance_lookup_;
+	std::map<size_t, size_t> instance_lookup_overlay_;
+
+	size_t next_cluster_id_;
+	size_t next_cluster_id_overlay_;
 };
 
 
@@ -36,27 +84,14 @@ public:
 	void recognitionCB(const ObservedTable::ConstPtr& ot);
 
 	// classify object and return index in current_clustering
-	size_t classify( const RegisteredObject& op );
-
-	typedef pcl::Histogram<308> Signature;
+	size_t classify( const RegisteredObject& op, size_t instance_id );
 
 protected:
-	typedef std::pair<RegisteredObject::Ptr, size_t> InstanceWithCluster;
-	typedef std::pair<size_t, size_t> InstanceAndViewIndex;
+	float rateInstanceInCluster( const pcl::PointCloud<Signature>& instance_signatures, size_t cluster_id );
 
-	void resetToStored();
+	InstanceCache cache_;
 
-	static Signature computeSignature( const sensor_msgs::PointCloud2& );
-
-	pcl::PointCloud<Signature>::Ptr signatures_;
-
-	std::vector<InstanceAndViewIndex> signature_lookup_;
-	size_t stored_signature_cnt_;
-
-	std::vector<InstanceWithCluster> instances_;
-	size_t stored_instance_cnt_;
-
-	InstanceClustering clustering_;
+	Clustering clustering_;
 
 	size_t current_table_id_;
 
