@@ -291,7 +291,12 @@ size_t Recognizer::classify( const RegisteredObject& object, size_t instance_on_
 
 			//TODO: adjust to n candidates
 			const size_t nearest_cluster= clustering_.clusterOfInstance(cache_.indicesOfSignature(matching_sigs[0]).first);
-			candidate_clusters[nearest_cluster]= std::min( candidate_clusters[nearest_cluster], matching_sigs_sqdist[0] );
+			try {
+				candidate_clusters.at(nearest_cluster)= std::min( candidate_clusters.at(nearest_cluster), matching_sigs_sqdist[0] );
+			}
+			catch(...){
+				candidate_clusters[nearest_cluster]= matching_sigs_sqdist[0];
+			}
 		}
 
 		std::ostringstream info;
