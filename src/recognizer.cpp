@@ -267,8 +267,6 @@ size_t Recognizer::classify( const RegisteredObject& object, size_t instance_on_
 
 	pcl::PointCloud<Signature>::Ptr object_signatures= computeSignatures( object );
 
-	const size_t instance_id= cache_.addInstance( boost::make_shared<RegisteredObject>(object), object_signatures );
-
 	size_t cluster_id;
 	// KdTree would fail with empty input
 	if( cache_.signatures()->empty() ){
@@ -316,6 +314,8 @@ size_t Recognizer::classify( const RegisteredObject& object, size_t instance_on_
 			ROS_INFO_STREAM( "instance" << instance_on_table << ": not recognized. Add new cluster" << cluster_id << " / best match is cluster" << best_rating.first << " with rating " << best_rating.second);
 		}
 	}
+
+	const size_t instance_id= cache_.addInstance( boost::make_shared<RegisteredObject>(object), object_signatures );
 
 	clustering_.addInstance(instance_id, cluster_id);
 	return cluster_id;
