@@ -206,8 +206,10 @@ const std::vector<size_t>& Clustering::overlay(size_t cluster_id) const {
 size_t Clustering::clusterOfInstance(size_t instance_id) const {
 	auto cluster_id= instance_lookup_overlay_.find(instance_id);
 
-	if( cluster_id == instance_lookup_overlay_.end() )
+	if( cluster_id == instance_lookup_overlay_.end() ){
+		assert( instance_lookup_.find(instance_id) != instance_lookup_.end() );
 		return instance_lookup_.at(instance_id);
+	}
 	else
 		return cluster_id->second;
 }
