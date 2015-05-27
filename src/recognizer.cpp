@@ -28,6 +28,7 @@
 #include <boost/make_shared.hpp>
 
 #include <string>
+#include <numeric>
 
 using utils::convert;
 
@@ -335,8 +336,6 @@ size_t Recognizer::classify( const RegisteredObject& object, size_t instance_on_
 float Recognizer::rateInstanceInCluster( const pcl::PointCloud<Signature>& instance_signatures, size_t cluster_id ){
 	assert( clustering_.validCluster(cluster_id) );
 
-	float dist_sum= 0.0;
-
 	auto cluster_sigs= make_shared< pcl::PointCloud<Signature> >();
 	try {
 		for( const size_t& instance : clustering_.overlay(cluster_id) )
@@ -356,12 +355,24 @@ float Recognizer::rateInstanceInCluster( const pcl::PointCloud<Signature>& insta
 	std::vector<int> match; match.resize(1);
 	std::vector<float> match_sqdist; match_sqdist.resize(1);
 
+	std::vector<float> distances;
+	distances.reserve( instance_signatures.size() );
+
 	for( const auto& sig : instance_signatures ){
 		signature_tree.nearestKSearch( sig, 1, match, match_sqdist );
-		dist_sum+= std::sqrt( match_sqdist[0] );
+		distances.push_back( std::sqrt(match_sqdist[0]) );
 	}
 
-	return dist_sum / static_cast<float>(instance_signatures.size());
+	std::sort(distances.begin(), distances.end());
+
+	const size_t outlier_cnt= static_cast<size_t>(distances.size()/3);
+
+	// filter outliers
+	distances.resize( distances.size() - outlier_cnt );
+
+	const float mean= std::accumulate(distances.begin(), distances.end(), 0.0) / static_cast<float>(distances.size());
+
+	return mean;
 }
 
 }
