@@ -191,7 +191,7 @@ size_t Clustering::newCluster(){
 }
 
 void Clustering::addInstance(size_t instance, size_t cluster){
-	cluster_overlay_.at(cluster).push_back(instance);
+	cluster_overlay_[cluster].push_back(instance);
 	instance_lookup_overlay_[instance]= cluster;
 }
 
