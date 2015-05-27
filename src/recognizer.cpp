@@ -318,7 +318,7 @@ size_t Recognizer::classify( const RegisteredObject& object, size_t instance_on_
 		}
 
 		//TODO: magic number
-		if( best_rating.second < 15.0 ){
+		if( best_rating.second < 14.5 ){
 			cluster_id= best_rating.first;
 			ROS_INFO_STREAM( "instance" << instance_on_table << ": recognized as cluster" << cluster_id << " with rating " << best_rating.second );
 		}
