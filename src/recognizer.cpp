@@ -29,6 +29,7 @@
 
 #include <string>
 #include <numeric>
+#include <algorithm>
 
 using utils::convert;
 
@@ -305,7 +306,7 @@ size_t Recognizer::classify( const RegisteredObject& object, size_t instance_on_
 		std::ostringstream info;
 		info << "instance" << instance_on_table << " primed clusters: ";
 		for( const auto& candidate : candidate_clusters )
-			info << candidate.first << "(" << std::setprecision(5) << candidate.second << "), ";
+			info << candidate.first << "(" << std::setprecision(5) << std::sqrt(candidate.second) << "), ";
 		ROS_INFO_STREAM( info.str() );
 
 		std::pair<size_t, double> best_rating(0, std::numeric_limits<double>::max());
@@ -367,10 +368,21 @@ float Recognizer::rateInstanceInCluster( const pcl::PointCloud<Signature>& insta
 
 	const size_t outlier_cnt= static_cast<size_t>(distances.size()/3);
 
+	std::stringstream ss;
+	ss << std::setprecision(4);
+	std::for_each( distances.begin(), distances.end()-outlier_cnt, [&ss](float d){ ss << d << " ";} );
+	if( outlier_cnt > 0 ){
+		ss << "( ";
+		std::for_each( distances.end()-outlier_cnt, distances.end(), [&ss](float d){ ss << d << " ";} );
+		ss << ")";
+	}
+
 	// filter outliers
 	distances.resize( distances.size() - outlier_cnt );
 
 	const float mean= std::accumulate(distances.begin(), distances.end(), 0.0) / static_cast<float>(distances.size());
+
+	ROS_DEBUG_STREAM( "rating cluster" << cluster_id << ": " << std::setprecision(4) << mean << " / distances: " << ss.str() );
 
 	return mean;
 }
