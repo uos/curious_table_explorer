@@ -12,6 +12,9 @@ from ecto_ros import ecto_sensor_msgs
 
 from uos_ecto_cells import uos_ecto_cells, ecto_object_recognition_msgs
 
+#import transparent_object_reconstruction.hole_detection as hole_detection
+#import transparent_object_reconstruction.ecto_transparent_object_reconstruction as ecto_transparent_object_reconstruction
+
 class TableTopSegmentationServer:
 	def __init__(self):
 		self.create_plasm()
@@ -42,74 +45,110 @@ class TableTopSegmentationServer:
 
 	def create_plasm(self):
 		self.plasm= ecto.Plasm()
+		graph= []
 
 		cloud_sub= ecto_sensor_msgs.Subscriber_PointCloud2(topic_name= '/kinect/depth_registered/points', queue_size= 1)
 		msg2cloud= ecto_pcl_ros.Message2PointCloud()
+		graph.extend([
+			cloud_sub[:] >> msg2cloud[:]
+		])
+
 		cloud_to_map= uos_ecto_cells.CloudReframer(target_frame= '/map', timeout= 0.2, tf_cache_time= 60.0)
 		floor_cropper= ecto_pcl.PassThroughIndices(filter_field_name= "z", filter_limit_min= .20)
-		extract_indices_floor= ecto_pcl.ExtractIndices()
+		extract_indices_floor= ecto_pcl.ExtractIndices(keep_organized= True)
+		graph.extend([
+			msg2cloud[:] >> cloud_to_map[:],
+			cloud_to_map[:] >> floor_cropper["input"],
+			floor_cropper[:] >> extract_indices_floor["indices"],
+			msg2cloud[:] >> extract_indices_floor["input"]
+		])
 
 		normals= ecto_pcl.NormalEstimation(radius_search= .02, k_search= 0)
+		graph.extend([
+			extract_indices_floor[:] >> normals[:]
+		])
+
 		planar_segmentation= ecto_pcl.SACSegmentationFromNormals(
 			model_type= ecto_pcl.SACMODEL_NORMAL_PLANE,
 			distance_threshold=.02,
 			max_iterations= 100)
-		extract_table_indices= ecto_pcl.ExtractIndices(negative= False)
+		extract_table_indices= ecto_pcl.ExtractIndices(negative= False, keep_organized= True)
+		graph.extend([
+			extract_indices_floor[:] >> planar_segmentation["input"],
+			normals[:] >> planar_segmentation["normals"],
+			planar_segmentation["inliers"] >> extract_table_indices["indices"],
+			extract_indices_floor[:] >> extract_table_indices["input"]
+		])
+
 		extract_table_clusters= ecto_pcl.EuclideanClusterExtraction(cluster_tolerance= .03)
-		extract_largest_table_cluster= ecto_pcl.ExtractLargestCluster()
-		convex_table= ecto_pcl.ConvexHull(dimensionality= 2)
+		extract_largest_table_cluster= uos_ecto_cells.ExtractLargestClusterIndices()
+		# this should keep the table inlier organized, but ConvexHull would fail
+		# TODO: this is required for hole detection
+		extract_largest_table_cluster_indices= ecto_pcl.ExtractIndices(keep_organized= False)
+		graph.extend([
+			extract_table_indices[:] >> extract_table_clusters["input"],
+			extract_table_clusters[:] >> extract_largest_table_cluster["clusters"],
+			extract_largest_table_cluster[:] >> extract_largest_table_cluster_indices["indices"],
+			extract_table_indices[:] >> extract_largest_table_cluster_indices["input"]
+		])
+
+		foo= ecto_pcl_ros.PointCloud2Message()
+		bar= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/foobar', queue_size=1)
+		graph.extend([
+			extract_largest_table_cluster_indices[:] >> foo[:],
+			foo[:] >> bar[:]
+		])
+
+		convex_table= uos_ecto_cells.ConvexHull(dimensionality= 2)
+		convex2tables= uos_ecto_cells.ConvexHull2Table()
+		table_pub= ecto_object_recognition_msgs.Publisher_TableArray(topic_name= '/table')
+		graph.extend([
+			extract_largest_table_cluster_indices[:] >> convex_table[:],
+			convex_table["output"] >> convex2tables[:],
+			convex2tables[:] >> table_pub[:]
+		])
+
+		# TODO: include these cells
+		#hole_detector= hole_detection.HoleDetector()
+		#hole_publisher= ecto_transparent_object_reconstruction.Publisher_Holes(topic_name= '/table_holes')
+		#graph.extend([
+		#	msg2cloud[:] >> hole_detector["input"],
+		#	convex_table[:] >> hole_detector["hull_indices"],
+		#	planar_segmentation["model"] >> hole_detector["model"],
+
+		#	hole_detector["holes"] >> hole_publisher[:]
+		#])
 
 		extract_table_content= ecto_pcl.ExtractPolygonalPrismData(height_min= .02, height_max= .5)
+		graph.extend([
+			convex_table["output"] >> extract_table_content["planar_hull"],
+			#hole_detector["output"] >> extract_table_content["input"]
+			msg2cloud[:] >> extract_table_content["input"]
+		])
+
 		cluster_table_content= ecto_pcl.EuclideanClusterExtraction(cluster_tolerance= .05, min_cluster_size= 20)
+		graph.extend([
+			msg2cloud[:] >> cluster_table_content["input"],
+			extract_table_content[:] >> cluster_table_content["indices"]
+		])
 
 		clusters2recognized_objects= uos_ecto_cells.Clusters2RecognizedObjectArray()
 		recognized_objects_pub= ecto_object_recognition_msgs.Publisher_RecognizedObjectArray(topic_name= '/recognized_object_array')
-
-		colorize_clusters= ecto_pcl.ColorizeClusters()
-
-		cloud2msg= ecto_pcl_ros.PointCloud2Message()
-		table_content_cloud_pub= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/table_content')
-
-		convex2tables= uos_ecto_cells.ConvexHull2Table()
-		table_pub= ecto_object_recognition_msgs.Publisher_TableArray(topic_name= '/table')
-
-		graph= [
-			cloud_sub[:] >> msg2cloud[:],
-
-			msg2cloud[:] >> cloud_to_map[:],
-			cloud_to_map[:] >> floor_cropper["input"],
-			floor_cropper[:] >> extract_indices_floor["indices"],
-			msg2cloud[:] >> extract_indices_floor["input"],
-
-			extract_indices_floor[:] >> normals[:],
-			extract_indices_floor[:] >> planar_segmentation["input"],
-			normals[:] >> planar_segmentation["normals"],
-
-			planar_segmentation["inliers"] >> extract_table_indices["indices"],
-			extract_indices_floor[:] >> extract_table_indices["input"],
-			extract_table_indices[:] >> extract_table_clusters["input"],
-			extract_table_clusters[:] >> extract_largest_table_cluster["clusters"],
-			extract_table_indices[:] >> extract_largest_table_cluster["input"],
-			extract_largest_table_cluster[:] >> convex_table[:],
-
-			convex_table[:] >> convex2tables[:],
-			convex2tables[:] >> table_pub[:],
-
-			convex_table[:] >> extract_table_content["planar_hull"],
-			msg2cloud[:] >> extract_table_content["input"],
-
-			msg2cloud[:] >> cluster_table_content["input"],
-			extract_table_content[:] >> cluster_table_content["indices"],
-
+		graph.extend([
 			cluster_table_content[:] >> clusters2recognized_objects["indices"],
 			msg2cloud[:] >> clusters2recognized_objects["input"],
-			clusters2recognized_objects[:] >> recognized_objects_pub[:],
+			clusters2recognized_objects[:] >> recognized_objects_pub[:]
+		])
 
+		colorize_clusters= ecto_pcl.ColorizeClusters()
+		clusters2cloudmsg= ecto_pcl_ros.PointCloud2Message()
+		table_content_cloud_pub= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/table_content')
+		graph.extend([
 			cluster_table_content[:] >> colorize_clusters["clusters"],
 			msg2cloud[:] >> colorize_clusters["input"],
-			colorize_clusters[:] >> cloud2msg[:],
-			cloud2msg[:] >> table_content_cloud_pub[:]
-		]
+			colorize_clusters[:] >> clusters2cloudmsg[:],
+			clusters2cloudmsg[:] >> table_content_cloud_pub[:]
+		])
 
 		self.plasm.connect(graph)
 
