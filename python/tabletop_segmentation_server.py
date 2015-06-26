@@ -55,7 +55,7 @@ class TableTopSegmentationServer:
 
 		cloud_to_map= uos_ecto_cells.CloudReframer(target_frame= '/map', timeout= 0.2, tf_cache_time= 60.0)
 		floor_cropper= ecto_pcl.PassThroughIndices(filter_field_name= "z", filter_limit_min= .20)
-		extract_indices_floor= ecto_pcl.ExtractIndices(keep_organized= True)
+		extract_indices_floor= ecto_pcl.ExtractIndices(keep_organized= False)
 		graph.extend([
 			msg2cloud[:] >> cloud_to_map[:],
 			cloud_to_map[:] >> floor_cropper["input"],
@@ -72,7 +72,7 @@ class TableTopSegmentationServer:
 			model_type= ecto_pcl.SACMODEL_NORMAL_PLANE,
 			distance_threshold=.02,
 			max_iterations= 100)
-		extract_table_indices= ecto_pcl.ExtractIndices(negative= False, keep_organized= True)
+		extract_table_indices= ecto_pcl.ExtractIndices(negative= False, keep_organized= False)
 		graph.extend([
 			extract_indices_floor[:] >> planar_segmentation["input"],
 			normals[:] >> planar_segmentation["normals"],
