@@ -69,15 +69,19 @@ class TableTopSegmentationServer:
 		])
 
 		planar_segmentation= ecto_pcl.SACSegmentationFromNormals(
-			model_type= ecto_pcl.SACMODEL_NORMAL_PLANE,
+			# ecto_pcl.SACMODEL_NORMAL_PLANE would support normals, but these are too noisy, so disabled for now
+			model_type= ecto_pcl.SACMODEL_PLANE,
 			distance_threshold=.02,
-			max_iterations= 100)
+			max_iterations= 125)
 		extract_table_indices= ecto_pcl.ExtractIndices(negative= False, keep_organized= False)
+		subtract_table_indices= ecto_pcl.ExtractIndices(negative= True, keep_organized= False)
 		graph.extend([
 			extract_indices_floor[:] >> planar_segmentation["input"],
 			normals[:] >> planar_segmentation["normals"],
 			planar_segmentation["inliers"] >> extract_table_indices["indices"],
-			extract_indices_floor[:] >> extract_table_indices["input"]
+			extract_indices_floor[:] >> extract_table_indices["input"],
+			planar_segmentation["inliers"] >> subtract_table_indices["indices"],
+			extract_indices_floor[:] >> subtract_table_indices["input"]
 		])
 
 		extract_table_clusters= ecto_pcl.EuclideanClusterExtraction(cluster_tolerance= .03)
@@ -92,11 +96,11 @@ class TableTopSegmentationServer:
 			extract_table_indices[:] >> extract_largest_table_cluster_indices["input"]
 		])
 
-		foo= ecto_pcl_ros.PointCloud2Message()
-		bar= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/foobar', queue_size=1)
+		table_inlier2msg= ecto_pcl_ros.PointCloud2Message()
+		inlier_pub= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/table_inliers', queue_size=1)
 		graph.extend([
-			extract_largest_table_cluster_indices[:] >> foo[:],
-			foo[:] >> bar[:]
+			extract_largest_table_cluster_indices[:] >> table_inlier2msg[:],
+			table_inlier2msg[:] >> inlier_pub[:]
 		])
 
 		convex_table= uos_ecto_cells.ConvexHull(dimensionality= 2)
@@ -119,16 +123,16 @@ class TableTopSegmentationServer:
 		#	hole_detector["holes"] >> hole_publisher[:]
 		#])
 
-		extract_table_content= ecto_pcl.ExtractPolygonalPrismData(height_min= .02, height_max= .5)
+		extract_table_content= ecto_pcl.ExtractPolygonalPrismData(height_min= 0.0, height_max= .5)
 		graph.extend([
 			convex_table["output"] >> extract_table_content["planar_hull"],
 			#hole_detector["output"] >> extract_table_content["input"]
-			msg2cloud[:] >> extract_table_content["input"]
+			subtract_table_indices[:] >> extract_table_content["input"]
 		])
 
 		cluster_table_content= ecto_pcl.EuclideanClusterExtraction(cluster_tolerance= .05, min_cluster_size= 20)
 		graph.extend([
-			msg2cloud[:] >> cluster_table_content["input"],
+			subtract_table_indices[:] >> cluster_table_content["input"],
 			extract_table_content[:] >> cluster_table_content["indices"]
 		])
 
@@ -136,7 +140,7 @@ class TableTopSegmentationServer:
 		recognized_objects_pub= ecto_object_recognition_msgs.Publisher_RecognizedObjectArray(topic_name= '/recognized_object_array')
 		graph.extend([
 			cluster_table_content[:] >> clusters2recognized_objects["indices"],
-			msg2cloud[:] >> clusters2recognized_objects["input"],
+			subtract_table_indices[:] >> clusters2recognized_objects["input"],
 			clusters2recognized_objects[:] >> recognized_objects_pub[:]
 		])
 
@@ -145,7 +149,7 @@ class TableTopSegmentationServer:
 		table_content_cloud_pub= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/table_content')
 		graph.extend([
 			cluster_table_content[:] >> colorize_clusters["clusters"],
-			msg2cloud[:] >> colorize_clusters["input"],
+			subtract_table_indices[:] >> colorize_clusters["input"],
 			colorize_clusters[:] >> clusters2cloudmsg[:],
 			clusters2cloudmsg[:] >> table_content_cloud_pub[:]
 		])
