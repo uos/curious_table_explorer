@@ -124,7 +124,7 @@ class Surrounder:
 					self.move_base_straight_client.send_goal_and_wait( MoveBaseGoal(near_test_pose), rospy.Duration(20.0))
 					break
 
-				# move_base often returns one or two seconds _before_ it stopped moving. Make sure we get a "clean" picture for recognition
+				# object recognition and move_base straight are not strongly synchronized, so make sure we get a clear picture without ego-motion
 				rospy.sleep(rospy.Duration(2.5))
 				self.object_recognition_client.send_goal_and_wait( ObjectRecognitionGoal(), rospy.Duration() )
 				break # next delta
