@@ -38,6 +38,7 @@ void TableTracker::lockTable(const object_recognition_msgs::Table& table, PointC
 	const auto table_to_view= convert<TransformMat>( table.pose );
 
 	table_= table;
+	//TODO: this should happen in tabletop segmentation (respecting the viewpoint)
 	for(auto& point : table_.convex_hull)
 		point.z= 0.0;
 	auto table_view= make_shared<PointCloud>();
@@ -73,6 +74,7 @@ bool TableTracker::registerTable(const object_recognition_msgs::Table& table, Po
 
 	// update convex hull
 	auto hull= convert<PointCloudXYZ::Ptr>( table.convex_hull );
+	//TODO: this should happen in tabletop segmentation (respecting the viewpoint)
 	for(auto& point : hull->points)
 		point.z= 0.0;
 	const auto table_to_locked_table= this->getWorldToTable() * view_to_world * table_to_view;
