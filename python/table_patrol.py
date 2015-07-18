@@ -6,7 +6,7 @@ import actionlib
 
 import tf
 
-from std_msgs.msg import Header
+from std_msgs.msg import Header, String
 from geometry_msgs.msg import PointStamped, Point, PoseStamped, Pose, Quaternion
 from object_recognition_msgs.msg import Table
 
@@ -21,7 +21,13 @@ class TablePatrol:
 
 		self.client= actionlib.SimpleActionClient('/surround_point', SurroundPointAction)
 		self.client.wait_for_server()
-		self.finalize_table= rospy.ServiceProxy('finalize_table', FinalizeTable)
+
+#		self.finalize_service= rospy.ServiceProxy('finalize_table', FinalizeTable)
+		self.finalize_pub= rospy.Publisher('/finalize_table', String, queue_size= 1)
+
+	def finalize_table(self):
+#		self.finalize_service()
+		self.finalize_pub.publish(String("finalize"))
 
 	def add_table(self, table):
 		self.tf_listener.waitForTransform('/map', table.header.frame_id, table.header.stamp, rospy.Duration(3.0))

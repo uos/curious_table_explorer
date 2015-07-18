@@ -19,6 +19,7 @@
 #include <object_recognition_msgs/RecognizedObjectArray.h>
 #include <object_recognition_msgs/TableArray.h>
 
+#include <std_msgs/String.h>
 
 namespace curious_table_explorer {
 
@@ -34,6 +35,7 @@ public:
 
 	bool dumpModels(curious_table_explorer::DumpModelsToFolder::Request&, curious_table_explorer::DumpModelsToFolder::Response&);
 	bool finalizeTable(curious_table_explorer::FinalizeTable::Request&, curious_table_explorer::FinalizeTable::Response&);
+	void finalizeTable(const std_msgs::String&);
 protected:
 	void observeTable(const object_recognition_msgs::TableArray::ConstPtr&, const object_recognition_msgs::RecognizedObjectArray::ConstPtr&);
 	void finalizeTable();
@@ -52,8 +54,10 @@ protected:
 	message_filters::Subscriber<object_recognition_msgs::TableArray> sub_table_;
 	message_filters::Subscriber<object_recognition_msgs::RecognizedObjectArray> sub_objects_;
 	message_filters::TimeSynchronizer<object_recognition_msgs::TableArray, object_recognition_msgs::RecognizedObjectArray> sync_table_;
+
 	ros::ServiceServer dump_service_;
 	ros::ServiceServer finalize_table_service_;
+	ros::Subscriber sub_finalize_by_message_;
 
 	tf::TransformListener tfl_;
 	tf::TransformBroadcaster tfb_;
