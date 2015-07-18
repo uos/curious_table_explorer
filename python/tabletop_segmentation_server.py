@@ -49,8 +49,10 @@ class TableTopSegmentationServer:
 
 		cloud_sub= ecto_sensor_msgs.Subscriber_PointCloud2(topic_name= '/kinect/depth_registered/points', queue_size= 1)
 		msg2cloud= ecto_pcl_ros.Message2PointCloud()
+		cloud_pub= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/segmented_view', queue_size= 5)
 		graph.extend([
-			cloud_sub[:] >> msg2cloud[:]
+			cloud_sub[:] >> msg2cloud[:],
+			cloud_sub[:] >> cloud_pub[:]
 		])
 
 		cloud_to_map= uos_ecto_cells.CloudReframer(target_frame= '/map', timeout= 0.2, tf_cache_time= 60.0)
