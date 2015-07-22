@@ -222,7 +222,7 @@ bool Clustering::validCluster(size_t cluster_id) const {
 
 void Clustering::storeOverlay(){
 	for( const auto& cl : cluster_overlay_ )
-		cluster_[cl.first]= cl.second;
+		cluster_[cl.first].insert(cluster_[cl.first].end(), cl.second.begin(), cl.second.end());
 	for( const auto& in : instance_lookup_overlay_ )
 		instance_lookup_[in.first]= in.second;
 	next_cluster_id_= next_cluster_id_overlay_;
