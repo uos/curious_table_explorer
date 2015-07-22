@@ -245,7 +245,7 @@ void Clustering::clearOverlay(){
 Recognizer::Recognizer() :
 	current_table_id_(0)
 {
-	sub_objects_= nh_.subscribe("/generated_models", 5, &Recognizer::recognitionCB, this);
+	sub_objects_= nh_.subscribe("/generated_models", 50, &Recognizer::recognitionCB, this);
 	pub_result_= nh_.advertise<object_recognition_msgs::RecognizedObjectArray>("/clustering_result", 5, true);
 
 	dump_service_= nh_.advertiseService("dump_clusters_to_folder", &Recognizer::dumpClusters, this);
