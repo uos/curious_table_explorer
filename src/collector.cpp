@@ -94,7 +94,7 @@ void Collector::observeTable(const object_recognition_msgs::TableArray::ConstPtr
 	this->publishObservedTable();
 }
 
-bool Collector::dumpModels(DumpModelsToFolder::Request& req, DumpModelsToFolder::Response& res) {
+bool Collector::dumpModels(DumpToFolder::Request& req, DumpToFolder::Response& res) {
 	res.success= model_constructor_.writeTableToFiles(req.path == "" ? "." : req.path);
 	return true;
 }

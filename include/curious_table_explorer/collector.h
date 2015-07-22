@@ -5,7 +5,7 @@
 #include <curious_table_explorer/table_tracker.h>
 #include <curious_table_explorer/model_constructor.h>
 
-#include <curious_table_explorer/DumpModelsToFolder.h>
+#include <curious_table_explorer/DumpToFolder.h>
 #include <curious_table_explorer/FinalizeTable.h>
 
 #include <ros/ros.h>
@@ -33,7 +33,7 @@ public:
 
 	void publishTableFrame();
 
-	bool dumpModels(curious_table_explorer::DumpModelsToFolder::Request&, curious_table_explorer::DumpModelsToFolder::Response&);
+	bool dumpModels(curious_table_explorer::DumpToFolder::Request&, curious_table_explorer::DumpToFolder::Response&);
 	bool finalizeTable(curious_table_explorer::FinalizeTable::Request&, curious_table_explorer::FinalizeTable::Response&);
 	void finalizeTable(const std_msgs::String&);
 protected:

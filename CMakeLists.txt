@@ -35,7 +35,7 @@ add_action_files(
 
 add_service_files(
 	FILES
-	DumpModelsToFolder.srv
+	DumpToFolder.srv
 	FinalizeTable.srv
 )
 
