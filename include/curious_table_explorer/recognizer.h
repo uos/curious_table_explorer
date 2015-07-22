@@ -102,6 +102,8 @@ protected:
 
 	size_t current_table_id_;
 
+	float gamma_;
+
 	ros::NodeHandle nh_;
 	ros::Subscriber sub_objects_;
 	ros::Publisher  pub_result_;
