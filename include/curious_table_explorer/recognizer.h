@@ -6,6 +6,8 @@
 #include <curious_table_explorer/RegisteredObject.h>
 #include <curious_table_explorer/ObservedTable.h>
 
+#include <curious_table_explorer/DumpToFolder.h>
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -26,7 +28,7 @@ public:
 
 	size_t addInstance(RegisteredObject::ConstPtr, pcl::PointCloud<Signature>::ConstPtr);
 
-	const std::vector<RegisteredObject::ConstPtr>& instances() const;
+	RegisteredObject::ConstPtr instances(size_t) const;
 
 	pcl::PointCloud<Signature>::ConstPtr signatures() const;
 	pcl::PointCloud<Signature>::ConstPtr signaturesOfInstance(size_t) const;
@@ -63,6 +65,7 @@ public:
 	size_t clusterOfInstance(size_t) const;
 
 	bool validCluster(size_t) const;
+	size_t clusterCnt() const;
 
 	void storeOverlay();
 	void clearOverlay();
@@ -88,6 +91,8 @@ public:
 	// classify object and return index in current_clustering
 	size_t classify( const RegisteredObject& op, size_t instance_id );
 
+	bool dumpClusters( curious_table_explorer::DumpToFolder::Request&, curious_table_explorer::DumpToFolder::Response&);
+
 protected:
 	float rateInstanceInCluster( const pcl::PointCloud<Signature>& instance_signatures, size_t cluster_id );
 
@@ -100,6 +105,8 @@ protected:
 	ros::NodeHandle nh_;
 	ros::Subscriber sub_objects_;
 	ros::Publisher  pub_result_;
+
+	ros::ServiceServer dump_service_;
 };
 
 }

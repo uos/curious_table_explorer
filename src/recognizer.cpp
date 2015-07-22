@@ -25,6 +25,7 @@
 #include <pcl/features/normal_3d.h>
 #include <pcl/features/vfh.h>
 
+#include <boost/filesystem.hpp>
 #include <boost/make_shared.hpp>
 
 #include <string>
@@ -152,8 +153,8 @@ size_t InstanceCache::addInstance(RegisteredObject::ConstPtr obj, pcl::PointClou
 	return instance_id;
 }
 
-const std::vector<RegisteredObject::ConstPtr>& InstanceCache::instances() const {
-	return instances_;
+RegisteredObject::ConstPtr InstanceCache::instances(size_t i) const {
+	return instances_.at(i);
 }
 
 pcl::PointCloud<Signature>::ConstPtr InstanceCache::signatures() const {
@@ -220,6 +221,10 @@ bool Clustering::validCluster(size_t cluster_id) const {
 	return cluster_id < next_cluster_id_overlay_;
 }
 
+size_t Clustering::clusterCnt() const {
+	return next_cluster_id_overlay_;
+}
+
 void Clustering::storeOverlay(){
 	for( const auto& cl : cluster_overlay_ )
 		cluster_[cl.first].insert(cluster_[cl.first].end(), cl.second.begin(), cl.second.end());
@@ -242,6 +247,8 @@ Recognizer::Recognizer() :
 {
 	sub_objects_= nh_.subscribe("/generated_models", 5, &Recognizer::recognitionCB, this);
 	pub_result_= nh_.advertise<object_recognition_msgs::RecognizedObjectArray>("/clustering_result", 5, true);
+
+	dump_service_= nh_.advertiseService("dump_clusters_to_folder", &Recognizer::dumpClusters, this);
 }
 
 void Recognizer::recognitionCB(const ObservedTable::ConstPtr& ot) {
@@ -385,6 +392,55 @@ float Recognizer::rateInstanceInCluster( const pcl::PointCloud<Signature>& insta
 	ROS_DEBUG_STREAM( "rating cluster" << cluster_id << ": " << std::setprecision(4) << mean << " / distances: " << ss.str() );
 
 	return mean;
+}
+
+bool Recognizer::dumpClusters(curious_table_explorer::DumpToFolder::Request& req, curious_table_explorer::DumpToFolder::Response& res){
+	const boost::filesystem::path path( (req.path == "") ? "." : req.path );
+
+	pcl::PCDWriter writer;
+
+	boost::system::error_code ec;
+	boost::filesystem::create_directories(path, ec);
+
+	for(size_t cluster_id= 0; cluster_id < clustering_.clusterCnt(); ++cluster_id){
+		std::stringstream folder;
+		folder << "cluster" << std::setfill('0') << std::setw(3) << cluster_id;
+		const boost::filesystem::path cluster_path(path/folder.str());
+		boost::filesystem::create_directories(cluster_path, ec);
+
+		std::vector<size_t> instance_ids;
+		try {
+			for(size_t instance_id: clustering_.cluster(cluster_id))
+				instance_ids.push_back(instance_id);
+		}
+		catch(...){}
+		try {
+			for(size_t instance_id: clustering_.overlay(cluster_id))
+				instance_ids.push_back(instance_id);
+		}
+		catch(...){}
+
+		for( size_t instance_id : instance_ids ){
+			const RegisteredObject& object= *cache_.instances(instance_id);
+			for(size_t view_id= 0; view_id < object.views.size(); ++view_id){
+				std::stringstream filename;
+				filename << "instance" << std::setfill('0') << std::setw(3) << instance_id << "_view" << std::setw(2) << view_id << ".pcd";
+
+				PointCloud view;
+				pcl::fromROSMsg(object.views[view_id].view, view);
+				try {
+					writer.writeBinary((cluster_path/filename.str()).native(), view);
+				}
+				catch(pcl::IOException e){
+					ROS_ERROR("failed to write cluster view to file: %s", e.what());
+					return false;
+				}
+			}
+		}
+	}
+
+	res.success= true;
+	return true;
 }
 
 }
