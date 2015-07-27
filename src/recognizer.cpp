@@ -111,6 +111,7 @@ namespace {
 			ve.setInputCloud(cloud);
 			ve.setInputNormals(normals);
 			ve.setNormalizeBins( true );
+			ve.setFillSizeComponent( true );
 			ve.setNormalizeDistance( true );
 			ve.compute(cloud_signature);
 		}
