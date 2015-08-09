@@ -17,10 +17,10 @@ from geometry_msgs.msg import Point, PointStamped
 from curious_table_explorer.msg import SurroundPointAction, SurroundPointGoal
 
 if __name__ == '__main__':
-	rospy.init_node('surround_client')
+	rospy.init_node('surround_point')
 
 	if len(sys.argv) != 3 and len(sys.argv) != 4:
-		print "usage: surround_client.py <x> <y> [frame_id] [delta]"
+		print "usage: surround_point.py <x> <y> [frame_id] [delta]"
 		print "will surround the point (x,y,0) in /map or [frame_id] with delta(rad) between two poses"
 		exit(1)
 
