@@ -19,7 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
 	visualization_msgs
 )
 
-find_package(PCL REQUIRED)
+find_package(PCL "1.8" REQUIRED)
 
 add_message_files(
    FILES
