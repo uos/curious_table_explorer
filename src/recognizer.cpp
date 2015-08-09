@@ -1,7 +1,9 @@
-/**
+/* Curious Table Explorer - Recognizer
  *
- * Author: Michael Goerner <mgoerner@uos.de>
- *
+ * Copyright (C) 2015 Michael 'v4hn' Goerner
+ * This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE file
+ * This is free software, and you are welcome to redistribute it
+ * under certain conditions; see LICENSE file for details
  */
 
 #include <curious_table_explorer/common.h>

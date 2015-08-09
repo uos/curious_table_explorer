@@ -1,3 +1,11 @@
+/* Curious Table Explorer - Model & Model View
+ *
+ * Copyright (C) 2014-2015 Michael 'v4hn' Goerner
+ * This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE file
+ * This is free software, and you are welcome to redistribute it
+ * under certain conditions; see LICENSE file for details
+ */
+
 #ifndef _MODEL_H_
 #define _MODEL_H_
 
