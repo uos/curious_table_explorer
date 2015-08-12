@@ -57,8 +57,8 @@ catkin_package(
 		visualization_msgs
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+add_compile_options("-std=c++11")
+add_compile_options("-Wall")
 
 include_directories(include ${PCL_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
