@@ -112,11 +112,17 @@ class TableTopSegmentationServer:
 			table_inlier2msg[:] >> inlier_pub[:]
 		])
 
+		inlier_projection= uos_ecto_cells.ProjectPlaneInliersPerspectively()
+		graph.extend([
+			extract_largest_table_cluster_indices[:] >> inlier_projection["input"],
+			planar_segmentation["model"] >> inlier_projection["model"]
+		])
+
 		convex_table= uos_ecto_cells.ConvexHull(dimensionality= 2)
 		convex2tables= uos_ecto_cells.ConvexHull2Table()
 		table_pub= ecto_object_recognition_msgs.Publisher_TableArray(topic_name= '/table')
 		graph.extend([
-			extract_largest_table_cluster_indices[:] >> convex_table[:],
+			inlier_projection[:] >> convex_table[:],
 			convex_table["output"] >> convex2tables[:],
 			convex2tables[:] >> table_pub[:]
 		])
