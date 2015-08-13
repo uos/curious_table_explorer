@@ -72,11 +72,6 @@ class TableTopSegmentationServer:
 			msg2cloud[:] >> extract_indices_floor["input"]
 		])
 
-		normals= ecto_pcl.NormalEstimation(radius_search= .02, k_search= 0)
-		graph.extend([
-			extract_indices_floor[:] >> normals[:]
-		])
-
 		# ecto_pcl.SACSegmentationFromNormals could be used, but the interpolated normals are too noisy..
 		planar_segmentation= ecto_pcl.SACSegmentation(
 			model_type= ecto_pcl.SACMODEL_PLANE,
