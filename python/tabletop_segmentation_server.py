@@ -77,8 +77,8 @@ class TableTopSegmentationServer:
 			extract_indices_floor[:] >> normals[:]
 		])
 
-		planar_segmentation= ecto_pcl.SACSegmentationFromNormals(
-			# ecto_pcl.SACMODEL_NORMAL_PLANE would support normals, but these are too noisy, so disabled for now
+		# ecto_pcl.SACSegmentationFromNormals could be used, but the interpolated normals are too noisy..
+		planar_segmentation= ecto_pcl.SACSegmentation(
 			model_type= ecto_pcl.SACMODEL_PLANE,
 			distance_threshold=.02,
 			max_iterations= 125)
@@ -86,7 +86,6 @@ class TableTopSegmentationServer:
 		subtract_table_indices= ecto_pcl.ExtractIndices(negative= True, keep_organized= False)
 		graph.extend([
 			extract_indices_floor[:] >> planar_segmentation["input"],
-			normals[:] >> planar_segmentation["normals"],
 			planar_segmentation["inliers"] >> extract_table_indices["indices"],
 			extract_indices_floor[:] >> extract_table_indices["input"],
 			planar_segmentation["inliers"] >> subtract_table_indices["indices"],
