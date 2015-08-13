@@ -77,38 +77,36 @@ class TableTopSegmentationServer:
 			model_type= ecto_pcl.SACMODEL_PLANE,
 			distance_threshold=.02,
 			max_iterations= 125)
-		extract_table_indices= ecto_pcl.ExtractIndices(negative= False, keep_organized= False)
 		subtract_table_indices= ecto_pcl.ExtractIndices(negative= True, keep_organized= False)
 		graph.extend([
-			extract_indices_floor[:] >> planar_segmentation["input"],
-			planar_segmentation["inliers"] >> extract_table_indices["indices"],
-			extract_indices_floor[:] >> extract_table_indices["input"],
+			msg2cloud[:] >> planar_segmentation["input"],
+			floor_cropper[:] >> planar_segmentation["indices"],
 			planar_segmentation["inliers"] >> subtract_table_indices["indices"],
 			extract_indices_floor[:] >> subtract_table_indices["input"]
 		])
 
 		extract_table_clusters= ecto_pcl.EuclideanClusterExtraction(cluster_tolerance= .03)
 		extract_largest_table_cluster= uos_ecto_cells.ExtractLargestClusterIndices()
-		# this should keep the table inlier organized, but ConvexHull would fail
-		# TODO: this is required for hole detection
-		extract_largest_table_cluster_indices= ecto_pcl.ExtractIndices(keep_organized= False)
 		graph.extend([
-			extract_table_indices[:] >> extract_table_clusters["input"],
+			msg2cloud[:] >> extract_table_clusters["input"],
+			planar_segmentation["inliers"] >> extract_table_clusters["indices"],
 			extract_table_clusters[:] >> extract_largest_table_cluster["clusters"],
-			extract_largest_table_cluster[:] >> extract_largest_table_cluster_indices["indices"],
-			extract_table_indices[:] >> extract_largest_table_cluster_indices["input"]
 		])
 
 		table_inlier2msg= ecto_pcl_ros.PointCloud2Message()
 		inlier_pub= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/table_inliers', queue_size=1)
+		extract_largest_table_cluster_indices= ecto_pcl.ExtractIndices(keep_organized= False)
 		graph.extend([
+			extract_largest_table_cluster[:] >> extract_largest_table_cluster_indices["indices"],
+			msg2cloud[:] >> extract_largest_table_cluster_indices["input"],
 			extract_largest_table_cluster_indices[:] >> table_inlier2msg[:],
 			table_inlier2msg[:] >> inlier_pub[:]
 		])
 
 		inlier_projection= uos_ecto_cells.ProjectPlaneInliersPerspectively()
 		graph.extend([
-			extract_largest_table_cluster_indices[:] >> inlier_projection["input"],
+			msg2cloud[:] >> inlier_projection["input"],
+			extract_largest_table_cluster[:] >> inlier_projection["indices"],
 			planar_segmentation["model"] >> inlier_projection["model"]
 		])
 
@@ -116,7 +114,8 @@ class TableTopSegmentationServer:
 		convex2tables= uos_ecto_cells.ConvexHull2Table()
 		table_pub= ecto_object_recognition_msgs.Publisher_TableArray(topic_name= '/table')
 		graph.extend([
-			inlier_projection[:] >> convex_table[:],
+			inlier_projection[:] >> convex_table["input"],
+			extract_largest_table_cluster[:] >> convex_table["indices"],
 			convex_table["output"] >> convex2tables[:],
 			convex2tables[:] >> table_pub[:]
 		])
