@@ -19,8 +19,6 @@ from ecto_ros import ecto_sensor_msgs
 
 from uos_ecto_cells import uos_ecto_cells, ecto_object_recognition_msgs
 
-#import transparent_object_reconstruction.hole_detection as hole_detection
-#import transparent_object_reconstruction.ecto_transparent_object_reconstruction as ecto_transparent_object_reconstruction
 
 class TableTopSegmentationServer:
 	def __init__(self):
@@ -64,12 +62,9 @@ class TableTopSegmentationServer:
 
 		cloud_to_map= uos_ecto_cells.CloudReframer(target_frame= '/map', timeout= 0.2, tf_cache_time= 60.0)
 		floor_cropper= ecto_pcl.PassThroughIndices(filter_field_name= "z", filter_limit_min= .20)
-		extract_indices_floor= ecto_pcl.ExtractIndices(keep_organized= False)
 		graph.extend([
 			msg2cloud[:] >> cloud_to_map[:],
 			cloud_to_map[:] >> floor_cropper["input"],
-			floor_cropper[:] >> extract_indices_floor["indices"],
-			msg2cloud[:] >> extract_indices_floor["input"]
 		])
 
 		# ecto_pcl.SACSegmentationFromNormals could be used, but the interpolated normals are too noisy..
@@ -77,12 +72,9 @@ class TableTopSegmentationServer:
 			model_type= ecto_pcl.SACMODEL_PLANE,
 			distance_threshold=.02,
 			max_iterations= 125)
-		subtract_table_indices= ecto_pcl.ExtractIndices(negative= True, keep_organized= False)
 		graph.extend([
 			msg2cloud[:] >> planar_segmentation["input"],
 			floor_cropper[:] >> planar_segmentation["indices"],
-			planar_segmentation["inliers"] >> subtract_table_indices["indices"],
-			extract_indices_floor[:] >> subtract_table_indices["input"]
 		])
 
 		extract_table_clusters= ecto_pcl.EuclideanClusterExtraction(cluster_tolerance= .03)
@@ -120,16 +112,28 @@ class TableTopSegmentationServer:
 			convex2tables[:] >> table_pub[:]
 		])
 
-		# TODO: include these cells
-		#hole_detector= hole_detection.HoleDetector()
-		#hole_publisher= ecto_transparent_object_reconstruction.Publisher_Holes(topic_name= '/table_holes')
-		#graph.extend([
-		#	msg2cloud[:] >> hole_detector["input"],
-		#	convex_table[:] >> hole_detector["hull_indices"],
-		#	planar_segmentation["model"] >> hole_detector["model"],
+		# TODO: include these cells - use filtered output cloud
+		import transparent_object_reconstruction.hole_detection as hole_detection
+		import transparent_object_reconstruction.ecto_transparent_object_reconstruction as ecto_transparent_object_reconstruction
 
-		#	hole_detector["holes"] >> hole_publisher[:]
-		#])
+		hole_detector= hole_detection.HoleDetector(plane_dist_threshold= 0.02)
+		hole_publisher= ecto_transparent_object_reconstruction.Publisher_Holes(topic_name= '/table_holes')
+		graph.extend([
+			msg2cloud[:] >> hole_detector["input"],
+			convex_table["output_indices"] >> hole_detector["hull_indices"],
+			planar_segmentation["model"] >> hole_detector["model"],
+
+			hole_detector["holes"] >> hole_publisher[:]
+		])
+
+		extract_indices_floor= ecto_pcl.ExtractIndices(keep_organized= True)
+		subtract_table_indices= ecto_pcl.ExtractIndices(negative= True, keep_organized= True)
+		graph.extend([
+			floor_cropper[:] >> extract_indices_floor["indices"],
+			msg2cloud[:] >> extract_indices_floor["input"],
+			extract_largest_table_cluster[:] >> subtract_table_indices["indices"],
+			extract_indices_floor[:] >> subtract_table_indices["input"]
+		])
 
 		extract_table_content= ecto_pcl.ExtractPolygonalPrismData(height_min= 0.0, height_max= .5)
 		graph.extend([
