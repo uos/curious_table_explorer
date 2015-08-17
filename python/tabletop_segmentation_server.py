@@ -195,4 +195,6 @@ if __name__ == '__main__':
 	# get different names when this is called from a launch file
 	ecto_ros.init([s for s in sys.argv if not s.startswith('__name:=')], node_name+'_ecto', anonymous= True)
 	ttserver= TableTopSegmentationServer()
+	# once the action server is factored out, this should be used instead of spin
+	#ttserver.plasm.execute(0)
 	rospy.spin()
