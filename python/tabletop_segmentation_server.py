@@ -19,6 +19,24 @@ from ecto_ros import ecto_sensor_msgs
 
 from uos_ecto_cells import uos_ecto_cells, ecto_object_recognition_msgs
 
+class CloudPublisher(ecto.BlackBox):
+	@staticmethod
+	def declare_cells(_p):
+		cells= {}
+		cells['m2c']= ecto.BlackBoxCellInfo(ecto_pcl_ros.PointCloud2Message, name= 'm2c')
+		cells['pub']= ecto.BlackBoxCellInfo(ecto_sensor_msgs.Publisher_PointCloud2, name= 'pub')
+		return cells
+	@staticmethod
+	def declare_forwards(_p):
+		p= {'pub': [ecto.BlackBoxForward('latched'), ecto.BlackBoxForward('queue_size'), ecto.BlackBoxForward('topic_name')] }
+		i= {'m2c': [ecto.BlackBoxForward('input', new_doc="Cloud to publish.")] }
+		o= {'pub': [ecto.BlackBoxForward('has_subscribers')]}
+		return (p,i,o)
+	def configure(self, _p, _i, _o):
+		pass
+	def connections(self, _p):
+		return [ self.m2c[:] >> self.pub[:] ]
+
 
 class TableTopSegmentationServer:
 	def __init__(self):
@@ -85,14 +103,12 @@ class TableTopSegmentationServer:
 			extract_table_clusters[:] >> extract_largest_table_cluster["clusters"],
 		])
 
-		table_inlier2msg= ecto_pcl_ros.PointCloud2Message()
-		inlier_pub= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/table_inliers', queue_size=1)
+		inlier_pub= CloudPublisher(topic_name= '/table_inliers', queue_size=1)
 		extract_largest_table_cluster_indices= ecto_pcl.ExtractIndices(keep_organized= False)
 		graph.extend([
 			extract_largest_table_cluster[:] >> extract_largest_table_cluster_indices["indices"],
 			msg2cloud[:] >> extract_largest_table_cluster_indices["input"],
-			extract_largest_table_cluster_indices[:] >> table_inlier2msg[:],
-			table_inlier2msg[:] >> inlier_pub[:]
+			extract_largest_table_cluster_indices[:] >> inlier_pub[:]
 		])
 
 		inlier_projection= uos_ecto_cells.ProjectPlaneInliersPerspectively()
@@ -157,13 +173,11 @@ class TableTopSegmentationServer:
 		])
 
 		colorize_clusters= ecto_pcl.ColorizeClusters()
-		clusters2cloudmsg= ecto_pcl_ros.PointCloud2Message()
-		table_content_cloud_pub= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/table_content')
+		table_content_cloud_pub= CloudPublisher(topic_name= '/table_content', queue_size= 1)
 		graph.extend([
 			cluster_table_content[:] >> colorize_clusters["clusters"],
 			subtract_table_indices[:] >> colorize_clusters["input"],
-			colorize_clusters[:] >> clusters2cloudmsg[:],
-			clusters2cloudmsg[:] >> table_content_cloud_pub[:]
+			colorize_clusters[:] >> table_content_cloud_pub[:]
 		])
 
 		self.plasm.connect(graph)
