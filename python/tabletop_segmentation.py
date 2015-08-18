@@ -11,8 +11,7 @@ import sys
 
 import rospy
 
-import actionlib
-from object_recognition_msgs.msg import ObjectRecognitionAction, ObjectRecognitionResult, RecognizedObjectArray
+from object_recognition_msgs.msg import RecognizedObjectArray
 
 import ecto, ecto_ros, ecto_pcl, ecto_pcl_ros
 from ecto_ros import ecto_sensor_msgs
@@ -38,44 +37,25 @@ class CloudPublisher(ecto.BlackBox):
 		return [ self.m2c[:] >> self.pub[:] ]
 
 
-class TableTopSegmentationServer:
+class TableTopSegmentation:
 	def __init__(self):
+		ecto_ros.init(sys.argv, 'tabletop_segmentation', anonymous= False)
 		self.create_plasm()
 		self.plasm.configure_all()
 
-		self.output= None
-		rospy.Subscriber( '/recognized_object_array', RecognizedObjectArray, self.callback_recognized_object_array )
+		rospy.loginfo('started tabletop segmentation')
 
-		self.server= actionlib.SimpleActionServer('recognize_objects', ObjectRecognitionAction, self.execute, False)
-		self.server.start()
-		rospy.loginfo('started tabletop segmentation server')
-
-	def callback_recognized_object_array(self, data):
-		self.output= data
-
-	def execute(self, goal):
-		rospy.loginfo('received request - running plasm once')
-		if self.plasm.execute(niter= 1):
-			# this is a crude hack to make the result accessable to this action server
-			# it's pretty hard to support direct conversion for RecognizedObjectArray
-			while self.output is None:
-				rospy.sleep(.1)
-			self.server.set_succeeded( ObjectRecognitionResult(self.output) )
-			self.output= None
-			rospy.loginfo('succeeded')
-		else:
-			self.server.set_aborted()
+	def run(self):
+		self.plasm.execute(niter= 0)
 
 	def create_plasm(self):
 		self.plasm= ecto.Plasm()
 		graph= []
 
-		cloud_sub= ecto_sensor_msgs.Subscriber_PointCloud2(topic_name= '/kinect/depth_registered/points', queue_size= 1)
+		cloud_sub= ecto_sensor_msgs.Subscriber_PointCloud2(topic_name= '/table_view', queue_size= 10)
 		msg2cloud= ecto_pcl_ros.Message2PointCloud()
-		cloud_pub= ecto_sensor_msgs.Publisher_PointCloud2(topic_name= '/segmented_view', queue_size= 5)
 		graph.extend([
-			cloud_sub[:] >> msg2cloud[:],
-			cloud_sub[:] >> cloud_pub[:]
+			cloud_sub[:] >> msg2cloud[:]
 		])
 
 		cloud_to_map= uos_ecto_cells.CloudReframer(target_frame= '/map', timeout= 0.2, tf_cache_time= 60.0)
@@ -103,8 +83,8 @@ class TableTopSegmentationServer:
 			extract_table_clusters[:] >> extract_largest_table_cluster["clusters"],
 		])
 
-		inlier_pub= CloudPublisher(topic_name= '/table_inliers', queue_size=1)
 		extract_largest_table_cluster_indices= ecto_pcl.ExtractIndices(keep_organized= False)
+		inlier_pub= CloudPublisher(topic_name= '/table_inliers', queue_size=1)
 		graph.extend([
 			extract_largest_table_cluster[:] >> extract_largest_table_cluster_indices["indices"],
 			msg2cloud[:] >> extract_largest_table_cluster_indices["input"],
@@ -128,7 +108,6 @@ class TableTopSegmentationServer:
 			convex2tables[:] >> table_pub[:]
 		])
 
-		# TODO: include these cells - use filtered output cloud
 		import transparent_object_reconstruction.hole_detection as hole_detection
 		import transparent_object_reconstruction.ecto_transparent_object_reconstruction as ecto_transparent_object_reconstruction
 
@@ -183,18 +162,5 @@ class TableTopSegmentationServer:
 		self.plasm.connect(graph)
 
 if __name__ == '__main__':
-	node_name= "tabletop_segmentation"
-	rospy.init_node(node_name)
-
-	node_name= rospy.get_name()
-	try:
-		node_name= node_name[(node_name.rindex('/')+1):]
-	except ValueError:
-		pass
-	# this filter is necessary to ensure the python & cpp node
-	# get different names when this is called from a launch file
-	ecto_ros.init([s for s in sys.argv if not s.startswith('__name:=')], node_name+'_ecto', anonymous= True)
-	ttserver= TableTopSegmentationServer()
-	# once the action server is factored out, this should be used instead of spin
-	#ttserver.plasm.execute(0)
-	rospy.spin()
+	ttserver= TableTopSegmentation()
+	ttserver.run()
