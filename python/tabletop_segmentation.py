@@ -32,7 +32,8 @@ class CloudPublisher(ecto.BlackBox):
 		o= {'pub': [ecto.BlackBoxForward('has_subscribers')]}
 		return (p,i,o)
 	def configure(self, _p, _i, _o):
-		pass
+		self.m2c.configure()
+		self.pub.configure()
 	def connections(self, _p):
 		return [ self.m2c[:] >> self.pub[:] ]
 
