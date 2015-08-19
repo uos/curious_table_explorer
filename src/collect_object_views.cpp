@@ -14,7 +14,7 @@ int main(int argc, char** argv)
 {
 	ros::init(argc, argv, "collect_object_views");
 
-	curious_table_explorer::Collector collector("/table", "/recognized_object_array");
+	curious_table_explorer::Collector collector("table", "segmented_tabletop_objects");
 	ROS_INFO("started tabletop object view collector");
 	ros::spin();
 

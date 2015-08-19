@@ -20,17 +20,17 @@ import threading
 
 class ObjectRecognitionActionServer:
 	def __init__(self):
-		self.sub_table_view= rospy.Subscriber( '/kinect/depth_registered/points', PointCloud2, self.callback_table_view, queue_size= 10 )
+		self.sub_table_view= rospy.Subscriber( 'input_cloud', PointCloud2, self.callback_table_view, queue_size= 10 )
 		self.new_view= threading.Event()
 		self.table_view= None
 
-		self.pub_table_view= rospy.Publisher( '/table_view', PointCloud2, queue_size= 10 )
+		self.pub_table_view= rospy.Publisher( 'pipeline_input', PointCloud2, queue_size= 10 )
 
-		self.sub_output= rospy.Subscriber( '/recognized_object_array', RecognizedObjectArray, self.callback_output, queue_size= 10 )
+		self.sub_output= rospy.Subscriber( 'pipeline_output', RecognizedObjectArray, self.callback_output, queue_size= 10 )
 		self.new_output= threading.Event()
 		self.output= None
 
-		self.server= actionlib.SimpleActionServer('recognize_objects', ObjectRecognitionAction, self.execute, False)
+		self.server= actionlib.SimpleActionServer(rospy.resolve_name('recognize_objects'), ObjectRecognitionAction, self.execute, False)
 
 		deadline= time.time() + rospy.get_param('~startup_timeout', 15.0)
 		while (not rospy.is_shutdown()) and (self.pub_table_view.get_num_connections() == 0) and (time.time() < deadline):
@@ -38,7 +38,7 @@ class ObjectRecognitionActionServer:
 		if rospy.is_shutdown():
 			exit()
 		if self.pub_table_view.get_num_connections() < 1:
-			rospy.logfatal("Object recognition pipeline did not connect to topic " + rospy.resolve_name("/table_view") + ". This server only wraps a pipeline to use as an action. It is useless without a functional recognition pipeline.")
+			rospy.logfatal("Object recognition pipeline did not connect to topic " + rospy.resolve_name("input_cloud") + ". This server only wraps a pipeline to use as an action. It is useless without a functional recognition pipeline.")
 			exit()
 
 		self.server.start()
@@ -71,6 +71,6 @@ class ObjectRecognitionActionServer:
 			self.server.set_aborted()
 
 if __name__ == '__main__':
-	rospy.init_node("tabletop_segmentation_action_server")
+	rospy.init_node("object_recognition_action_server")
 	ttserver= ObjectRecognitionActionServer()
 	rospy.spin()

@@ -145,7 +145,7 @@ class TableTopSegmentation:
 		])
 
 		clusters2recognized_objects= uos_ecto_cells.Clusters2RecognizedObjectArray()
-		recognized_objects_pub= ecto_object_recognition_msgs.Publisher_RecognizedObjectArray(topic_name= '/recognized_object_array')
+		recognized_objects_pub= ecto_object_recognition_msgs.Publisher_RecognizedObjectArray(topic_name= 'segmented_tabletop_objects')
 		graph.extend([
 			cluster_table_content[:] >> clusters2recognized_objects["indices"],
 			subtract_table_indices[:] >> clusters2recognized_objects["input"],
