@@ -53,13 +53,13 @@ class TableTopSegmentation:
 		self.plasm= ecto.Plasm()
 		graph= []
 
-		cloud_sub= ecto_sensor_msgs.Subscriber_PointCloud2(topic_name= '/table_view', queue_size= 10)
+		cloud_sub= ecto_sensor_msgs.Subscriber_PointCloud2(topic_name= 'table_view', queue_size= 10)
 		msg2cloud= ecto_pcl_ros.Message2PointCloud()
 		graph.extend([
 			cloud_sub[:] >> msg2cloud[:]
 		])
 
-		cloud_to_map= uos_ecto_cells.CloudReframer(target_frame= '/map', timeout= 0.2, tf_cache_time= 60.0)
+		cloud_to_map= uos_ecto_cells.CloudReframer(target_frame= 'map', timeout= 0.2, tf_cache_time= 60.0)
 		floor_cropper= ecto_pcl.PassThroughIndices(filter_field_name= "z", filter_limit_min= .20)
 		graph.extend([
 			msg2cloud[:] >> cloud_to_map[:],
@@ -85,7 +85,7 @@ class TableTopSegmentation:
 		])
 
 		extract_largest_table_cluster_indices= ecto_pcl.ExtractIndices(keep_organized= False)
-		inlier_pub= CloudPublisher(topic_name= '/table_inliers', queue_size=1)
+		inlier_pub= CloudPublisher(topic_name= 'table_inliers', queue_size=1)
 		graph.extend([
 			extract_largest_table_cluster[:] >> extract_largest_table_cluster_indices["indices"],
 			msg2cloud[:] >> extract_largest_table_cluster_indices["input"],
@@ -101,7 +101,7 @@ class TableTopSegmentation:
 
 		convex_table= uos_ecto_cells.ConvexHull(dimensionality= 2)
 		convex2tables= uos_ecto_cells.ConvexHull2Table()
-		table_pub= ecto_object_recognition_msgs.Publisher_TableArray(topic_name= '/table')
+		table_pub= ecto_object_recognition_msgs.Publisher_TableArray(topic_name= 'table')
 		graph.extend([
 			inlier_projection[:] >> convex_table["input"],
 			extract_largest_table_cluster[:] >> convex_table["indices"],
@@ -113,7 +113,7 @@ class TableTopSegmentation:
 		import transparent_object_reconstruction.ecto_transparent_object_reconstruction as ecto_transparent_object_reconstruction
 
 		hole_detector= hole_detection.HoleDetector(plane_dist_threshold= 0.02)
-		hole_publisher= ecto_transparent_object_reconstruction.Publisher_Holes(topic_name= '/table_holes')
+		hole_publisher= ecto_transparent_object_reconstruction.Publisher_Holes(topic_name= 'table_holes')
 		graph.extend([
 			msg2cloud[:] >> hole_detector["input"],
 			convex_table["output_indices"] >> hole_detector["hull_indices"],
@@ -153,7 +153,7 @@ class TableTopSegmentation:
 		])
 
 		colorize_clusters= ecto_pcl.ColorizeClusters()
-		table_content_cloud_pub= CloudPublisher(topic_name= '/table_content', queue_size= 1)
+		table_content_cloud_pub= CloudPublisher(topic_name= 'table_content', queue_size= 1)
 		graph.extend([
 			cluster_table_content[:] >> colorize_clusters["clusters"],
 			subtract_table_indices[:] >> colorize_clusters["input"],
