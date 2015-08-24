@@ -39,9 +39,10 @@ class CloudPublisher(ecto.BlackBox):
 
 
 class TableTopSegmentation:
-	def __init__(self):
+	def __init__(self, with_holes= False):
 		ecto_ros.init(sys.argv, 'tabletop_segmentation', anonymous= False)
-		self.create_plasm()
+
+		self.create_plasm(with_holes= not ('--without-holes' in sys.argv))
 		self.plasm.configure_all()
 
 		rospy.loginfo('started tabletop segmentation')
@@ -49,7 +50,7 @@ class TableTopSegmentation:
 	def run(self):
 		self.plasm.execute(niter= 0)
 
-	def create_plasm(self):
+	def create_plasm(self, with_holes= True):
 		self.plasm= ecto.Plasm()
 		graph= []
 
@@ -109,24 +110,32 @@ class TableTopSegmentation:
 			convex2tables[:] >> table_pub[:]
 		])
 
-		import transparent_object_reconstruction.hole_detection as hole_detection
-		import transparent_object_reconstruction.ecto_transparent_object_reconstruction as ecto_transparent_object_reconstruction
+		if with_holes:
+			import transparent_object_reconstruction.hole_detection as hole_detection
+			import transparent_object_reconstruction.ecto_transparent_object_reconstruction as ecto_transparent_object_reconstruction
 
-		hole_detector= hole_detection.HoleDetector(plane_dist_threshold= 0.02)
-		hole_publisher= ecto_transparent_object_reconstruction.Publisher_Holes(topic_name= 'table_holes')
-		graph.extend([
-			msg2cloud[:] >> hole_detector["input"],
-			convex_table["output_indices"] >> hole_detector["hull_indices"],
-			planar_segmentation["model"] >> hole_detector["model"],
+			hole_detector= hole_detection.HoleDetector(plane_dist_threshold= 0.02)
+			hole_publisher= ecto_transparent_object_reconstruction.Publisher_Holes(topic_name= 'table_holes')
+			hole_cleaner= ecto_pcl.ExtractIndices(keep_organized= True, negative= True)
+			graph.extend([
+				msg2cloud[:] >> hole_detector["input"],
+				convex_table["output_indices"] >> hole_detector["hull_indices"],
+				planar_segmentation["model"] >> hole_detector["model"],
 
-			hole_detector["holes"] >> hole_publisher[:]
-		])
+				hole_detector["holes"] >> hole_publisher[:],
+
+				msg2cloud[:] >> hole_cleaner["input"],
+				hole_detector["remove_indices"] >> hole_cleaner["indices"]
+			])
+			input_image= hole_cleaner
+		else:
+			input_image= msg2cloud
 
 		extract_indices_floor= ecto_pcl.ExtractIndices(keep_organized= True)
 		subtract_table_indices= ecto_pcl.ExtractIndices(negative= True, keep_organized= True)
 		graph.extend([
 			floor_cropper[:] >> extract_indices_floor["indices"],
-			msg2cloud[:] >> extract_indices_floor["input"],
+			input_image[:] >> extract_indices_floor["input"],
 			extract_largest_table_cluster[:] >> subtract_table_indices["indices"],
 			extract_indices_floor[:] >> subtract_table_indices["input"]
 		])
