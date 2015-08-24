@@ -118,7 +118,7 @@ class TableTopSegmentation:
 			hole_publisher= ecto_transparent_object_reconstruction.Publisher_Holes(topic_name= 'table_holes')
 			hole_cleaner= ecto_pcl.ExtractIndices(keep_organized= True, negative= True)
 			graph.extend([
-				msg2cloud[:] >> hole_detector["input"],
+				inlier_projection[:] >> hole_detector["input"],
 				convex_table["output_indices"] >> hole_detector["hull_indices"],
 				planar_segmentation["model"] >> hole_detector["model"],
 
