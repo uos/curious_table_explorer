@@ -10,7 +10,7 @@
 
 #include <curious_table_explorer/ObservedTable.h>
 
-#include <utils/backjump.h>
+#include <bag_loop_check/bag_loop_check.hpp>
 #include <utils/convert.h>
 
 #include <pcl_ros/transforms.h>
@@ -46,9 +46,9 @@ Collector::Collector(const std::string& table_topic, const std::string& recogniz
 }
 
 void Collector::observeTable(const object_recognition_msgs::TableArray::ConstPtr& tables, const object_recognition_msgs::RecognizedObjectArray::ConstPtr& objs){
-	static utils::BackjumpChk backjump;
-	if(backjump){
-		ROS_WARN("Detected jump back in time. Clearing object buffer");
+	static bag_loop_check::BagLoopCheck bagloop;
+	if(bagloop){
+		ROS_WARN("Detected bag loop. Clearing object buffer.");
 		model_constructor_.clear();
 		table_tracker_.reset();
 	}

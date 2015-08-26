@@ -4,6 +4,7 @@ project(curious_table_explorer)
 find_package(catkin REQUIRED COMPONENTS
 	actionlib
 	actionlib_msgs
+	bag_loop_check
 	eigen_conversions
 	genmsg
 	geometry_msgs
