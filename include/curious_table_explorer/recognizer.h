@@ -45,6 +45,8 @@ public:
 
 	void storeCurrentState();
 	void resetToStored();
+
+	void clear();
 protected:
 
 	pcl::PointCloud<Signature>::Ptr sigs_;
@@ -78,6 +80,7 @@ public:
 	void storeOverlay();
 	void clearOverlay();
 
+	void clear();
 protected:
 	std::map< size_t, std::vector<size_t> > cluster_;
 	std::map< size_t, std::vector<size_t> > cluster_overlay_;
@@ -98,6 +101,8 @@ public:
 
 	// classify object and return index in current_clustering
 	size_t classify( const RegisteredObject& op, size_t instance_id );
+
+	void clear();
 
 	bool dumpClusters( curious_table_explorer::DumpToFolder::Request&, curious_table_explorer::DumpToFolder::Response&);
 

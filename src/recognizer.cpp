@@ -11,6 +11,8 @@
 
 #include <utils/convert.h>
 
+#include <bag_loop_check/bag_loop_check.hpp>
+
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <curious_table_explorer/RegisteredObject.h>
@@ -185,6 +187,12 @@ void InstanceCache::resetToStored(){
 	instance_sigs_.resize( stored_instance_cnt_ );
 }
 
+void InstanceCache::clear(){
+	stored_signature_cnt_= 0;
+	stored_instance_cnt_= 0;
+	this->resetToStored();
+}
+
 
 Clustering::Clustering() :
 	next_cluster_id_(0),
@@ -244,6 +252,13 @@ void Clustering::clearOverlay(){
 	next_cluster_id_overlay_= next_cluster_id_;
 }
 
+void Clustering::clear(){
+	cluster_.clear();
+	instance_lookup_.clear();
+	next_cluster_id_= 0;
+	this->clearOverlay();
+}
+
 
 Recognizer::Recognizer() :
 	current_table_id_(0),
@@ -258,6 +273,12 @@ Recognizer::Recognizer() :
 }
 
 void Recognizer::recognitionCB(const ObservedTable::ConstPtr& ot) {
+	static bag_loop_check::BagLoopCheck bag_loop;
+	if(bag_loop){
+		ROS_WARN("Detected bag loop. Clearing recognizer cache.");
+		this->clear();
+	}
+
 	object_recognition_msgs::RecognizedObjectArray::Ptr recognition_result= recognizedObjectsWithoutViews( *ot );
 
 	// should we track a new table?
@@ -344,6 +365,12 @@ size_t Recognizer::classify( const RegisteredObject& object, size_t instance_on_
 
 	clustering_.addInstance(instance_id, cluster_id);
 	return cluster_id;
+}
+
+void Recognizer::clear(){
+	current_table_id_= 0;
+	cache_.clear();
+	clustering_.clear();
 }
 
 float Recognizer::rateInstanceInCluster( const pcl::PointCloud<Signature>& instance_signatures, size_t cluster_id ){
