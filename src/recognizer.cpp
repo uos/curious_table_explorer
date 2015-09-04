@@ -262,14 +262,15 @@ void Clustering::clear(){
 
 Recognizer::Recognizer() :
 	current_table_id_(0),
-	nh_("~")
+	nh_(),
+	private_nh_("~")
 {
 	sub_objects_= nh_.subscribe("generated_models", 50, &Recognizer::recognitionCB, this);
 	pub_result_= nh_.advertise<object_recognition_msgs::RecognizedObjectArray>("clustering_result", 5, true);
 
-	dump_service_= nh_.advertiseService("dump_clusters_to_folder", &Recognizer::dumpClusters, this);
+	dump_service_= private_nh_.advertiseService("dump_clusters_to_folder", &Recognizer::dumpClusters, this);
 
-	gamma_= nh_.param("gamma", 14.5);
+	gamma_= private_nh_.param("gamma", 14.5);
 }
 
 void Recognizer::recognitionCB(const ObservedTable::ConstPtr& ot) {

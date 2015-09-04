@@ -118,6 +118,7 @@ protected:
 	float gamma_;
 
 	ros::NodeHandle nh_;
+	ros::NodeHandle private_nh_;
 	ros::Subscriber sub_objects_;
 	ros::Publisher  pub_result_;
 
