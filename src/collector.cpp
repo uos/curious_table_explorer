@@ -36,13 +36,13 @@ Collector::Collector(const std::string& table_topic, const std::string& recogniz
 	sync_table_.connectInput(sub_table_, sub_objects_);
 	sync_table_.registerCallback(boost::bind(&Collector::observeTable, this, _1, _2));
 
-	pub_markers_= nh_.advertise<visualization_msgs::MarkerArray>("/tracked_object_views", 5, true);
-	pub_tables_=  nh_.advertise<object_recognition_msgs::TableArray>("/tracked_table", 5, true);
-	pub_models_=  nh_.advertise<ObservedTable>("/generated_models", 5, true);
+	pub_markers_= nh_.advertise<visualization_msgs::MarkerArray>("tracked_object_views", 5, true);
+	pub_tables_=  nh_.advertise<object_recognition_msgs::TableArray>("tracked_table", 5, true);
+	pub_models_=  nh_.advertise<ObservedTable>("generated_models", 5, true);
 
 	dump_service_= nh_.advertiseService("dump_models_to_folder", &Collector::dumpModels, this);
 	finalize_table_service_= nh_.advertiseService("finalize_table", &Collector::finalizeTable, this);
-	sub_finalize_by_message_= nh_.subscribe("/finalize_table", 1, &Collector::finalizeTable, this);
+	sub_finalize_by_message_= nh_.subscribe("finalize_table", 1, &Collector::finalizeTable, this);
 }
 
 void Collector::observeTable(const object_recognition_msgs::TableArray::ConstPtr& tables, const object_recognition_msgs::RecognizedObjectArray::ConstPtr& objs){
