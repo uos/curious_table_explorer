@@ -42,7 +42,6 @@ Collector::Collector(const std::string& table_topic, const std::string& recogniz
 
 	dump_service_= nh_.advertiseService("dump_models_to_folder", &Collector::dumpModels, this);
 	finalize_table_service_= nh_.advertiseService("finalize_table", &Collector::finalizeTable, this);
-	sub_finalize_by_message_= nh_.subscribe("finalize_table", 1, &Collector::finalizeTable, this);
 }
 
 void Collector::observeTable(const object_recognition_msgs::TableArray::ConstPtr& tables, const object_recognition_msgs::RecognizedObjectArray::ConstPtr& objs){
@@ -112,13 +111,12 @@ bool Collector::finalizeTable(FinalizeTable::Request&, FinalizeTable::Response&)
 	return true;
 }
 
-void Collector::finalizeTable(const std_msgs::String& command) {
-	this->finalizeTable();
-}
-
 void Collector::finalizeTable() {
 		if( !table_tracker_.isLocked() )
 			return;
+
+		ROS_INFO_STREAM("Finalizing Table Views");
+
 		model_constructor_.finalizeTable();
 
 		std::string path;

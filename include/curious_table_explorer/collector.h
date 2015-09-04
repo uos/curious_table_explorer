@@ -43,7 +43,6 @@ public:
 
 	bool dumpModels(curious_table_explorer::DumpToFolder::Request&, curious_table_explorer::DumpToFolder::Response&);
 	bool finalizeTable(curious_table_explorer::FinalizeTable::Request&, curious_table_explorer::FinalizeTable::Response&);
-	void finalizeTable(const std_msgs::String&);
 protected:
 	void observeTable(const object_recognition_msgs::TableArray::ConstPtr&, const object_recognition_msgs::RecognizedObjectArray::ConstPtr&);
 	void finalizeTable();
@@ -65,7 +64,6 @@ protected:
 
 	ros::ServiceServer dump_service_;
 	ros::ServiceServer finalize_table_service_;
-	ros::Subscriber sub_finalize_by_message_;
 
 	tf::TransformListener tfl_;
 	tf::TransformBroadcaster tfb_;
