@@ -42,7 +42,7 @@ class TableTopSegmentation:
 	def __init__(self, with_holes= False):
 		ecto_ros.init(sys.argv, 'tabletop_segmentation', anonymous= False)
 
-		self.create_plasm(with_holes= not ('--without-holes' in sys.argv))
+		self.create_plasm(with_holes= with_holes)
 		self.plasm.configure_all()
 
 		rospy.loginfo('started tabletop segmentation')
@@ -172,5 +172,5 @@ class TableTopSegmentation:
 		self.plasm.connect(graph)
 
 if __name__ == '__main__':
-	ttserver= TableTopSegmentation()
+	ttserver= TableTopSegmentation(with_holes= not ('--without-holes' in sys.argv))
 	ttserver.run()
