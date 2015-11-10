@@ -16,6 +16,9 @@
 #include <pcl_ros/transforms.h>
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <pcl/io/pcd_io.h>
+#include <fstream>
+
 #include <boost/make_shared.hpp>
 #include <vector>
 #include <cassert>
@@ -90,7 +93,20 @@ void Collector::observeTable(const object_recognition_msgs::TableArray::ConstPtr
 
 		ROS_INFO("locked onto new table");
 		table_tracker_.lockTable(table, full_view, view_to_world);
+		table_to_last_view= view_to_world.inverse() * table_tracker_.getTableToWorld();
 	}
+
+	pcl::PCDWriter writer;
+	static size_t view_id= 0;
+	std::stringstream filename;
+	filename << "table_views/table" << std::setfill('0') << std::setw(2) << table_count_ << "_view" << std::setfill('0') << std::setw(2) << view_id++ << ".pcd";
+	writer.writeBinary(filename.str(), *full_view);
+	filename << ".planereg";
+	std::ofstream regfile(filename.str());
+	regfile << (table_to_last_view * table_tracker_.getWorldToTable() * view_to_world).matrix();
+	regfile.close();
+	ROS_INFO_STREAM( "wrote file" << filename.str() );
+	table_to_last_view= view_to_world.inverse() * table_tracker_.getTableToWorld();
 
 	this->publishTableFrame();
 	model_constructor_.addTableView(table, view, table_tracker_.getWorldToTable()*view_to_world);

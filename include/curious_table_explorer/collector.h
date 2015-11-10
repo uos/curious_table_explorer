@@ -68,6 +68,7 @@ protected:
 	tf::TransformListener tfl_;
 	tf::TransformBroadcaster tfb_;
 
+	TransformMat table_to_last_view;
 };
 
 }
