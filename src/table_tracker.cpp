@@ -36,8 +36,8 @@ TableTracker::TableTracker(std::string world_frame) :
 	icp->setMaximumIterations(20);
 	icp->setMaxCorrespondenceDistance(.05);
 
-	auto estimation_2d= make_shared< pcl::registration::TransformationEstimation2D<Point,Point,double> >();
-	icp->setTransformationEstimation(estimation_2d);
+//	auto estimation_2d= make_shared< pcl::registration::TransformationEstimation2D<Point,Point,double> >();
+//	icp->setTransformationEstimation(estimation_2d);
 
 	iicp_.setICP(icp);
 };

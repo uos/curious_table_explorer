@@ -101,7 +101,7 @@ void Collector::observeTable(const object_recognition_msgs::TableArray::ConstPtr
 	std::stringstream filename;
 	filename << "table_views/table" << std::setfill('0') << std::setw(2) << table_count_ << "_view" << std::setfill('0') << std::setw(2) << view_id++ << ".pcd";
 	writer.writeBinary(filename.str(), *full_view);
-	filename << ".planereg";
+	filename << ".6dreg";
 	std::ofstream regfile(filename.str());
 	regfile << (table_to_last_view * table_tracker_.getWorldToTable() * view_to_world).matrix();
 	regfile.close();
