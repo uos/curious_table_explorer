@@ -63,7 +63,7 @@ bool TableTracker::registerTable(const object_recognition_msgs::Table& table, Po
 	const auto table_to_world= view_to_world * table_to_view;
 
 	// world knowledge: the table planes have to align
-	auto table_in_locked_table= convert<geometry_msgs::Pose,TransformMat>( this->getWorldToTable() * view_to_world * table_to_view );
+	auto table_in_locked_table= convert<geometry_msgs::Pose,TransformMat>( this->getWorldToTable() * table_to_world );
 	table_in_locked_table.position.z= 0;
 	table_in_locked_table.orientation= tf::createQuaternionMsgFromYaw( tf::getYaw(table_in_locked_table.orientation) );
 	const auto table_to_old_locked_table= convert<TransformMat>(table_in_locked_table);
