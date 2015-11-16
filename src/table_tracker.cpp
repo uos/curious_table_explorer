@@ -60,7 +60,7 @@ bool TableTracker::registerTable(const object_recognition_msgs::Table& table, Po
 	assert( locked_ );
 
 	const auto table_to_view= convert<TransformMat>( table.pose );
-	const auto table_to_world= view_to_world * table_to_view;
+	const TransformMat table_to_world= view_to_world * table_to_view;
 
 	// world knowledge: the table planes have to align
 	auto table_in_locked_table= convert<geometry_msgs::Pose,TransformMat>( this->getWorldToTable() * table_to_world );
@@ -68,21 +68,20 @@ bool TableTracker::registerTable(const object_recognition_msgs::Table& table, Po
 	table_in_locked_table.orientation= tf::createQuaternionMsgFromYaw( tf::getYaw(table_in_locked_table.orientation) );
 	const auto table_to_old_locked_table= convert<TransformMat>(table_in_locked_table);
 
-	const auto view_to_locked_table= table_to_old_locked_table * table_to_view.inverse();
+	const TransformMat view_to_old_locked_table= table_to_old_locked_table * table_to_view.inverse();
 
 	auto locked_table_view= make_shared<PointCloud>();
-	pcl::transformPointCloud(*view, *locked_table_view, view_to_locked_table );
+	pcl::transformPointCloud(*view, *locked_table_view, view_to_old_locked_table );
 
 	if( !iicp_.registerCloud(locked_table_view) )
 		return false;
 	locked_table_to_world_= table_to_world * table_to_old_locked_table.inverse() * iicp_.getAbsoluteTransform().inverse();
 
+	const TransformMat table_to_locked_table= this->getWorldToTable() * view_to_world * table_to_view;
+
 	// update convex hull
 	auto hull= convert<PointCloudXYZ::Ptr>( table.convex_hull );
-
-	const auto table_to_locked_table= this->getWorldToTable() * view_to_world * table_to_view;
 	pcl::transformPointCloud(*hull, *hull,  table_to_locked_table);
-
 	auto old_hull= convert<PointCloudXYZ::Ptr>( table_.convex_hull );
 	*hull+= *old_hull;
 
