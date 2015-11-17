@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="holes" default="true" />
+
+  <node name="tabletop_segmentation" pkg="curious_table_explorer" type="tabletop_segmentation.py" output="screen" unless="$(arg holes)" args="--without-holes" />
+  <node name="tabletop_segmentation" pkg="curious_table_explorer" type="tabletop_segmentation.py" output="screen" if="$(arg holes)" />
+
+  <node name="finalize_table_srv" pkg="curious_table_explorer" type="finalize_table_srv.py" output="screen" />
+
+  <node name="object_view_collector" pkg="curious_table_explorer" type="collect_object_views" output="screen" />
+
+  <node name="recognize_registered_objects" pkg="curious_table_explorer" type="recognize_registered_objects" output="screen" />
+</launch>
