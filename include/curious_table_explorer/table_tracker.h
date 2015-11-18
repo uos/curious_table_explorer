@@ -11,7 +11,8 @@
 
 #include <curious_table_explorer/common.h>
 
-#include <pcl/registration/meta_icp.h>
+#include <utils/averaging_meta_icp.h>
+//#include <pcl/registration/meta_icp.h>
 
 #include <object_recognition_msgs/Table.h>
 
@@ -40,7 +41,7 @@ protected:
 	// use getTable to receive the current pose
 	object_recognition_msgs::Table table_;
 
-	pcl::registration::MetaICP<Point,double> iicp_;
+	utils::AveragingMetaICP<Point,double> iicp_;
 
 	TransformMat locked_table_to_world_;
 
