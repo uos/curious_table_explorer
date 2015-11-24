@@ -11,6 +11,8 @@
   <node name="move_base_straight" pkg="move_base_straight" type="move_base_straight.py" output="screen">
     <remap from="base_scan" to="lms200_scan_filtered"/>
     <remap from="base_controller/command" to="cmd_vel"/>
+    <param name="goal_threshold" value="0.1"/>
+    <param name="yaw_goal_tolerance" value="0.1"/>
   </node>
 
   <node name="finalize_table_srv" pkg="curious_table_explorer" type="finalize_table_srv.py" output="screen" />
