@@ -58,6 +58,7 @@ class ObjectRecognitionActionServer:
 		while self.table_view == None or self.table_view.header.stamp < now:
 			self.new_view.wait()
 			self.new_view.clear()
+		self.new_output.clear()
 		self.pub_table_view.publish(self.table_view)
 
 		timeout= rospy.get_param("~detection_timeout",15.0)
