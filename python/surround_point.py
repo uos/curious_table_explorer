@@ -11,6 +11,7 @@ import sys
 import rospy
 import actionlib
 
+from std_srvs.srv import Empty
 from std_msgs.msg import Header
 from geometry_msgs.msg import Point, PointStamped
 
@@ -35,6 +36,12 @@ if __name__ == '__main__':
 	if len(sys.argv) > 4:
 		delta= float(sys.argv[4])
 
+	# clear hostmaps before moving
+	clear_costmaps= rospy.ServiceProxy('move_base_node/clear_costmaps', Empty)
+	clear_costmaps.wait_for_service()
+	clear_costmaps()
+
+	# move around point
 	client= actionlib.SimpleActionClient('/surround_point', SurroundPointAction)
 	client.wait_for_server()
 	client.send_goal(
