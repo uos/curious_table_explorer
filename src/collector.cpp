@@ -13,6 +13,8 @@
 #include <bag_loop_check/bag_loop_check.hpp>
 #include <utils/convert.h>
 
+#include <transparent_object_reconstruction/HoleIntersectorReset.h>
+
 #include <pcl_ros/transforms.h>
 #include <pcl_conversions/pcl_conversions.h>
 
@@ -129,6 +131,10 @@ void Collector::finalizeTable() {
 
 		model_constructor_.clear();
 		table_tracker_.reset();
+
+		ros::ServiceClient transparent_reset_client = nh_.serviceClient<transparent_object_reconstruction::HoleIntersectorReset>("transObjRec/HoleIntersector_reset");
+		transparent_object_reconstruction::HoleIntersectorReset reset;
+		transparent_reset_client.call(reset);
 
 		table_count_++;
 }

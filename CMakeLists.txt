@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 	sensor_msgs
 	tf
 	tf_conversions
+	transparent_object_reconstruction
 	visualization_msgs
 )
 
